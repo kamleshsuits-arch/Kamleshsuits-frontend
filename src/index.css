@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1C1917;
+  --color-secondary: #57534E;
+  --color-accent: #90462c;
+  --color-highlight: #ec7a1c;
+  --color-background: #FAFAF9;
+  --color-surface: #FFFFFF;
+  --color-muted: #F5F5F4;
+
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "Lato", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-secondary font-sans antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif text-primary;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Coupon scroll — hidden at rest, thin accent bar on hover */
+  .coupon-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .coupon-scroll::-webkit-scrollbar {
+    height: 3px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .coupon-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .coupon-scroll::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 99px;
+    transition: background 0.3s;
+  }
+  .coupon-scroll-wrap:hover .coupon-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #90462c transparent;
+  }
+  .coupon-scroll-wrap:hover .coupon-scroll::-webkit-scrollbar {
+    height: 3px;
+  }
+  .coupon-scroll-wrap:hover .coupon-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(to right, #90462c, #ec7a1c);
+  }
+
+  .shadow-premium {
+    box-shadow: 0 20px 50px -12px rgba(28, 25, 23, 0.08);
+  }
+
+  .animate-in {
+    animation-duration: 0.3s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    animation-fill-mode: both;
+  }
+
+  .fade-in {
+    animation-name: fadeIn;
+  }
+
+  .slide-in-from-top-2 {
+    animation-name: slideInFromTop2;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideInFromTop2 {
+    from { transform: translateY(-0.5rem); }
+    to { transform: translateY(0); }
+  }
+}
