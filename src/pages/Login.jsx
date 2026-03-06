@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { HiMail, HiLockClosed, HiEye, HiEyeOff, HiHome } from 'react-icons/hi';
-import { FcGoogle } from 'react-icons/fc';
+import { HiMail, HiLockClosed, HiEye, HiEyeOff, HiHome, HiCheckCircle } from 'react-icons/hi';
 import logo from "../assets/K_suit.png";
 
 const Login = () => {
@@ -11,16 +10,18 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showVerification, setShowVerification] = useState(false);
+  const [view, setView] = useState('login'); // 'login', 'verify', 'forgot', 'reset'
   const [verificationCode, setVerificationCode] = useState('');
   const [registeredEmail, setRegisteredEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   
   // Real-time validation states
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [touched, setTouched] = useState({ email: false, password: false });
   
-  const { login, verifyEmail, resendVerificationCode, loginWithGoogle } = useAuth();
+  const { login, verifyEmail, resendVerificationCode, forgotPassword, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   // Email validation
@@ -38,25 +39,18 @@ const Login = () => {
     return '';
   };
 
-  // Handle email change with real-time validation
   const handleEmailChange = (e) => {
     const value = e.target.value;
     setEmail(value);
-    if (touched.email) {
-      setEmailError(validateEmail(value));
-    }
+    if (touched.email) setEmailError(validateEmail(value));
   };
 
-  // Handle password change with real-time validation
   const handlePasswordChange = (e) => {
     const value = e.target.value;
     setPassword(value);
-    if (touched.password) {
-      setPasswordError(validatePassword(value));
-    }
+    if (touched.password) setPasswordError(validatePassword(value));
   };
 
-  // Handle field blur
   const handleBlur = (field) => {
     setTouched({ ...touched, [field]: true });
     if (field === 'email') setEmailError(validateEmail(email));
@@ -67,7 +61,6 @@ const Login = () => {
     e.preventDefault();
     setError('');
     
-    // Validate all fields
     const emailErr = validateEmail(email);
     const passwordErr = validatePassword(password);
     
@@ -84,7 +77,7 @@ const Login = () => {
     } catch (err) {
       if (err.message === 'User is not confirmed.' || err.code === 'UserNotConfirmedException') {
         setRegisteredEmail(email);
-        setShowVerification(true);
+        setView('verify');
         setError('Your email is not verified yet. Please enter the code sent to your email.');
       } else {
         setError(err.message || 'Invalid email or password. Please try again.');
@@ -103,9 +96,9 @@ const Login = () => {
 
     setLoading(true);
     try {
-      await verifyEmail(registeredEmail, verificationCode);
+      await verifyEmail(registeredEmail || email, verificationCode);
       alert('Email verified successfully! You can now login.');
-      setShowVerification(false);
+      setView('login');
       setError('');
     } catch (err) {
       setError(err.message || 'Verification failed. Please check the code.');
@@ -114,20 +107,63 @@ const Login = () => {
     }
   };
 
-  const handleResendCode = async () => {
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    const emailErr = validateEmail(email);
+    if (emailErr) {
+      setEmailError(emailErr);
+      setTouched({ ...touched, email: true });
+      return;
+    }
+
+    setLoading(true);
+    setError('');
     try {
-      await resendVerificationCode(registeredEmail);
-      alert('Verification code resent! Please check your email.');
+      await forgotPassword(email);
+      setRegisteredEmail(email);
+      setView('reset');
     } catch (err) {
-      setError(err.message || 'Failed to resend code.');
+      setError(err.message || 'Failed to initiate password reset.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!verificationCode || !newPassword) {
+      setError('Verification code and new password are required');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
     try {
-      await loginWithGoogle();
+      await resetPassword(registeredEmail || email, verificationCode, newPassword);
+      alert('Password reset successful! You can now sign in with your new password.');
+      setView('login');
+      setPassword('');
     } catch (err) {
-      setError(err.message || 'Failed to login with Google');
+      setError(err.message || 'Failed to reset password. Please check the code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    try {
+      await resendVerificationCode(registeredEmail || email);
+      alert('Verification code resent! Please check your email.');
+    } catch (err) {
+      setError(err.message || 'Failed to resend code.');
     }
   };
 
@@ -163,26 +199,30 @@ const Login = () => {
               />
             </div>
             <h1 className="text-2xl font-serif text-primary mb-1">
-              {showVerification ? 'Verify Email' : 'Welcome Back'}
+              {view === 'verify' ? 'Verify Email' : 
+               view === 'forgot' ? 'Forgot Password' : 
+               view === 'reset' ? 'Reset Password' : 'Welcome Back'}
             </h1>
             <p className="text-secondary text-sm">
-              {showVerification ? `We've sent a code to ${registeredEmail}` : 'Sign in to continue shopping'}
+              {view === 'verify' ? `We've sent a code to ${registeredEmail || email}` : 
+               view === 'forgot' ? 'Enter your email to receive a reset code' :
+               view === 'reset' ? `Enter the code sent to ${registeredEmail || email}` : 'Sign in to continue shopping'}
             </p>
           </div>
 
           {/* Global Error */}
           {error && (
             <div className={`mb-4 p-3 border text-sm rounded-xl flex items-start gap-2 animate-in fade-in slide-in-from-top-2 ${
-              showVerification ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-red-50 border-red-200 text-red-600'
+              view === 'verify' || view === 'reset' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-red-50 border-red-200 text-red-600'
             }`}>
-              <span className={showVerification ? 'text-amber-500' : 'text-red-500'}>
-                {showVerification ? 'ℹ' : '⚠'}
+              <span className={view === 'verify' || view === 'reset' ? 'text-amber-500' : 'text-red-500'}>
+                {view === 'verify' || view === 'reset' ? 'ℹ' : '⚠'}
               </span>
               <p className="flex-1">{error}</p>
             </div>
           )}
 
-          {showVerification ? (
+          {view === 'verify' ? (
             <form onSubmit={handleVerificationSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Verification Code</label>
@@ -215,9 +255,113 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setShowVerification(false);
+                    setView('login');
                     setError('');
                   }}
+                  className="text-xs text-secondary hover:text-primary transition-colors"
+                >
+                  Back to Login
+                </button>
+              </div>
+            </form>
+          ) : view === 'forgot' ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Email</label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">
+                    <HiMail size={18} />
+                  </div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={handleEmailChange}
+                    className={`w-full pl-11 pr-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-stone-300 ${
+                      emailError ? 'border-red-400 focus:border-red-400' : 'border-stone-200 focus:border-primary'
+                    }`}
+                    placeholder="you@example.com"
+                  />
+                </div>
+                {emailError && <p className="text-xs text-red-500 ml-1">{emailError}</p>}
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-primary text-white rounded-xl font-bold uppercase tracking-wider text-xs hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Sending...' : 'Send Reset Code'}
+              </button>
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => setView('login')}
+                  className="text-xs text-secondary hover:text-primary transition-colors"
+                >
+                  Back to Login
+                </button>
+              </div>
+            </form>
+          ) : view === 'reset' ? (
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Verification Code</label>
+                <input
+                  type="text"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-stone-300 text-center tracking-[0.5em] text-xl font-bold"
+                  placeholder="000000"
+                  maxLength={6}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">New Password</label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">
+                    <HiLockClosed size={18} />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full pl-11 pr-12 py-3 bg-white border border-stone-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-stone-300"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400"
+                  >
+                    {showPassword ? <HiEyeOff size={18} /> : <HiEye size={18} />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Confirm New Password</label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">
+                    <HiLockClosed size={18} />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 bg-white border border-stone-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-stone-300"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-primary text-white rounded-xl font-bold uppercase tracking-wider text-xs hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Resetting...' : 'Reset Password'}
+              </button>
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => setView('login')}
                   className="text-xs text-secondary hover:text-primary transition-colors"
                 >
                   Back to Login
@@ -236,9 +380,6 @@ const Login = () => {
                     </div>
                     <input
                       type="email"
-                      name="email"
-                      id="email"
-                      autoComplete="email"
                       value={email}
                       onChange={handleEmailChange}
                       onBlur={() => handleBlur('email')}
@@ -257,16 +398,22 @@ const Login = () => {
 
                 {/* Password Field */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Password</label>
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Password</label>
+                    <button 
+                      type="button"
+                      onClick={() => setView('forgot')}
+                      className="text-xs text-primary font-bold hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">
                       <HiLockClosed size={18} />
                     </div>
                     <input
                       type={showPassword ? "text" : "password"}
-                      name="password"
-                      id="password"
-                      autoComplete="current-password"
                       value={password}
                       onChange={handlePasswordChange}
                       onBlur={() => handleBlur('password')}
@@ -306,26 +453,6 @@ const Login = () => {
                   )}
                 </button>
               </form>
-
-              {/* Divider */}
-              <div className="relative py-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-stone-200"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase font-bold tracking-wider">
-                  <span className="bg-white px-3 text-stone-400">Or continue with</span>
-                </div>
-              </div>
-
-              {/* Google Login */}
-              <button
-                onClick={handleGoogleLogin}
-                type="button"
-                className="w-full py-3 bg-white border border-stone-200 text-primary rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-3 hover:bg-stone-50 transition-all shadow-sm hover:shadow-md"
-              >
-                <FcGoogle size={20} />
-                Login with Google
-              </button>
 
               {/* Footer */}
               <div className="mt-6 pt-4 border-t border-stone-200 text-center">

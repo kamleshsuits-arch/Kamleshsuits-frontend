@@ -5,13 +5,17 @@ import {
   HiShieldCheck, HiTag, HiCheck, HiLocationMarker, HiHome, HiOfficeBuilding,
   HiPlusCircle, HiPencilAlt
 } from 'react-icons/hi';
+import { FaWhatsapp } from 'react-icons/fa';
 import { useCart } from '../../hooks/useCart';
 import { useAuth } from '../../context/AuthContext';
 import { formatPrice } from '../../utils/currency';
-import { fetchProducts, placeOrder } from '../../api/products';
+import { fetchProducts, placeOrder, validateDelivery, submitDeliveryDemand } from '../../api/products';
 import { validateCoupon, fetchPublicCoupons } from '../../api/coupons';
+import { isLikelySupportedPin, SUPPORTED_REGIONS } from '../../utils/deliveryUtils';
 import gsap from 'gsap';
 import YouMayAlsoLike from '../home/YouMayAlsoLike';
+import { HiX } from 'react-icons/hi';
+
 
 const Cart = () => {
   const { 
@@ -48,11 +52,16 @@ const Cart = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [availableCoupons, setAvailableCoupons] = useState([]);
   const [isFetchingCoupons, setIsFetchingCoupons] = useState(false);
+  const [deliveryDetails, setDeliveryDetails] = useState({ isAllowed: true, deliveryFee: 0 });
+  const [isValidatingDelivery, setIsValidatingDelivery] = useState(false);
+  const [showDemandModal, setShowDemandModal] = useState(false);
+  const [unsupportedPincode, setUnsupportedPincode] = useState('');
+  const [isFetchingPincode, setIsFetchingPincode] = useState(false);
 
   const gst = Math.round(subtotal * 0.05);
 
-  // Calculate Shipping (3% if < 5000, Free if >= 5000)
-  const shippingFee = subtotal >= 5000 ? 0 : Math.round(subtotal * 0.03);
+  // Calculate Shipping (Dynamic based on distance, default/fallback if subtotal > 5000)
+  const shippingFee = (subtotal >= 5000) ? 0 : (deliveryDetails.deliveryFee || Math.round(subtotal * 0.03));
 
   // Total Payable
   let total = subtotal + gst + shippingFee;
@@ -247,6 +256,57 @@ const Cart = () => {
     }
   };
 
+  const handleWhatsAppOrder = () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    
+    if (addresses.length === 0) {
+      alert("Please add a delivery address first.");
+      setShowAddressForm(true);
+      return;
+    }
+
+    if (!selectedAddressId) {
+      alert("Please select a delivery address.");
+      return;
+    }
+
+    const selectedAddr = addresses.find(a => a.id === selectedAddressId);
+    
+    // Format Message
+    const itemsText = cartItems.map((item, index) => 
+      `${index + 1}. *${item.title}* x ${item.quantity || 1} - ${formatPrice(item.price * (item.quantity || 1))}`
+    ).join('\n');
+
+    const couponDiscount = isCouponApplied && appliedCoupon 
+      ? (appliedCoupon.discount_type === 'percent' ? (subtotal * (appliedCoupon.discount / 100)) : appliedCoupon.discount)
+      : 0;
+
+    const discountText = isCouponApplied && appliedCoupon 
+      ? `\n- Coupon (${appliedCoupon.code}): -${formatPrice(couponDiscount)}`
+      : '';
+
+    const message = `*NEW ORDER - KAMLESH SUITS*\n` +
+      `--------------------------\n` +
+      `*Customer:* ${selectedAddr.name}\n` +
+      `*Phone:* ${selectedAddr.phone}\n` +
+      `*Address:* ${selectedAddr.houseNo}, ${selectedAddr.area}, ${selectedAddr.city}, ${selectedAddr.state} - ${selectedAddr.pincode}\n\n` +
+      `*Order Items:*\n${itemsText}\n\n` +
+      `*Price Summary:*\n` +
+      `- Subtotal: ${formatPrice(subtotal)}\n` +
+      `- GST (5%): ${formatPrice(gst)}\n` +
+      `- Shipping: ${subtotal >= 5000 ? 'FREE' : formatPrice(shippingFee)}` +
+      `${discountText}\n` +
+      `--------------------------\n` +
+      `*GRAND TOTAL: ${formatPrice(total)}*\n\n` +
+      `_Please confirm my order._`;
+
+    const whatsappUrl = `https://wa.me/919992304505?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   const handleAddressSubmit = (e) => {
     e.preventDefault();
     const errors = {};
@@ -331,6 +391,171 @@ const Cart = () => {
       </div>
     );
   }
+
+  // --- DELIVERY VALIDATION LOGIC ---
+  useEffect(() => {
+    const checkDelivery = async () => {
+      if (!selectedAddressId) {
+        setDeliveryDetails({ isAllowed: true, deliveryFee: 0 });
+        return;
+      }
+      
+      const addr = addresses.find(a => a.id === selectedAddressId);
+      if (!addr?.pincode) return;
+
+      setIsValidatingDelivery(true);
+      try {
+        const result = await validateDelivery(addr.pincode);
+
+        if (result.isAllowed === true) {
+          // ✅ Backend confirmed delivery is available
+          setDeliveryDetails(result);
+
+        } else if (result.isAllowed === null || result.error) {
+          // ⚠️ API error / backend unreachable – use client-side prefix check as fallback
+          // Never block a valid-prefix pincode just because of a network error
+          if (isLikelySupportedPin(addr.pincode)) {
+            setDeliveryDetails({ isAllowed: true, deliveryFee: 60, estimatedFee: true });
+          } else {
+            // Prefix is also unknown – be lenient, don't show the popup on API error
+            setDeliveryDetails({ isAllowed: true, deliveryFee: 0 });
+          }
+
+        } else {
+          // ❌ Backend explicitly says isAllowed: false
+          // Double-check with client-side prefix – if prefix is valid, ignore the backend response
+          // (can happen when backend isn't restarted yet with new pincode list)
+          if (isLikelySupportedPin(addr.pincode)) {
+            setDeliveryDetails({ isAllowed: true, deliveryFee: 60, estimatedFee: true });
+          } else {
+            // Truly unsupported area – show the demand modal
+            setDeliveryDetails(result);
+            setUnsupportedPincode(addr.pincode);
+            setShowDemandModal(true);
+          }
+        }
+      } catch (err) {
+        console.error("Delivery validation failed", err);
+        // On unexpected error, don't block the user
+        setDeliveryDetails({ isAllowed: true, deliveryFee: 0 });
+      } finally {
+        setIsValidatingDelivery(false);
+      }
+    };
+
+    checkDelivery();
+  }, [selectedAddressId, addresses]);
+
+  const DeliveryDemandModal = () => {
+    const [demandForm, setDemandForm] = useState({
+      name: user?.name || '',
+      phone: '',
+      address: '',
+      city: '',
+      pincode: unsupportedPincode
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setIsSubmitting(true);
+      try {
+        await submitDeliveryDemand(demandForm);
+        alert("Thank you! We've received your request and will notify you when we expand to your area.");
+        setShowDemandModal(false);
+      } catch (err) {
+        alert("Something went wrong. Please try again.");
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 p-8 sm:p-10 relative">
+          <button 
+            onClick={() => setShowDemandModal(false)}
+            className="absolute top-6 right-6 p-2 rounded-full hover:bg-stone-100 transition-colors"
+          >
+            <HiX className="text-stone-400" size={20} />
+          </button>
+
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
+              <HiLocationMarker size={32} />
+            </div>
+            <h3 className="font-serif text-2xl text-primary mb-2">🚫 Delivery Not Available Yet</h3>
+            <p className="text-secondary text-sm leading-relaxed">
+              Currently we are not delivering in your area (<b>{unsupportedPincode}</b>), but we are working to expand our service soon.
+            </p>
+            <p className="text-stone-400 text-xs mt-2 font-medium bg-stone-50 py-2 rounded-lg border border-stone-100 max-w-xs mx-auto">
+              Store location: Near Farrukhnagar (122504)
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Name</label>
+                <input 
+                  type="text" required
+                  className="w-full p-3 rounded-xl border border-stone-200 outline-none focus:border-primary transition-all text-sm"
+                  value={demandForm.name}
+                  onChange={e => setDemandForm({...demandForm, name: e.target.value})}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Phone</label>
+                <input 
+                  type="text" required
+                  className="w-full p-3 rounded-xl border border-stone-200 outline-none focus:border-primary transition-all text-sm"
+                  value={demandForm.phone}
+                  onChange={e => setDemandForm({...demandForm, phone: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Address Detail</label>
+              <textarea 
+                required
+                className="w-full p-3 rounded-xl border border-stone-200 outline-none focus:border-primary transition-all text-sm h-20 resize-none"
+                value={demandForm.address}
+                onChange={e => setDemandForm({...demandForm, address: e.target.value})}
+                placeholder="Full address where you need delivery"
+              />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">City</label>
+                <input 
+                  type="text" required
+                  className="w-full p-3 rounded-xl border border-stone-200 outline-none focus:border-primary transition-all text-sm"
+                  value={demandForm.city}
+                  onChange={e => setDemandForm({...demandForm, city: e.target.value})}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">PIN Code</label>
+                <input 
+                  type="text" required readOnly
+                  className="w-full p-3 rounded-xl border border-stone-100 bg-stone-50 outline-none text-sm"
+                  value={demandForm.pincode}
+                />
+              </div>
+            </div>
+
+            <button 
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-primary text-white py-4 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-accent transition-all shadow-xl shadow-primary/10 disabled:opacity-50"
+            >
+              {isSubmitting ? 'Submitting...' : 'Notify Me on Expansion'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="container mx-auto px-4 pt-1 sm:pt-2 pb-8 relative overflow-x-hidden">
@@ -481,7 +706,15 @@ const Cart = () => {
                   </div>
                   {!showAddressForm && addresses.length < 3 && (
                     <button 
-                      onClick={() => setShowAddressForm(true)}
+                      onClick={() => {
+                        setAddressForm({
+                          name: '', phone: '', pincode: '', houseNo: '',
+                          area: '', landmark: '', city: '', state: '', type: 'home'
+                        });
+                        setEditingAddressId(null);
+                        setAddressErrors({});
+                        setShowAddressForm(true);
+                      }}
                       className="flex items-center gap-2 text-accent font-black text-[10px] uppercase tracking-widest hover:text-primary transition-colors bg-accent/5 px-4 py-2 rounded-full"
                     >
                       <HiPlusCircle size={16} /> Add New Address
@@ -533,22 +766,62 @@ const Cart = () => {
                       {/* Pincode & State */}
                       <div className="space-y-1">
                         <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Pincode *</label>
-                        <input 
-                          type="text" 
-                          placeholder="6-digit area code"
-                          className={`w-full p-3 rounded-xl border-2 bg-white outline-none transition-all ${addressErrors.pincode ? 'border-red-200' : 'border-stone-100 focus:border-primary'}`}
+                        <input
+                          type="text"
+                          placeholder="Enter 6-digit Pincode"
+                          maxLength={6}
+                          className={`w-full p-3 rounded-xl border-2 bg-white outline-none transition-all ${addressErrors.pincode ? 'border-red-200' : 'border-stone-100 focus:border-primary'} ${isFetchingPincode ? 'opacity-50 cursor-wait' : ''}`}
                           value={addressForm.pincode}
-                          onChange={(e) => setAddressForm({...addressForm, pincode: e.target.value.replace(/\D/g, '').slice(0,6)})}
+                          onChange={async (e) => {
+                            const pin = e.target.value.replace(/\D/g, '').slice(0, 6);
+                            setAddressForm({ ...addressForm, pincode: pin });
+                            
+                            if (pin.length === 6) {
+                              setIsFetchingPincode(true);
+                              try {
+                                const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+                                const data = await res.json();
+                                if (data[0].Status === "Success") {
+                                  const postOffice = data[0].PostOffice[0];
+                                  setAddressForm(prev => ({
+                                    ...prev,
+                                    city: postOffice.District,
+                                    state: postOffice.State
+                                  }));
+                                }
+                              } catch (err) {
+                                console.error("Pincode fetch error:", err);
+                              } finally {
+                                setIsFetchingPincode(false);
+                              }
+                            }
+                          }}
                         />
+                        {/* Live delivery hint */}
+                        {addressForm.pincode.length === 6 && (
+                          isLikelySupportedPin(addressForm.pincode) ? (
+                            <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-1">
+                              ✅ Delivery available in your area
+                            </p>
+                          ) : (
+                            <p className="text-[10px] text-amber-600 font-bold flex items-center gap-1 mt-1">
+                              ⚠️ Delivery may not be available — we'll verify on selection
+                            </p>
+                          )
+                        )}
+                        <p className="text-[9px] text-stone-400 mt-1">
+                          Supported: Delhi (110xxx), Gurgaon (122xxx), Rewari (123xxx), Jhajjar (124xxx)
+                        </p>
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">State *</label>
                         <input 
                           type="text" 
-                          placeholder="e.g. Haryana"
+                          placeholder="State (Auto-filled)"
                           className={`w-full p-3 rounded-xl border-2 bg-white outline-none transition-all ${addressErrors.state ? 'border-red-200' : 'border-stone-100 focus:border-primary'}`}
                           value={addressForm.state}
                           onChange={(e) => setAddressForm({...addressForm, state: e.target.value})}
+                          readOnly={isFetchingPincode}
                         />
                       </div>
 
@@ -620,7 +893,12 @@ const Cart = () => {
 
                       <button 
                         type="submit"
-                        className="sm:col-span-2 w-full bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-accent transition-all shadow-xl hover:shadow-primary/20"
+                        disabled={!isLikelySupportedPin(addressForm.pincode) || addressForm.pincode.length !== 6}
+                        className={`sm:col-span-2 w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-xl ${
+                          !isLikelySupportedPin(addressForm.pincode) || addressForm.pincode.length !== 6
+                            ? 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-none'
+                            : 'bg-primary text-white hover:bg-accent hover:shadow-primary/20'
+                        }`}
                       >
                         {editingAddressId ? 'Save Changes' : 'Deliver to this Address'}
                       </button>
@@ -675,8 +953,11 @@ const Cart = () => {
                           </div>
                           
                           {selectedAddressId === addr.id && (
-                            <div className="absolute top-4 right-4 text-primary animate-in zoom-in-0 duration-300">
-                              <HiCheck size={24} />
+                            <div className="absolute top-4 right-4 flex flex-col items-end gap-1 animate-in zoom-in-0 duration-300">
+                              <HiCheck size={24} className="text-primary" />
+                              {isValidatingDelivery && (
+                                <span className="text-[9px] text-stone-400 uppercase tracking-widest font-bold">Checking...</span>
+                              )}
                             </div>
                           )}
                         </div>
@@ -725,15 +1006,22 @@ const Cart = () => {
                     <span className="text-primary font-bold">{formatPrice(gst)}</span>
                   </div>
                   <div className="flex justify-between items-center border-b border-stone-50 pb-4 mb-4">
-                    <span className="text-stone-600">Shipping Fee {subtotal < 5000 ? '(3%)' : ''}</span>
+                    <span className="text-stone-600">
+                      Shipping
+                      {selectedAddressId && deliveryDetails.estimatedFee && ' (estimated)'}
+                    </span>
                     <span className={subtotal >= 5000 ? 'text-emerald-600 font-bold' : 'text-primary font-bold'}>
                       {subtotal >= 5000 ? (
                         <span className="flex items-center gap-2 justify-end">
-                          <span className="line-through text-stone-400 text-xs font-normal">{formatPrice(Math.round(subtotal * 0.03))}</span>
+                          <span className="line-through text-stone-400 text-xs font-normal">{formatPrice(shippingFee || deliveryDetails.deliveryFee || 60)}</span>
                           <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[10px] uppercase tracking-widest">Free</span>
                         </span>
+                      ) : selectedAddressId ? (
+                        isValidatingDelivery
+                          ? <span className="text-stone-400 text-xs italic">Calculating...</span>
+                          : formatPrice(shippingFee)
                       ) : (
-                        formatPrice(shippingFee)
+                        <span className="text-stone-400 text-xs italic">Select address</span>
                       )}
                     </span>
                   </div>
@@ -791,11 +1079,20 @@ const Cart = () => {
 
                   <button 
                     onClick={handlePlaceOrder}
-                    disabled={total <= 0 || isPlacingOrder}
-                    className={`w-full bg-primary text-white py-4 text-xs font-black uppercase tracking-[0.2em] hover:bg-accent transition-all duration-500 shadow-xl hover:shadow-primary/20 rounded-2xl flex items-center justify-center gap-3 active:scale-95 ${((!selectedAddressId && user) || isPlacingOrder) ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+                    disabled={total <= 0 || isPlacingOrder || !deliveryDetails.isAllowed}
+                    className={`w-full bg-primary text-white py-4 text-xs font-black uppercase tracking-[0.2em] hover:bg-accent transition-all duration-500 shadow-xl hover:shadow-primary/20 rounded-2xl flex items-center justify-center gap-3 active:scale-95 mb-3 ${((!selectedAddressId && user) || isPlacingOrder || !deliveryDetails.isAllowed) ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
                   >
-                    {isPlacingOrder ? 'Processing...' : !user ? 'Sign In to Continue' : addresses.length === 0 ? 'Add Address First' : !selectedAddressId ? 'Select an Address' : 'Confirm & Place Order'}
+                    {isPlacingOrder ? 'Processing...' : !user ? 'Sign In to Continue' : addresses.length === 0 ? 'Add Address First' : !selectedAddressId ? 'Select an Address' : !deliveryDetails.isAllowed ? 'Delivery Not Available' : 'Confirm & Place Order'}
                     <HiCheck size={18} />
+                  </button>
+
+                  <button 
+                    onClick={handleWhatsAppOrder}
+                    disabled={total <= 0 || !deliveryDetails.isAllowed}
+                    className={`w-full bg-[#25D366] text-white py-4 text-xs font-black uppercase tracking-[0.2em] hover:bg-[#128C7E] transition-all duration-500 shadow-xl hover:shadow-emerald-200/50 rounded-2xl flex items-center justify-center gap-3 active:scale-95 ${(!deliveryDetails.isAllowed) ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+                  >
+                    Order on WhatsApp
+                    <FaWhatsapp size={18} />
                   </button>
                   <p className="text-[9px] text-stone-400 font-bold uppercase text-center mt-4 tracking-widest opacity-60">Verified & Secure Connection</p>
                 </div>
@@ -968,6 +1265,8 @@ const Cart = () => {
                onProductSelect={handleViewProduct}
              />
           </div>
+          
+          {showDemandModal && <DeliveryDemandModal />}
         </>
       )}
     </div>

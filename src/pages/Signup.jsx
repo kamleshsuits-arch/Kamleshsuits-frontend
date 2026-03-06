@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { HiUser, HiMail, HiLockClosed, HiEye, HiEyeOff, HiHome, HiCheckCircle, HiXCircle } from 'react-icons/hi';
-import { FcGoogle } from 'react-icons/fc';
 import logo from "../assets/K_suit.png";
 
 const Signup = () => {
@@ -40,7 +39,7 @@ const Signup = () => {
   // Password strength
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, text: '', color: '' });
   
-  const { signup, verifyEmail, resendVerificationCode, loginWithGoogle } = useAuth();
+  const { signup, verifyEmail, resendVerificationCode } = useAuth();
   const navigate = useNavigate();
 
   // Full name validation
@@ -251,13 +250,6 @@ const Signup = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      await loginWithGoogle();
-    } catch (err) {
-      setError(err.message || 'Failed to signup with Google');
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8 relative overflow-hidden">
@@ -565,26 +557,6 @@ const Signup = () => {
                   )}
                 </button>
               </form>
-
-              {/* Divider */}
-              <div className="relative py-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-stone-200"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase font-bold tracking-wider">
-                  <span className="bg-white px-3 text-stone-400">Or sign up with</span>
-                </div>
-              </div>
-
-              {/* Google Signup */}
-              <button
-                onClick={handleGoogleLogin}
-                type="button"
-                className="w-full py-3 bg-white border border-stone-200 text-primary rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-3 hover:bg-stone-50 transition-all shadow-sm hover:shadow-md"
-              >
-                <FcGoogle size={20} />
-                Sign up with Google
-              </button>
 
               {/* Footer */}
               <div className="mt-6 pt-4 border-t border-stone-200 text-center">

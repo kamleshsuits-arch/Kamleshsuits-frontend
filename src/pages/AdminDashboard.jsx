@@ -8,11 +8,12 @@ import {
     HiTag, HiCube, HiX, HiCollection, HiCheck,
     HiSearch, HiTrendingUp, HiUsers, HiCubeTransparent, HiChevronDown, HiChevronUp,
     HiCloudUpload, HiScissors, HiPresentationChartLine, HiDatabase, HiRefresh,
-    HiCamera, HiIdentification, HiColorSwatch, HiCursorClick, HiStar
+    HiCamera, HiIdentification, HiColorSwatch, HiCursorClick, HiStar, HiTruck
 } from 'react-icons/hi';
 import { BiLoaderAlt } from 'react-icons/bi';
 import AnalyticsTerminal from '../components/admin/AnalyticsTerminal';
 import CouponManager from '../components/admin/CouponManager';
+import DeliveryDemandInsights from '../components/admin/DeliveryDemandInsights';
 import Loader from '../components/common/Loader';
 import { useCart } from '../hooks/useCart';
 import { getColorName, getColorDisplay } from '../utils/colors';
@@ -360,6 +361,12 @@ const AdminDashboard = () => {
                         >
                             <HiPresentationChartLine size={16} /> Growth Studio
                         </button>
+                        <button 
+                            onClick={() => setActiveTab('delivery')} 
+                            className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === 'delivery' ? 'bg-primary text-white shadow-xl' : 'text-stone-400 hover:text-stone-600'}`}
+                        >
+                            <HiTruck size={16} /> Delivery Expansion
+                        </button>
                     </div>
                 </div>
 
@@ -483,6 +490,8 @@ const AdminDashboard = () => {
                     </>
                 ) : activeTab === 'coupons' ? (
                     <CouponManager showToast={showToast} />
+                ) : activeTab === 'delivery' ? (
+                    <DeliveryDemandInsights />
                 ) : (
                     <AnalyticsTerminal products={products} />
                 )}

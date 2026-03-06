@@ -160,6 +160,34 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  const forgotPassword = (email) => {
+    return new Promise((resolve, reject) => {
+      const cognitoUser = new CognitoUser({
+        Username: email,
+        Pool: userPool,
+      });
+
+      cognitoUser.forgotPassword({
+        onSuccess: (data) => resolve(data),
+        onFailure: (err) => reject(err),
+      });
+    });
+  };
+
+  const resetPassword = (email, code, newPassword) => {
+    return new Promise((resolve, reject) => {
+      const cognitoUser = new CognitoUser({
+        Username: email,
+        Pool: userPool,
+      });
+
+      cognitoUser.confirmPassword(code, newPassword, {
+        onSuccess: () => resolve(),
+        onFailure: (err) => reject(err),
+      });
+    });
+  };
+
   const value = {
     user,
     isAdmin: user?.groups?.includes('Admin') || user?.email === 'sanjayrathi575@gmail.com',
@@ -169,6 +197,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     verifyEmail,
     resendVerificationCode,
+    forgotPassword,
+    resetPassword,
   };
 
   return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;

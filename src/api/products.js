@@ -144,3 +144,39 @@ export const uploadProductImage = async (file) => {
     throw err;
   }
 };
+
+// --- DELIVERY API ---
+
+export const validateDelivery = async (pincode) => {
+  try {
+    const response = await axios.get(`${API_URL}/delivery/validate/${pincode}`);
+    return response.data;
+  } catch (err) {
+    // Do NOT return isAllowed:false on network errors — this wrongly blocks valid pincodes.
+    // Return a neutral error state so the caller can apply client-side fallback.
+    console.error("Delivery validation error:", err);
+    return { isAllowed: null, error: true };
+  }
+};
+
+export const submitDeliveryDemand = async (demandData) => {
+  try {
+    const response = await axios.post(`${API_URL}/delivery/demand`, demandData);
+    return response.data;
+  } catch (err) {
+    console.error("Submit demand error:", err);
+    throw err;
+  }
+};
+
+export const fetchDeliveryDemands = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/admin/delivery/demands`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Fetch demands error:", err);
+    throw err;
+  }
+};
