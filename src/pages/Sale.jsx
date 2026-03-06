@@ -47,14 +47,12 @@ const Sale = () => {
         <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] h-[50px]">
           <div className="absolute inset-0 z-10">
             <svg className="w-[200%] h-full animate-[wave_15s_linear_infinite] opacity-30" viewBox="0 0 1200 120" preserveAspectRatio="none">
-              <path d="M0,30 C150,110 350,-10 600,30 C850,70 1050,-10 1200,30 L1200,120 L0,120 Z" fill="#780000" />
-              <path d="M-1200,30 C-1050,110 -850,-10 -600,30 C-350,70 -150,-10 0,30 L0,120 L-1200,120 Z" fill="#780000" />
+              <path d="M0,60 C150,110 450,10 600,60 C750,110 1050,10 1200,60 L1200,120 L0,120 Z" fill="#780000" />
             </svg>
           </div>
           <div className="absolute inset-0 z-20">
             <svg className="w-[200%] h-full animate-[wave_10s_linear_infinite]" viewBox="0 0 1200 120" preserveAspectRatio="none">
-              <path d="M0,50 C300,100 400,20 600,50 C800,80 1100,20 1200,50 L1200,120 L0,120 Z" fill="#FFFFFF" />
-              <path d="M-1200,50 C-900,100 -800,20 -600,50 C-400,80 -100,20 0,50 L0,120 L-1200,120 Z" fill="#FFFFFF" />
+              <path d="M0,60 C150,110 450,10 600,60 C750,110 1050,10 1200,60 L1200,120 L0,120 Z" fill="#FFFFFF" />
             </svg>
           </div>
         </div>
@@ -62,7 +60,7 @@ const Sale = () => {
         <style dangerouslySetInnerHTML={{ __html: `
           @keyframes wave {
             0% { transform: translateX(0); }
-            100% { transform: translateX(50%); }
+            100% { transform: translateX(-50%); }
           }
         `}} />
 
