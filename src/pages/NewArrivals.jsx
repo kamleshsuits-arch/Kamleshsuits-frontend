@@ -44,8 +44,11 @@ const NewArrivals = () => {
           "url": "https://kamleshsuits.com/new-arrivals"
         }}
       />
-      {/* Premium Header - Light Silk Theme (No Black/Dark) */}
-      <div className="relative bg-gradient-to-br from-[#FFFDF5] via-[#F9F7F2] to-[#F1EDE1] pt-12 pb-24 px-6 text-center text-primary overflow-hidden">
+      {/* Premium Header - Vibrant Sunset Theme */}
+      <div 
+        className="relative pt-12 pb-24 px-6 text-center text-primary overflow-hidden"
+        style={{ background: 'linear-gradient(-225deg, #FFE29F 0%, #FFA99F 48%, #FF719A 100%)' }}
+      >
         {/* Animated Light Layers */}
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#D4A373]/10 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#E29578]/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />

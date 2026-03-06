@@ -133,9 +133,7 @@ const ProductDetails = () => {
   }, [isLightboxOpen, nextImage, prevImage]);
 
   if (!product) return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-50">
-      <Loader message="Retrieving Product Specification..." />
-    </div>
+    <Loader message="Retrieving Product Specification..." />
   );
 
 
@@ -304,7 +302,7 @@ const ProductDetails = () => {
                     if (isInCart(product.suitId)) {
                       removeFromCart(product.suitId);
                     } else {
-                      addToCart(product);
+                      addToCart({ ...product, selectedColor });
                     }
                   }}
                   className={`w-full py-4 text-white text-lg font-medium tracking-wide hover:shadow-lg transition-all duration-300 rounded-sm flex items-center justify-center gap-2 ${

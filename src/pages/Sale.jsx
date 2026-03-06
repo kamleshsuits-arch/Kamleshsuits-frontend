@@ -51,8 +51,11 @@ const Sale = () => {
           "url": "https://kamleshsuits.com/sale"
         }}
       />
-      {/* Vibrant Wave Banner with Premium Multi-Layer Gradient */}
-      <div className="relative bg-gradient-to-br from-[#E63946] via-[#D62828] to-[#9B2226] pt-12 pb-24 px-6 text-center text-white overflow-hidden">
+      {/* Vibrant Wave Banner with Premium Sunset Gradient */}
+      <div 
+        className="relative pt-12 pb-24 px-6 text-center text-white overflow-hidden"
+        style={{ background: 'linear-gradient(to right, #fa709a 0%, #fee140 100%)' }}
+      >
         {/* Layered Decorative Elements */}
         <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-[20%] right-[-5%] w-48 h-48 bg-black/10 rounded-full blur-2xl" />

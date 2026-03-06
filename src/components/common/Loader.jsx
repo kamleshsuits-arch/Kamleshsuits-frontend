@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Loader = ({ message = 'Loading...' }) => (
-    <div className="flex flex-col items-center justify-center gap-6">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-stone-50/50">
         <div className="relative w-20 h-20">
             {/* Outer Ring */}
             <div className="absolute inset-0 border-4 border-stone-100 rounded-full" />

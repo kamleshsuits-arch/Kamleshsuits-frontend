@@ -133,17 +133,13 @@ const AdminDashboard = () => {
     };
 
     if (authLoading) return (
-        <div className="min-h-screen flex items-center justify-center bg-stone-50">
-            <Loader message="Authenticating Secure Session..." />
-        </div>
+        <Loader message="Authenticating Secure Session..." />
     );
     
     if (!isAdmin) return <Navigate to="/" />;
 
     if (loading && products.length === 0) return (
-        <div className="min-h-screen flex items-center justify-center bg-stone-50">
-            <Loader message="Establishing Asset Relay..." />
-        </div>
+        <Loader message="Establishing Asset Relay..." />
     );
 
     const uploadImage = async (file) => {

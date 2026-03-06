@@ -57,11 +57,22 @@ const Cart = () => {
   const [showDemandModal, setShowDemandModal] = useState(false);
   const [unsupportedPincode, setUnsupportedPincode] = useState('');
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
+  const [lastAddrCount, setLastAddrCount] = useState(addresses.length);
 
   // Ensure user lands at top of cart page
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Auto-select most recently added address
+  useEffect(() => {
+    if (addresses.length > lastAddrCount) {
+      // Find latest by ID (Date.now())
+      const sorted = [...addresses].sort((a, b) => b.id - a.id);
+      if (sorted[0]) setSelectedAddressId(sorted[0].id);
+    }
+    setLastAddrCount(addresses.length);
+  }, [addresses.length]);
 
   const gst = Math.round(subtotal * 0.05);
 
@@ -281,9 +292,10 @@ const Cart = () => {
     const selectedAddr = addresses.find(a => a.id === selectedAddressId);
     
     // Format Message
-    const itemsText = cartItems.map((item, index) => 
-      `${index + 1}. *${item.title}* x ${item.quantity || 1} - ${formatPrice(item.price * (item.quantity || 1))}`
-    ).join('\n');
+    const itemsText = cartItems.map((item, index) => {
+      const colorText = item.selectedColor ? ` (Color: ${item.selectedColor})` : '';
+      return `${index + 1}. *${item.title}${colorText}* x ${item.quantity || 1} - ${formatPrice(item.price * (item.quantity || 1))}`;
+    }).join('\n');
 
     const couponDiscount = isCouponApplied && appliedCoupon 
       ? (appliedCoupon.discount_type === 'percent' ? (subtotal * (appliedCoupon.discount / 100)) : appliedCoupon.discount)
@@ -658,6 +670,12 @@ const Cart = () => {
                              <span className="px-2 py-0.5 bg-stone-100 text-[9px] sm:text-[10px] text-stone-700 font-bold uppercase tracking-widest rounded-sm">
                                {item.type || "Suit Set"}
                              </span>
+                             {item.selectedColor && (
+                               <span className="px-2 py-0.5 bg-primary/5 text-[9px] sm:text-[10px] text-primary font-bold uppercase tracking-widest rounded-sm flex items-center gap-1.5">
+                                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.selectedColor.toLowerCase() }} />
+                                 Color: {item.selectedColor}
+                               </span>
+                             )}
                              {item.session && (
                                <span className="px-2 py-0.5 bg-highlight/10 text-[9px] sm:text-[10px] text-highlight font-bold uppercase tracking-widest rounded-sm">
                                  {item.session}

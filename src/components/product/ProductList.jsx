@@ -210,9 +210,7 @@ const ProductList = () => {
   }, [displayed.length, filteredAndSorted.length, loadMore]);
 
   if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-stone-50">
-      <Loader message="Fetching Silk Collection..." />
-    </div>
+    <Loader message="Fetching Silk Collection..." />
   );
 
 

@@ -29,7 +29,8 @@ export const AuthProvider = ({ children }) => {
             email: payload.email,
             name: payload.name || payload['custom:full_name'] || payload.email,
             groups: payload['cognito:groups'] || [],
-            token: session.getIdToken().getJwtToken()
+            token: session.getIdToken().getJwtToken(),
+            authTime: payload.auth_time * 1000
           });
           setLoading(false);
         });
@@ -77,7 +78,8 @@ export const AuthProvider = ({ children }) => {
             email: payload.email,
             name: payload.name || payload.email,
             groups: payload['cognito:groups'] || [],
-            token: result.getIdToken().getJwtToken()
+            token: result.getIdToken().getJwtToken(),
+            authTime: payload.auth_time * 1000
           };
           setUser(userObj);
           resolve(userObj);
@@ -109,7 +111,8 @@ export const AuthProvider = ({ children }) => {
                 email: payload.email,
                 name: payload.name || payload.email,
                 groups: payload['cognito:groups'] || [],
-                token: result.getIdToken().getJwtToken()
+                token: result.getIdToken().getJwtToken(),
+                authTime: payload.auth_time * 1000
               };
               setUser(userObj);
               resolve(userObj);

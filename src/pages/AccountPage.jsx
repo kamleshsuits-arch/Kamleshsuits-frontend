@@ -1,6 +1,6 @@
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { HiUser, HiMail, HiCalendar, HiShieldCheck, HiFingerPrint, HiLightningBolt, HiShoppingBag } from 'react-icons/hi';
+import { HiUser, HiMail, HiCalendar, HiShieldCheck, HiFingerPrint, HiLightningBolt, HiShoppingBag, HiClock, HiBadgeCheck } from 'react-icons/hi';
 
 const AccountPage = () => {
     const { user, loading } = useAuth();
@@ -22,7 +22,7 @@ const AccountPage = () => {
                 
                 {/* Header Profile Card */}
                 <div className="bg-white rounded-3xl shadow-xl shadow-stone-200/50 overflow-hidden mb-8 border border-white">
-                    <div className="h-32 bg-gradient-to-r from-primary to-gray-800 relative">
+                    <div className="h-32 relative" style={{ background: 'linear-gradient(to right, #434343 0%, black 100%)' }}>
                         <div className="absolute -bottom-12 left-8">
                                 <div className="w-24 h-24 rounded-2xl border-4 border-white shadow-lg bg-accent text-white flex items-center justify-center text-4xl font-black">
                                     {(name[0]).toUpperCase()}
@@ -48,70 +48,72 @@ const AccountPage = () => {
                     
                     {/* User Details Section */}
                     <div className="space-y-6">
-                        <h2 className="text-xs font-black text-stone-400 uppercase tracking-[0.3em] flex items-center gap-2">
-                             <span className="w-4 h-px bg-stone-200" /> Identity Details
+                        <h2 className="text-[11px] font-black text-primary/70 uppercase tracking-[0.4em] flex items-center gap-2">
+                             <span className="w-6 h-px bg-accent/30" /> Identity Details
                         </h2>
                         
                         <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 space-y-5">
                             <DetailRow icon={<HiUser />} label="Full Name" value={name || 'Not Provided'} />
                             <DetailRow icon={<HiMail />} label="Email ID" value={user.email} verified={true} />
-                            <DetailRow icon={<HiCalendar />} label="Member ID" value={user.id?.substring(0, 8).toUpperCase()} />
-                            <DetailRow icon={<HiLightningBolt />} label="Status" value="Active Secure Connection" />
+                            <DetailRow icon={<HiBadgeCheck />} label="Account ID" value={user.id?.substring(0, 12).toUpperCase()} />
+                            <DetailRow icon={<HiClock />} label="Last Login" value={user.authTime ? new Date(user.authTime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Just Now'} />
                         </div>
 
-                        <h2 className="text-xs font-black text-stone-400 uppercase tracking-[0.3em] flex items-center gap-2">
-                             <span className="w-4 h-px bg-stone-200" /> Security Settings
+                        <h2 className="text-[11px] font-black text-primary/70 uppercase tracking-[0.4em] flex items-center gap-2">
+                             <span className="w-6 h-px bg-accent/30" /> Account Security
                         </h2>
                         <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 space-y-4">
                              <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <HiShieldCheck className="text-emerald-500 text-xl" />
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl shrink-0">
+                                        <HiShieldCheck />
+                                    </div>
                                     <div>
-                                        <p className="text-sm font-bold text-primary">Two-Factor Authentication</p>
-                                        <p className="text-xs text-stone-400">Secure your account with 2FA</p>
+                                        <p className="text-sm font-bold text-primary">Login Status</p>
+                                        <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Cloud Verified</p>
                                     </div>
                                 </div>
-                                <button className="text-[10px] font-black text-stone-300 uppercase tracking-widest cursor-not-allowed">Disabled</button>
+                                <div className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[8px] font-black uppercase tracking-widest border border-emerald-100">Verified</div>
                              </div>
                         </div>
                     </div>
 
                     {/* Redesigned Dashboard Activity Section */}
                     <div className="space-y-6">
-                         <h2 className="text-xs font-black text-stone-400 uppercase tracking-[0.3em] flex items-center gap-2">
-                             <span className="w-4 h-px bg-stone-200" /> Activity Command Center
+                         <h2 className="text-[11px] font-black text-primary/70 uppercase tracking-[0.4em] flex items-center gap-2">
+                             <span className="w-6 h-px bg-accent/30" /> Customer Dashboard
                         </h2>
                         
                         <div className="grid grid-cols-1 gap-4">
                             {/* Performance Card 1 */}
-                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100 flex items-center justify-between group hover:border-primary transition-all">
+                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100 flex items-center justify-between group hover:border-accent transition-all">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-2xl bg-stone-50 text-primary flex items-center justify-center text-xl group-hover:bg-primary group-hover:text-white transition-colors">
                                         <HiShoppingBag />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Recent Purchases</p>
-                                        <p className="text-xl font-black text-primary">04 Active</p>
+                                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Active Orders</p>
+                                        <p className="text-xl font-black text-primary">00 Total</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[10px] font-black text-emerald-500 uppercase">In Transit</p>
+                                    <p className="text-[10px] font-black text-stone-300 uppercase italic">Catalog Sync</p>
                                 </div>
                             </div>
 
                             {/* Performance Card 2 */}
-                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100 flex items-center justify-between group hover:border-primary transition-all">
+                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100 flex items-center justify-between group hover:border-accent transition-all">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-2xl bg-stone-50 text-accent flex items-center justify-center text-xl group-hover:bg-accent group-hover:text-white transition-colors">
                                         <HiLightningBolt />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Style Points</p>
-                                        <p className="text-xl font-black text-primary">850 Tokens</p>
+                                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Membership Tier</p>
+                                        <p className="text-xl font-black text-primary">Premium Member</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[10px] font-black text-amber-500 uppercase">Gold Tier</p>
+                                    <p className="text-[10px] font-black text-accent uppercase">Standard</p>
                                 </div>
                             </div>
 
@@ -133,11 +135,11 @@ const AccountPage = () => {
                         </div>
 
                         {/* Quick Action Banner */}
-                        <div className="bg-primary rounded-3xl p-8 text-white relative overflow-hidden group">
+                        <div className="bg-gradient-to-br from-primary to-stone-800 rounded-3xl p-8 text-white relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-700" />
-                            <h3 className="text-lg font-black uppercase tracking-tighter mb-2 italic">Elite Membership</h3>
-                            <p className="text-white/60 text-xs font-medium leading-relaxed mb-6">You're 150 points away from unlocking <span className="text-white font-bold">Free Express Shipping</span> globally on all suits.</p>
-                            <button className="w-full py-3 bg-white text-primary rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-accent hover:text-white transition-all transform hover:-translate-y-1 shadow-lg shadow-black/20">Upgrade Profile</button>
+                            <h3 className="text-lg font-black uppercase tracking-tighter mb-2 italic">Exclusive Benefits</h3>
+                            <p className="text-white/60 text-xs font-medium leading-relaxed mb-6">Complete your profile and get <span className="text-accent font-bold">Priority Support</span> and early access to silk launches.</p>
+                            <button className="w-full py-3 bg-white text-primary rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-accent hover:text-white transition-all transform hover:-translate-y-1 shadow-lg shadow-black/20">Edit Profile</button>
                         </div>
                     </div>
                 </div>
@@ -152,10 +154,10 @@ const DetailRow = ({ icon, label, value, verified }) => (
             {icon}
         </div>
         <div className="flex-1 min-w-0 border-b border-stone-50 pb-3">
-            <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">{label}</p>
+            <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-1">{label}</p>
             <div className="flex items-center gap-2">
                 <p className="text-sm font-bold text-primary truncate">{value}</p>
-                {verified && <HiShieldCheck className="text-emerald-500" title="Verified" />}
+                {verified && <HiBadgeCheck className="text-emerald-500" title="Verified" />}
             </div>
         </div>
     </div>
