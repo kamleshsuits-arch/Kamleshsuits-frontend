@@ -58,6 +58,11 @@ const Cart = () => {
   const [unsupportedPincode, setUnsupportedPincode] = useState('');
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
 
+  // Ensure user lands at top of cart page
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const gst = Math.round(subtotal * 0.05);
 
   // Calculate Shipping (Dynamic based on distance, default/fallback if subtotal > 5000)

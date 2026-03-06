@@ -6,7 +6,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import ProductCard from "./ProductCard";
 import ProductFilter from "./ProductFilter";
 import { useCart } from "../../hooks/useCart.jsx";
-import { HiFilter, HiSortAscending, HiX, HiCheck } from "react-icons/hi";
+import { HiFilter, HiSortAscending, HiX, HiCheck, HiChevronUp } from "react-icons/hi";
 import Loader from "../common/Loader";
 
 const ProductList = () => {
@@ -31,6 +31,24 @@ const ProductList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const { addToCart } = useCart();
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Show scroll top button after 800px (roughly 8 items)
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 800) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToCollection = () => {
+    document.getElementById('collection-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   // Sync filters with URL search params
   useEffect(() => {
@@ -345,6 +363,17 @@ const ProductList = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Scroll Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToCollection}
+          className="fixed bottom-24 right-6 z-50 p-4 bg-white/30 backdrop-blur-lg border border-primary/20 text-primary rounded-full shadow-2xl hover:bg-primary hover:text-white transition-all duration-500 animate-in fade-in zoom-in slide-in-from-bottom-10"
+          aria-label="Scroll to top of collection"
+        >
+          <HiChevronUp size={24} />
+        </button>
       )}
     </div>
   );
