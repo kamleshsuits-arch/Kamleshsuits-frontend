@@ -80,8 +80,7 @@ const Footer = () => {
             © {new Date().getFullYear()} Kamlesh Suits. All rights reserved.
           </p>
           <div className="flex gap-6">
-            <a href="#" className="text-xs text-stone-400 hover:text-primary transition">Privacy Policy</a>
-            <a href="#" className="text-xs text-stone-400 hover:text-primary transition">Terms of Service</a>
+            <Link to="/terms" className="text-xs text-stone-400 hover:text-primary transition">Terms & Conditions</Link>
           </div>
         </div>
       </div>

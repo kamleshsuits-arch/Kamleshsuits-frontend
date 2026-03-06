@@ -8,6 +8,7 @@ import { fetchProductById, fetchProducts } from '../api/products';
 import { useCart } from '../hooks/useCart';
 import { getColorDisplay } from '../utils/colors';
 import Loader from '../components/common/Loader';
+import SEO from '../components/common/SEO';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -140,6 +141,33 @@ const ProductDetails = () => {
 
   return (
     <div className="bg-background min-h-screen font-sans text-secondary pb-20">
+      <SEO 
+        title={product.title}
+        description={`Buy ${product.title} at Kamlesh Suits. ${product.fabric_family || ''} ${product.fabric_category || ''} suit for only ${formatPrice(product.price)}. Discover premium ethnic wear in Gurugram.`}
+        image={product.image || product.images?.[0]}
+        url={`/product/${id}`}
+        type="product"
+        schemaData={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": product.title,
+          "image": product.image || product.images?.[0],
+          "description": product.description,
+          "sku": product.suitId,
+          "brand": {
+            "@type": "Brand",
+            "name": "Kamlesh Suits"
+          },
+          "offers": {
+            "@type": "Offer",
+            "url": `https://kamleshsuits.com/product/${id}`,
+            "priceCurrency": "INR",
+            "price": product.price,
+            "availability": "https://schema.org/InStock",
+            "itemCondition": "https://schema.org/NewCondition"
+          }
+        }}
+      />
       {/* --- Top Navigation --- */}
       <div className="sticky top-20 z-30 bg-white/90 backdrop-blur-sm border-b border-stone-100 px-4 py-4 transition-all">
         <div className="max-w-7xl mx-auto flex justify-between items-center">

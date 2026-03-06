@@ -11,6 +11,8 @@ import AccountPage from './pages/AccountPage';
 import AdminDashboard from './pages/AdminDashboard';
 import NewArrivals from './pages/NewArrivals';
 import Sale from './pages/Sale';
+import TermsAndConditions from './pages/TermsAndConditions';
+import NotFound from './pages/NotFound';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import Toast from './components/common/Toast';
@@ -48,6 +50,9 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/auth-test" element={<AuthTest />} />
+          <Route path="/terms" element={<TermsAndConditions />} />
+          {/* Catch-all 404 route */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       {!isAuthPage && <BottomNav />}

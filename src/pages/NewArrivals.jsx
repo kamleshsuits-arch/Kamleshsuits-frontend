@@ -4,6 +4,7 @@ import ProductCard from '../components/product/ProductCard';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../components/common/Loader';
 import { HiSparkles } from 'react-icons/hi';
+import SEO from '../components/common/SEO';
 
 const NewArrivals = () => {
   const [products, setProducts] = useState([]);
@@ -30,6 +31,19 @@ const NewArrivals = () => {
 
   return (
     <div className="min-h-screen bg-white pb-28 overflow-x-hidden">
+      <SEO 
+        title="New Arrivals"
+        description={`Explore the latest ${new Date().getFullYear()} collection of Indian style suits at Kamlesh Suits. Exquisitely crafted ethnic wear, fresh designs, and premium fabrics.`}
+        keywords="new arrivals, latest suits, trendy ethnic wear, fresh collection 2026, designer suits gurugram"
+        url="/new-arrivals"
+        schemaData={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": `New Arrivals - Season ${new Date().getFullYear()}`,
+          "description": "Discover our latest and most exclusive ethnic wear additions.",
+          "url": "https://kamleshsuits.com/new-arrivals"
+        }}
+      />
       {/* Premium Header - Light Silk Theme (No Black/Dark) */}
       <div className="relative bg-gradient-to-br from-[#FFFDF5] via-[#F9F7F2] to-[#F1EDE1] pt-12 pb-24 px-6 text-center text-primary overflow-hidden">
         {/* Animated Light Layers */}

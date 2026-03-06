@@ -4,6 +4,7 @@ import ProductCard from '../components/product/ProductCard';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../components/common/Loader';
 import { HiTag } from 'react-icons/hi';
+import SEO from '../components/common/SEO';
 
 const Sale = () => {
   const [products, setProducts] = useState([]);
@@ -37,6 +38,19 @@ const Sale = () => {
 
   return (
     <div className="min-h-screen bg-white pb-28 overflow-x-hidden">
+      <SEO 
+        title="Exclusive Sale"
+        description={`Get up to ${maxDiscount}% off on premium Indian ladies suits and ethnic wear. Shop the clearance sale at Kamlesh Suits, Gurugram for the best deals on silk and festive wear.`}
+        keywords="sale, ethnic wear clearance, discounted suits, silk suits sale, gurugram fashion deals"
+        url="/sale"
+        schemaData={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": `Ethnic Wear Sale - Up to ${maxDiscount}% Off`,
+          "description": "Exclusive offers on ladies suits and ethnic collections.",
+          "url": "https://kamleshsuits.com/sale"
+        }}
+      />
       {/* Vibrant Wave Banner with Premium Multi-Layer Gradient */}
       <div className="relative bg-gradient-to-br from-[#E63946] via-[#D62828] to-[#9B2226] pt-12 pb-24 px-6 text-center text-white overflow-hidden">
         {/* Layered Decorative Elements */}

@@ -303,7 +303,7 @@ const Cart = () => {
       `*GRAND TOTAL: ${formatPrice(total)}*\n\n` +
       `_Please confirm my order._`;
 
-    const whatsappUrl = `https://wa.me/919992304505?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/919992892775?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 

@@ -4,15 +4,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from "../../hooks/useCart.jsx";
 import { useAuth } from "../../context/AuthContext";
-import { HiMenu, HiX, HiOutlineHeart, HiOutlineShoppingBag, HiChevronDown, HiUserCircle, HiLogout, HiShoppingBag, HiHeart, HiCollection, HiShieldCheck } from 'react-icons/hi';
+import { HiMenu, HiX, HiOutlineHeart, HiOutlineShoppingBag, HiChevronDown, HiUserCircle, HiLogout, HiShoppingBag, HiHeart, HiCollection, HiShieldCheck, HiGift, HiCheck, HiClipboard } from 'react-icons/hi';
 import { gsap } from 'gsap';
 import logo from "../../assets/K_suit.png";
+import { fetchPublicCoupons } from '../../api/coupons';
 
 const Navbar = () => {
   const { cartItems, wishlistItems } = useCart();
   const { user, isAdmin, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [coupons, setCoupons] = useState([]);
+  const [isFetchingCoupons, setIsFetchingCoupons] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(null);
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   
@@ -65,6 +69,28 @@ const Navbar = () => {
     }
   };
 
+  const copyToClipboard = (text) => {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text);
+    } else {
+      // Fallback for non-secure contexts (HTTP)
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Fallback copy failed', err);
+      }
+      document.body.removeChild(textArea);
+    }
+  };
+
   // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -75,6 +101,24 @@ const Navbar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Fetch coupons when menu opens
+  useEffect(() => {
+    if (menuOpen) {
+      const loadCoupons = async () => {
+        try {
+          setIsFetchingCoupons(true);
+          const data = await fetchPublicCoupons();
+          setCoupons(data || []);
+        } catch (error) {
+          console.error("Failed to fetch coupons for navbar", error);
+        } finally {
+          setIsFetchingCoupons(false);
+        }
+      };
+      loadCoupons();
+    }
+  }, [menuOpen]);
 
   return (
     <>
@@ -327,70 +371,80 @@ const Navbar = () => {
 
         {/* Menu Items */}
         <div className="py-2 flex-1">
-          <Link to="/sale" className="block px-6 py-4 text-sm font-medium text-primary border-b border-stone-100 uppercase tracking-widest hover:bg-muted" onClick={() => setMenuOpen(false)}>
-            SALE
-          </Link>
-          
-          <Link to="/new-arrivals" className="block px-6 py-4 text-sm font-medium text-primary border-b border-stone-100 uppercase tracking-widest hover:bg-muted" onClick={() => setMenuOpen(false)}>
-            SAJ DHAJ KE
+          <Link to="/" className="block px-6 py-4 text-sm font-black text-primary border-b border-stone-100 uppercase tracking-widest hover:bg-stone-50 transition" onClick={() => setMenuOpen(false)}>
+            Shop All
           </Link>
 
-          {/* Expandable: Special Offers */}
-          <div>
-            <button 
-              onClick={() => toggleCategory('special-offers')}
-              className="w-full flex items-center justify-between px-6 py-4 text-sm font-medium text-primary border-b border-stone-100 uppercase tracking-widest hover:bg-muted"
-            >
-              <span>SPECIAL OFFERS</span>
-              <HiChevronDown className={`transition-transform ${expandedCategory === 'special-offers' ? 'rotate-180' : ''}`} />
-            </button>
-            <div className={`bg-muted overflow-hidden transition-all duration-300 ${expandedCategory === 'special-offers' ? 'max-h-40' : 'max-h-0'}`}>
-              <Link to="/offers/1" className="block px-8 py-3 text-sm text-secondary" onClick={() => setMenuOpen(false)}>Bundle Deals</Link>
-              <Link to="/offers/2" className="block px-8 py-3 text-sm text-secondary" onClick={() => setMenuOpen(false)}>Clearance</Link>
-            </div>
-          </div>
+          <Link to="/new-arrivals" className="block px-6 py-4 text-sm font-black text-primary border-b border-stone-100 uppercase tracking-widest hover:bg-stone-50 transition" onClick={() => setMenuOpen(false)}>
+            New Arrivals
+          </Link>
 
-          {/* Expandable: New Arrivals */}
-          <div>
-            <button 
-              onClick={() => toggleCategory('new-arrivals')}
-              className="w-full flex items-center justify-between px-6 py-4 text-sm font-medium text-primary border-b border-stone-100 uppercase tracking-widest hover:bg-muted"
-            >
-              <span>NEW ARRIVALS</span>
-              <HiChevronDown className={`transition-transform ${expandedCategory === 'new-arrivals' ? 'rotate-180' : ''}`} />
-            </button>
-             <div className={`bg-muted overflow-hidden transition-all duration-300 ${expandedCategory === 'new-arrivals' ? 'max-h-40' : 'max-h-0'}`}>
-              <Link to="/new/suits" className="block px-8 py-3 text-sm text-secondary" onClick={() => setMenuOpen(false)}>New Suit Collections</Link>
-            </div>
-          </div>
+          <Link to="/sale" className="block px-6 py-4 text-sm font-black text-emerald-600 border-b border-stone-100 uppercase tracking-widest hover:bg-stone-50 transition" onClick={() => setMenuOpen(false)}>
+            Exclusive Sale
+          </Link>
 
           {/* Expandable: Shop By Categories */}
           <div>
             <button 
               onClick={() => toggleCategory('categories')}
-              className="w-full flex items-center justify-between px-6 py-4 text-sm font-medium text-primary border-b border-stone-100 uppercase tracking-widest hover:bg-muted"
+              className="w-full flex items-center justify-between px-6 py-4 text-sm font-black text-primary border-b border-stone-100 uppercase tracking-widest hover:bg-stone-50 transition"
             >
-              <span>SHOP BY CATEGORIES</span>
-              <HiChevronDown className={`transition-transform ${expandedCategory === 'categories' ? 'rotate-180' : ''}`} />
+              <span>Shop Collections</span>
+              <HiChevronDown className={`transition-transform duration-300 ${expandedCategory === 'categories' ? 'rotate-180' : ''}`} />
             </button>
-             <div className={`bg-muted overflow-hidden transition-all duration-300 ${expandedCategory === 'categories' ? 'max-h-60' : 'max-h-0'}`}>
-              <Link to="/category/cotton" className="block px-8 py-3 text-sm text-secondary" onClick={() => setMenuOpen(false)}>Cotton</Link>
-              <Link to="/category/silk" className="block px-8 py-3 text-sm text-secondary" onClick={() => setMenuOpen(false)}>Silk</Link>
-              <Link to="/category/party-wear" className="block px-8 py-3 text-sm text-secondary" onClick={() => setMenuOpen(false)}>Party Wear</Link>
+             <div className={`bg-stone-50/50 overflow-hidden transition-all duration-300 ${expandedCategory === 'categories' ? 'max-h-60' : 'max-h-0'}`}>
+              <Link to="/?category=Wedding" className="block px-10 py-3 text-xs font-bold text-stone-500 hover:text-primary border-b border-stone-50 transition" onClick={() => setMenuOpen(false)}>Wedding Wear</Link>
+              <Link to="/?category=Party Wear" className="block px-10 py-3 text-xs font-bold text-stone-500 hover:text-primary border-b border-stone-50 transition" onClick={() => setMenuOpen(false)}>Party Wear</Link>
+              <Link to="/?category=Festive" className="block px-10 py-3 text-xs font-bold text-stone-500 hover:text-primary border-b border-stone-50 transition" onClick={() => setMenuOpen(false)}>Festive Look</Link>
+              <Link to="/?category=Daily Wear" className="block px-10 py-3 text-xs font-bold text-stone-500 hover:text-primary border-b border-stone-50 transition" onClick={() => setMenuOpen(false)}>Daily Wear</Link>
             </div>
           </div>
 
-           <Link to="/art" className="block px-6 py-4 text-sm font-medium text-primary border-b border-stone-100 uppercase tracking-widest hover:bg-muted" onClick={() => setMenuOpen(false)}>
-            OUR ART
-          </Link>
-
+          {/* "Gifts for You" Section */}
+          {coupons.length > 0 && (
+            <div className="mt-4 px-6 py-4 bg-emerald-50/50 border-y border-stone-100">
+              <div className="flex items-center gap-2 mb-3">
+                <HiGift className="text-emerald-500" size={20} />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">Gifts For You</span>
+              </div>
+              <div className="space-y-3">
+                {coupons.slice(0, 2).map((coupon) => (
+                  <div key={coupon.code} className="bg-white p-3 rounded-xl border border-emerald-100 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-50 rounded-full blur-2xl -mr-8 -mt-8 opacity-50" />
+                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter mb-1">{coupon.description || 'Exclusive Discount'}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-black text-primary uppercase tracking-wider">{coupon.code}</span>
+                      <button 
+                        onClick={() => {
+                          copyToClipboard(coupon.code);
+                          setCopiedCode(coupon.code);
+                          setTimeout(() => setCopiedCode(null), 2000);
+                        }}
+                        className={`p-2 rounded-md transition-all active:scale-90 ${
+                          copiedCode === coupon.code 
+                            ? 'bg-emerald-500 text-white' 
+                            : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                        }`}
+                        title="Copy Code"
+                      >
+                        {copiedCode === coupon.code ? (
+                          <HiCheck size={16} className="animate-in zoom-in duration-300" />
+                        ) : (
+                          <HiClipboard size={16} />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Footer of Drawer */}
         <div className="p-6 bg-stone-50 mt-auto border-t border-stone-200">
             <div className="flex flex-col items-center gap-4">
                 <div className="flex gap-4 text-xs text-stone-500">
-                    <Link to="/privacy-policy" className="hover:text-primary transition" onClick={() => setMenuOpen(false)}>Privacy Policy</Link>
                     <Link to="/terms" className="hover:text-primary transition" onClick={() => setMenuOpen(false)}>Terms & Conditions</Link>
                 </div>
                 <p className="text-xs text-center text-stone-400">© {new Date().getFullYear()} Kamlesh Suits. All rights reserved.</p>

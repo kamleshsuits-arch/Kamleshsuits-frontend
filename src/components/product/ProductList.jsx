@@ -28,8 +28,20 @@ const ProductList = () => {
 
   const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [showMobileSort, setShowMobileSort] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const { addToCart } = useCart();
+
+  // Sync filters with URL search params
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam) {
+      setFilters(prev => ({
+        ...prev,
+        type: [categoryParam]
+      }));
+    }
+  }, [searchParams]);
 
   // --- Lazy loading / paging state ---
   const PAGE_SIZE = 12; // items per "page" loaded
