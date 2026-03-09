@@ -50,8 +50,8 @@ const NewArrivals = () => {
         style={{ background: 'linear-gradient(-225deg, #FFE29F 0%, #FFA99F 48%, #FF719A 100%)' }}
       >
         {/* Animated Light Layers */}
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#D4A373]/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#E29578]/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#fa709a]/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#f9d423]/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
         <div className="absolute top-[20%] left-[30%] w-[40%] h-[40%] bg-white/40 rounded-full blur-[100px]" />
         
         {/* Animated Three-Layer Waves with Fluid Flow */}
@@ -83,14 +83,14 @@ const NewArrivals = () => {
         <div className="relative z-10">
           <div className="flex justify-center mb-6">
              <div className="p-3 bg-white shadow-xl rounded-full">
-                <HiSparkles className="text-[#D4A373] animate-pulse" size={32} />
+                <HiSparkles className="text-[#fa709a] animate-pulse" size={32} />
              </div>
           </div>
           <h2 className="text-4xl font-serif text-primary tracking-tight uppercase tracking-[0.3em] mb-4">
             The New Edit
           </h2>
-          <div className="inline-block px-4 py-1.5 bg-white border border-[#D4A373]/20 rounded-full shadow-sm">
-            <p className="text-[#90462c] text-[9px] font-black uppercase tracking-[0.4em]">
+          <div className="inline-block px-4 py-1.5 bg-white border border-[#fa709a]/20 rounded-full shadow-sm">
+            <p className="text-[#fa709a] text-[9px] font-black uppercase tracking-[0.4em]">
               Exquisitely Crafted • Season {new Date().getFullYear()}
             </p>
           </div>

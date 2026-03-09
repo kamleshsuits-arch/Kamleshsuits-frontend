@@ -248,7 +248,9 @@ const ProductDetails = () => {
               <p className="text-stone-600 font-bold text-[10px] uppercase tracking-[0.2em] mb-1">
                 {product.fabric_family || 'Standard'} • {product.fabric_category || 'General'}
               </p>
-              <h1 className="text-2xl md:text-4xl font-serif font-bold text-primary mb-2">{product.title}</h1>
+              <h1 className="text-2xl md:text-4xl font-serif font-bold text-primary mb-2">
+                {product.title.replace(/suit/gi, '').trim()}
+              </h1>
               <p className="text-xs md:text-sm text-secondary uppercase tracking-widest mb-6">
                 {Array.isArray(product.categories) ? product.categories.join(" • ") : (product.categories || 'Suit Collection')}
               </p>

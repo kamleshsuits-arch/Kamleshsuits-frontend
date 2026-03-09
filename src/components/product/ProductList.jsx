@@ -216,22 +216,35 @@ const ProductList = () => {
 
 
   return (
-    <div className="bg-background min-h-screen relative">
+    <div className="bg-background min-h-screen relative pb-20 md:pb-0">
       
-      {/* Mobile Sticky Filter & Sort Bar */}
-      <div className="lg:hidden sticky top-20 z-30 bg-white border-b border-stone-200 shadow-sm flex">
-        <button 
-          onClick={() => setShowMobileFilter(true)}
-          className="flex-1 py-3 flex items-center justify-center gap-2 text-sm font-bold text-primary uppercase tracking-widest border-r border-stone-100 hover:bg-muted transition"
-        >
-          <HiFilter size={18} /> Filter
-        </button>
-        <button 
-          onClick={() => setShowMobileSort(true)}
-          className="flex-1 py-3 flex items-center justify-center gap-2 text-sm font-bold text-primary uppercase tracking-widest hover:bg-muted transition"
-        >
-          <HiSortAscending size={18} /> Sort
-        </button>
+      {/* Mobile Sticky Filter & Sort Bar — pill style. top is sum(Navbar 56px + CategoryBar 84px) = 140px = 8.75rem */}
+      <div className="lg:hidden sticky top-[8.75rem] z-30 bg-white border-b border-stone-100 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+        <div className="flex gap-2 px-3 py-2">
+          {/* Filter button with active count badge */}
+          <button
+            onClick={() => setShowMobileFilter(true)}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider border-2 border-accent/30 text-accent bg-accent/5 hover:bg-accent/10 transition relative"
+          >
+            <HiFilter size={15} /> Filter
+            {/* Active filter count */}
+            {(filters.type?.length > 0 || filters.color?.length > 0 || filters.minDiscount > 0) && (
+              <span className="absolute -top-1.5 -right-1 bg-gradient-to-r from-accent to-highlight text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                {(filters.type?.length || 0) + (filters.color?.length || 0) + (filters.minDiscount > 0 ? 1 : 0)}
+              </span>
+            )}
+          </button>
+          {/* Sort button showing current sort */}
+          <button
+            onClick={() => setShowMobileSort(true)}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider border-2 border-stone-200 text-stone-600 bg-white hover:border-accent/40 hover:text-accent transition"
+          >
+            <HiSortAscending size={15} />
+            {filters.sort
+              ? { price_asc: 'Low→High', price_desc: 'High→Low', discount: 'Discount', rating: 'Rating', newest: 'Newest' }[filters.sort] || 'Sort'
+              : 'Sort By'}
+          </button>
+        </div>
       </div>
 
       <div className="px-4 py-8 lg:py-12 max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-4 gap-12">

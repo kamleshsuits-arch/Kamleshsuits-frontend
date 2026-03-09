@@ -320,7 +320,7 @@ const Cart = () => {
       `*GRAND TOTAL: ${formatPrice(total)}*\n\n` +
       `_Please confirm my order._`;
 
-    const whatsappUrl = `https://wa.me/919992892775?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/919992304505?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
@@ -651,7 +651,7 @@ const Cart = () => {
                                  onClick={() => handleViewProduct(item)}
                                  className="font-serif text-base sm:text-2xl text-primary leading-tight line-clamp-2 cursor-pointer hover:text-accent transition-colors"
                                >
-                                 {item.title}
+                                 {item.title.replace(/suit/gi, '').trim()}
                                </h3>
                                <p className="text-[10px] sm:text-xs text-secondary uppercase tracking-[0.2em] font-medium opacity-70">
                                  {item.brand || "Kamlesh Collection"} • {item.material || "Premium Fabric"}
@@ -668,7 +668,7 @@ const Cart = () => {
 
                           <div className="flex flex-wrap gap-2">
                              <span className="px-2 py-0.5 bg-stone-100 text-[9px] sm:text-[10px] text-stone-700 font-bold uppercase tracking-widest rounded-sm">
-                               {item.type || "Suit Set"}
+                               {item.type?.replace(/suit/gi, '').trim() || "Premium"}
                              </span>
                              {item.selectedColor && (
                                <span className="px-2 py-0.5 bg-primary/5 text-[9px] sm:text-[10px] text-primary font-bold uppercase tracking-widest rounded-sm flex items-center gap-1.5">

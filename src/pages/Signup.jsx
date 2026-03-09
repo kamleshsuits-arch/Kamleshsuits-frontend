@@ -53,7 +53,7 @@ const Signup = () => {
   // Phone number validation
   const validatePhoneNumber = (phone) => {
     if (!phone) return 'Phone number is required';
-    if (!/^\+[1-9]\d{1,14}$/.test(phone)) return 'Include +country code (e.g. +919992892775)';
+    if (!/^\+[1-9]\d{1,14}$/.test(phone)) return 'Include +country code (e.g. +919992304505)';
     return '';
   };
 
@@ -424,7 +424,7 @@ const Signup = () => {
                           ? 'border-red-400 focus:border-red-400 bg-red-50/30'
                           : 'border-stone-200 focus:border-primary'
                       }`}
-                      placeholder="+919992892775"
+                      placeholder="+919992304505"
                     />
                   </div>
                   {errors.phoneNumber && touched.phoneNumber && (

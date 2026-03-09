@@ -4,8 +4,8 @@
 @theme {
   --color-primary: #1C1917;
   --color-secondary: #57534E;
-  --color-accent: #90462c;
-  --color-highlight: #ec7a1c;
+  --color-accent: #fa709a;
+  --color-highlight: #f9d423;
   --color-background: #FAFAF9;
   --color-surface: #FFFFFF;
   --color-muted: #F5F5F4;
@@ -52,13 +52,13 @@
   }
   .coupon-scroll-wrap:hover .coupon-scroll {
     scrollbar-width: thin;
-    scrollbar-color: #90462c transparent;
+    scrollbar-color: #fa709a transparent;
   }
   .coupon-scroll-wrap:hover .coupon-scroll::-webkit-scrollbar {
     height: 3px;
   }
   .coupon-scroll-wrap:hover .coupon-scroll::-webkit-scrollbar-thumb {
-    background: linear-gradient(to right, #90462c, #ec7a1c);
+    background: linear-gradient(to right, #fa709a, #f9d423);
   }
 
   .shadow-premium {
@@ -87,5 +87,85 @@
   @keyframes slideInFromTop2 {
     from { transform: translateY(-0.5rem); }
     to { transform: translateY(0); }
+  }
+
+  /* Mobile navbar gradient — Updated to vibrant Sunset/Rose theme */
+  .mobile-nav-gradient {
+    /* Soft Sunset Theme: Static gradient */
+    background: linear-gradient(135deg, #fa709a 0%, #ffb199 50%, #fee140 100%);
+  }
+
+  @media (min-width: 768px) {
+    .mobile-nav-gradient {
+      background: transparent;
+      animation: none;
+    }
+  }
+
+  /* Safe area bottom for bottom nav on iPhones */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 24px);
+  }
+
+  /* Premium Sunset Cart Button — Balanced Rose/Gold */
+  .cart-fab-green {
+    background: linear-gradient(135deg, #fa709a 0%, #ea4c89 50%, #f9d423 100%);
+    box-shadow: 0 10px 30px -5px rgba(234, 76, 137, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .cart-fab-green:active {
+    background: linear-gradient(135deg, #d81b60 0%, #fa709a 100%);
+    transform: scale(0.96) translateY(2px);
+  }
+
+  /* Glassy Card Chip Style */
+  .glass-chip {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(22, 21, 19, 0.08);
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+  }
+  
+  .glass-chip-active {
+    background: linear-gradient(135deg, #fa709a 0%, #f9d423 100%);
+    border-color: rgba(250, 112, 154, 0.2);
+    box-shadow: 0 8px 20px -4px rgba(250, 112, 154, 0.3);
+  }
+
+  /* Product card ADD button always visible on mobile */
+  @media (max-width: 767px) {
+    .group .add-to-bag-btn {
+      transform: translateY(0) !important;
+    }
+  }
+  /* Hero banner static sunset gradient (animation delegated to blobs) */
+  .theme-animated-gradient {
+    /* Airy Sunset Theme: Gold, White-Peach, Soft Rose */
+    background: linear-gradient(135deg, #fa709a 0%, #ffb199 50%, #fee140 100%);
+  }
+
+  /* Floating decorative blobs — warm sunset colors */
+  @keyframes themeBlobPulse {
+    0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.15; }
+    33%       { transform: scale(1.2) translate(15px, -15px); opacity: 0.25; }
+    66%       { transform: scale(0.85) translate(-10px, 10px); opacity: 0.1; }
+  }
+  .theme-blob-1 {
+    background-color: #f9d423; /* Gold glow */
+    animation: themeBlobPulse 8s ease-in-out infinite;
+  }
+  .theme-blob-2 {
+    background-color: #fa709a; /* Rose glow */
+    animation: themeBlobPulse 10s ease-in-out infinite reverse;
+  }
+
+  /* Slide-in from bottom (for cart FAB) */
+  .slide-in-from-bottom-4 {
+    animation-name: slideInFromBottom4;
+  }
+  @keyframes slideInFromBottom4 {
+    from { transform: translateY(1rem); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
   }
 }

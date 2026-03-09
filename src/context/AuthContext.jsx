@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }) => {
 
           // If 'phone_number' is required but missing, use a placeholder
           if (!challengeAttributes.phone_number) {
-            challengeAttributes.phone_number = '+919992892775';
+            challengeAttributes.phone_number = '+919992304505';
           }
 
           cognitoUser.completeNewPasswordChallenge(password, challengeAttributes, {
