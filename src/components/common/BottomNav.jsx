@@ -29,7 +29,7 @@ const BottomNav = () => {
   };
 
   return (
-    <div className="md:hidden fixed bottom-1.5 left-0 right-0 z-50 pb-safe pointer-events-none">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
 
       {/* Floating Cart FAB — Blinkit Style (Green with items) */}
       {cartItems.length > 0 && (
@@ -67,8 +67,8 @@ const BottomNav = () => {
       )}
 
       {/* Bottom Tab Bar */}
-      <div className="bg-white/97 backdrop-blur-md border-t border-stone-100 shadow-[0_-4px_24px_rgba(0,0,0,0.15)] pointer-events-auto">
-        <div className="flex justify-around items-center h-14 px-1">
+      <div className="bg-white/95 backdrop-blur-md border-t border-stone-100 shadow-[0_-4px_24px_rgba(0,0,0,0.15)] pointer-events-auto pb-[env(safe-area-inset-bottom)]">
+        <div className="flex justify-around items-center h-14 px-1 pt-1">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
