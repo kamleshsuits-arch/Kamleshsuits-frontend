@@ -15,6 +15,7 @@ import { isLikelySupportedPin, SUPPORTED_REGIONS } from '../../utils/deliveryUti
 import gsap from 'gsap';
 import YouMayAlsoLike from '../home/YouMayAlsoLike';
 import { HiX } from 'react-icons/hi';
+import OrderSuccessAnimation from '../common/OrderSuccessAnimation';
 
 
 const Cart = () => {
@@ -363,49 +364,11 @@ const Cart = () => {
 
   if (orderConfirmed) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <div className="max-w-2xl mx-auto bg-white p-12 rounded-[3rem] shadow-xl border border-stone-100">
-          <div className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 border border-emerald-100 shadow-lg shadow-emerald-50">
-            <HiCheck size={48} />
-          </div>
-          <h1 className="font-serif text-4xl text-primary mb-4">Order Confirmed!</h1>
-          <p className="text-secondary text-lg mb-2">Thank you for your purchase, {orderConfirmed.name}.</p>
-          <p className="text-secondary/60 mb-8">Your order ID is <span className="font-black text-primary">#{orderConfirmed.orderId}</span></p>
-          
-          <div className="bg-stone-50 p-6 rounded-2xl mb-10 inline-block text-left">
-            <h4 className="text-xs font-black uppercase tracking-widest text-primary mb-3">What happens next?</h4>
-            <ul className="space-y-3 text-sm text-secondary">
-              <li className="flex items-center gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                A confirmation email has been sent to your registered address.
-              </li>
-              <li className="flex items-center gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                The admin team has been notified for processing.
-              </li>
-              <li className="flex items-center gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Your premium suit set will be prepared for shipping shortly.
-              </li>
-            </ul>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button 
-              onClick={() => navigate('/')} 
-              className="bg-primary text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-accent transition-all shadow-lg hover:shadow-xl"
-            >
-              Back to Collection
-            </button>
-            <button 
-              onClick={() => navigate('/')}
-              className="px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs text-secondary border border-stone-200 hover:bg-stone-100 transition-all"
-            >
-              Track My Order
-            </button>
-          </div>
-        </div>
-      </div>
+      <OrderSuccessAnimation 
+        orderId={orderConfirmed.orderId}
+        name={orderConfirmed.name}
+        onClose={() => setOrderConfirmed(null)}
+      />
     );
   }
 
@@ -653,7 +616,7 @@ const Cart = () => {
                                >
                                  {item.title.replace(/suit/gi, '').trim()}
                                </h3>
-                               <p className="text-[10px] sm:text-xs text-secondary uppercase tracking-[0.2em] font-medium opacity-70">
+                               <p className="text-[10px] sm:text-xs text-primary uppercase tracking-[0.2em] font-black">
                                  {item.brand || "Kamlesh Collection"} • {item.material || "Premium Fabric"}
                                </p>
                             </div>
@@ -667,7 +630,7 @@ const Cart = () => {
                           </div>
 
                           <div className="flex flex-wrap gap-2">
-                             <span className="px-2 py-0.5 bg-stone-100 text-[9px] sm:text-[10px] text-stone-700 font-bold uppercase tracking-widest rounded-sm">
+                             <span className="px-2 py-0.5 bg-stone-100 text-[9px] sm:text-[10px] text-primary font-black uppercase tracking-widest rounded-sm">
                                {item.type?.replace(/suit/gi, '').trim() || "Premium"}
                              </span>
                              {item.selectedColor && (
@@ -677,7 +640,7 @@ const Cart = () => {
                                </span>
                              )}
                              {item.session && (
-                               <span className="px-2 py-0.5 bg-highlight/10 text-[9px] sm:text-[10px] text-highlight font-bold uppercase tracking-widest rounded-sm">
+                               <span className="px-2 py-0.5 bg-stone-100 text-[9px] sm:text-[10px] text-primary font-black uppercase tracking-widest rounded-sm">
                                  {item.session}
                                </span>
                              )}
@@ -738,7 +701,7 @@ const Cart = () => {
                         setAddressErrors({});
                         setShowAddressForm(true);
                       }}
-                      className="flex items-center gap-2 text-accent font-black text-[10px] uppercase tracking-widest hover:text-primary transition-colors bg-accent/5 px-4 py-2 rounded-full"
+                      className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest hover:text-accent transition-colors bg-stone-100 px-4 py-2 rounded-full"
                     >
                       <HiPlusCircle size={16} /> Add New Address
                     </button>

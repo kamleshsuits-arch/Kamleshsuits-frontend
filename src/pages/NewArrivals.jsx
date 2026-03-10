@@ -30,7 +30,7 @@ const NewArrivals = () => {
   if (loading) return <Loader message="Curating New Arrivals..." />;
 
   return (
-    <div className="min-h-screen bg-white pb-28 overflow-x-hidden">
+    <div className="min-h-screen bg-white pb-28 overflow-x-hidden page-new">
       <SEO 
         title="New Arrivals"
         description={`Explore the latest ${new Date().getFullYear()} collection of Indian style suits at Kamlesh Suits. Exquisitely crafted ethnic wear, fresh designs, and premium fabrics.`}
@@ -44,17 +44,16 @@ const NewArrivals = () => {
           "url": "https://kamleshsuits.com/new-arrivals"
         }}
       />
-      {/* Premium Header - Vibrant Sunset Theme */}
+      {/* Premium Header - Coral Theme with Waves */}
       <div 
         className="relative pt-12 pb-24 px-6 text-center text-primary overflow-hidden"
-        style={{ background: 'linear-gradient(-225deg, #FFE29F 0%, #FFA99F 48%, #FF719A 100%)' }}
+        style={{ backgroundColor: 'var(--theme-coral)' }}
       >
         {/* Animated Light Layers */}
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#fa709a]/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#f9d423]/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-[20%] left-[30%] w-[40%] h-[40%] bg-white/40 rounded-full blur-[100px]" />
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-white/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-black/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
         
-        {/* Animated Three-Layer Waves with Fluid Flow */}
+        {/* Animated Three-Layer Waves */}
         <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] h-[50px]">
           <div className="absolute inset-0 z-10">
             <svg className="w-[200%] h-full animate-[wave_20s_linear_infinite] opacity-40" viewBox="0 0 1200 120" preserveAspectRatio="none">
@@ -86,11 +85,11 @@ const NewArrivals = () => {
                 <HiSparkles className="text-[#fa709a] animate-pulse" size={32} />
              </div>
           </div>
-          <h2 className="text-4xl font-serif text-primary tracking-tight uppercase tracking-[0.3em] mb-4">
+          <h2 className="text-4xl font-serif text-white tracking-tight uppercase tracking-[0.3em] mb-4">
             The New Edit
           </h2>
-          <div className="inline-block px-4 py-1.5 bg-white border border-[#fa709a]/20 rounded-full shadow-sm">
-            <p className="text-[#fa709a] text-[9px] font-black uppercase tracking-[0.4em]">
+          <div className="inline-block px-4 py-1.5 bg-white/20 border border-white/40 rounded-full shadow-sm">
+            <p className="text-white text-[9px] font-black uppercase tracking-[0.4em]">
               Exquisitely Crafted • Season {new Date().getFullYear()}
             </p>
           </div>

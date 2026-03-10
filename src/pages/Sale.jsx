@@ -37,7 +37,7 @@ const Sale = () => {
   if (loading) return <Loader message="Scouring Best Deals..." />;
 
   return (
-    <div className="min-h-screen bg-white pb-28 overflow-x-hidden">
+    <div className="min-h-screen bg-white pb-28 overflow-x-hidden page-sale">
       <SEO 
         title="Exclusive Sale"
         description={`Get up to ${maxDiscount}% off on premium Indian ladies suits and ethnic wear. Shop the clearance sale at Kamlesh Suits, Gurugram for the best deals on silk and festive wear.`}
@@ -51,16 +51,16 @@ const Sale = () => {
           "url": "https://kamleshsuits.com/sale"
         }}
       />
-      {/* Vibrant Wave Banner with Premium Sunset Gradient */}
+      {/* Premium Header - Orange Theme with Waves */}
       <div 
         className="relative pt-12 pb-24 px-6 text-center text-white overflow-hidden"
-        style={{ background: 'linear-gradient(to right, #fa709a 0%, #fee140 100%)' }}
+        style={{ backgroundColor: 'var(--theme-orange)' }}
       >
         {/* Layered Decorative Elements */}
         <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-[20%] right-[-5%] w-48 h-48 bg-black/10 rounded-full blur-2xl" />
         
-        {/* Animated Fluid Waves (Sale Red Theme) */}
+        {/* Animated Fluid Waves */}
         <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] h-[50px]">
           <div className="absolute inset-0 z-10">
             <svg className="w-[200%] h-full animate-[wave_15s_linear_infinite] opacity-30" viewBox="0 0 1200 120" preserveAspectRatio="none">

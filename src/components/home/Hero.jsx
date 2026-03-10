@@ -3,7 +3,8 @@ import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useAuth } from "../../context/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import LocationBar from "../common/LocationBar";
 import hero1 from "../../assets/hero1.webp";
 import hero2 from "../../assets/hero2.jpg";
 
@@ -67,7 +68,7 @@ const Hero = () => {
 
               <h1 className="text-white font-serif text-2xl leading-snug mb-1 drop-shadow-sm">
                 Shop Premium<br />
-                <span className="text-yellow-100 italic font-serif text-[22px]">Ladies Suits</span>
+                <span className="text-white italic font-serif text-[22px]">Ladies Suits</span>
               </h1>
               <p className="text-yellow-100/80 text-[9px] font-semibold mb-3 tracking-widest uppercase">
                 Festive &bull; Wedding
@@ -115,8 +116,12 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* Curved bottom edge */}
-        <div className="h-5 bg-white rounded-t-[2rem]" />
+        {/* Curved bottom edge with Location Bar integrated */}
+        <div className="bg-white rounded-t-[2.5rem] mt-6 overflow-hidden">
+           <div className="pt-4 pb-1">
+              <LocationBar className="!border-none" />
+           </div>
+        </div>
       </div>
 
       {/* ===== DESKTOP HERO — unchanged ===== */}

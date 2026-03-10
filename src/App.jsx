@@ -19,15 +19,27 @@ import Toast from './components/common/Toast';
 import { useCart } from './hooks/useCart';
 
 import BottomNav from './components/common/BottomNav';
+import LocationBar from './components/common/LocationBar';
+import LaunchScreen from './components/common/LaunchScreen';
 
 function App() {
-  const { toast, hideToast } = useCart();
+  const { toast, hideToast, deliveryLocation } = useCart();
   const location = useLocation();
+  const [showLaunch, setShowLaunch] = React.useState(() => {
+    return !sessionStorage.getItem('hasSeenLaunch');
+  });
+
+  const handleLaunchComplete = () => {
+    sessionStorage.setItem('hasSeenLaunch', 'true');
+    setShowLaunch(false);
+  };
 
   const isAuthPage = ['/login', '/signup', '/auth-test'].includes(location.pathname);
+  const isHome = location.pathname === '/';
 
   return (
     <div className={`flex flex-col min-h-screen ${!isAuthPage ? 'pb-16 md:pb-0' : ''}`}>
+      {showLaunch && <LaunchScreen onComplete={handleLaunchComplete} />}
       {!isAuthPage && <Navbar />}
       <Toast 
         show={toast.show} 
@@ -36,7 +48,8 @@ function App() {
         type={toast.type} 
         onClose={hideToast} 
       />
-      <main className="flex-grow">
+      <main className={`flex-grow ${!isAuthPage && !isHome ? 'pt-14' : ''}`}>
+        {!isAuthPage && !isHome && !deliveryLocation && <LocationBar />}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<ProductDetails />} />
@@ -55,7 +68,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      {!isAuthPage && <BottomNav />}
+      {!isAuthPage && location.pathname !== '/cart' && <BottomNav />}
       {!isAuthPage && <Footer />}
     </div>
   );

@@ -96,7 +96,7 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className={`z-[100] transition-all duration-700 ${isScrolled ? 'fixed top-0 left-0 right-0 animate-in slide-in-from-top-2 mobile-nav-gradient shadow-lg' : 'absolute top-0 left-0 right-0 bg-transparent border-none'} md:sticky md:top-0 md:bg-surface/90 md:backdrop-blur-md md:border-b md:border-stone-100`}>
+      <nav className={`z-[100] transition-all duration-700 ${isScrolled ? 'fixed top-0 left-0 right-0 animate-in slide-in-from-top-2 mobile-nav-gradient md:bg-white shadow-lg' : 'absolute top-0 left-0 right-0 bg-transparent border-none'} md:sticky md:top-0 md:bg-white md:border-b md:border-stone-100`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 md:h-20">
 

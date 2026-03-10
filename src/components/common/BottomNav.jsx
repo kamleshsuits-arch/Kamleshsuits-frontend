@@ -36,7 +36,7 @@ const BottomNav = () => {
         <div className="px-5 pb-2 animate-in slide-in-from-bottom-4 duration-300 pointer-events-auto">
           <Link
             to="/cart"
-            className="flex items-center justify-between mx-auto max-w-[80%] px-4 py-2 rounded-2xl text-white cart-fab-green transition-transform active:scale-95 shadow-xl"
+            className="flex items-center justify-between mx-auto max-w-[80%] px-4 py-2 rounded-2xl text-white bg-[#CFB53B] transition-transform active:scale-95 shadow-xl"
           >
             <div className="flex items-center gap-2">
               {/* Item icons overflow — slightly smaller icons for compact look */}
@@ -80,7 +80,7 @@ const BottomNav = () => {
                 className="flex flex-col items-center justify-center w-full h-full space-y-0.5 relative"
               >
                 <div className={`relative flex items-center justify-center w-10 h-8 rounded-2xl transition-all duration-300 ${
-                  isActive ? 'bg-gradient-to-br from-accent to-highlight shadow-md shadow-highlight/30' : ''
+                  isActive ? 'bg-[#CFB53B] shadow-md shadow-[#CFB53B]/30' : ''
                 }`}>
                   <Icon size={isActive ? 20 : 22} className={`transition-all duration-300 ${isActive ? 'text-white' : 'text-stone-400'}`} />
                   {item.badge > 0 && (
@@ -91,7 +91,7 @@ const BottomNav = () => {
                     </span>
                   )}
                 </div>
-                <span className={`text-[9px] font-bold tracking-wide transition-all duration-300 ${isActive ? 'text-accent' : 'text-stone-400'}`}>
+                <span className={`text-[9px] font-bold tracking-wide transition-all duration-300 ${isActive ? 'text-[#CFB53B]' : 'text-stone-400'}`}>
                   {item.name}
                 </span>
               </button>

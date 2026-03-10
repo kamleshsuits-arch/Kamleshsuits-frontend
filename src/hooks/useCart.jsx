@@ -28,6 +28,7 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [addresses, setAddresses] = useState([]);
+  const [deliveryLocation, setDeliveryLocation] = useState(null); // { city: string, pincode: string }
   const [isLoaded, setIsLoaded] = useState(false);
   const syncTimeoutRef = useRef(null);
 
@@ -38,9 +39,11 @@ export const CartProvider = ({ children }) => {
       const localCart = loadInitialState('cartItems');
       const localWishlist = loadInitialState('wishlistItems');
       const localAddresses = loadInitialState('addresses');
+      const localLocation = loadInitialState('deliveryLocation');
       setCartItems(localCart);
       setWishlistItems(localWishlist);
       setAddresses(localAddresses);
+      if (localLocation && !Array.isArray(localLocation)) setDeliveryLocation(localLocation);
       
       // 2. If logged in, fetch from cloud
       if (user) {
@@ -52,11 +55,13 @@ export const CartProvider = ({ children }) => {
               setCartItems(profile.cartItems || []);
               setWishlistItems(profile.wishlistItems || []);
               setAddresses(profile.addresses || []);
+              setDeliveryLocation(profile.deliveryLocation || null);
               
               // Also update current local storage to match cloud
               localStorage.setItem(`cartItems_${user.id}`, JSON.stringify(profile.cartItems || []));
               localStorage.setItem(`wishlistItems_${user.id}`, JSON.stringify(profile.wishlistItems || []));
               localStorage.setItem(`addresses_${user.id}`, JSON.stringify(profile.addresses || []));
+              if (profile.deliveryLocation) localStorage.setItem(`deliveryLocation_${user.id}`, JSON.stringify(profile.deliveryLocation));
             }
           }
         } catch (error) {
@@ -77,16 +82,18 @@ export const CartProvider = ({ children }) => {
     const storageKeyCart = getStorageKey('cartItems');
     const storageKeyWish = getStorageKey('wishlistItems');
     const storageKeyAddr = getStorageKey('addresses');
+    const storageKeyLoc = getStorageKey('deliveryLocation');
     localStorage.setItem(storageKeyCart, JSON.stringify(cartItems));
     localStorage.setItem(storageKeyWish, JSON.stringify(wishlistItems));
     localStorage.setItem(storageKeyAddr, JSON.stringify(addresses));
+    if (deliveryLocation) localStorage.setItem(storageKeyLoc, JSON.stringify(deliveryLocation));
 
     // Debounced Cloud Sync
     if (user) {
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
       syncTimeoutRef.current = setTimeout(async () => {
         try {
-          await saveUserProfile({ cartItems, wishlistItems, addresses });
+          await saveUserProfile({ cartItems, wishlistItems, addresses, deliveryLocation });
           console.log("Cloud sync successful");
         } catch (err) {
           console.error("Cloud sync failed:", err);
@@ -97,7 +104,7 @@ export const CartProvider = ({ children }) => {
     return () => {
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
     };
-  }, [cartItems, wishlistItems, addresses, user, isLoaded, getStorageKey]);
+  }, [cartItems, wishlistItems, addresses, deliveryLocation, user, isLoaded, getStorageKey]);
 
   // --- SYNC WITH COLLECTION (CLEANUP) ---
   useEffect(() => {
@@ -241,6 +248,7 @@ export const CartProvider = ({ children }) => {
         cartItems, addToCart, removeFromCart, clearCart, updateQuantity,
         wishlistItems, addToWishlist, removeFromWishlist, toggleWishlist,
         addresses, addAddress, removeAddress, updateAddress,
+        deliveryLocation, setDeliveryLocation,
         isInWishlist, isInCart, subtotal, toast, showToast, hideToast
       }}
     >

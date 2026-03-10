@@ -1,6 +1,6 @@
 // src/components/ProductCard.jsx
 import React, { useState, useRef } from "react";
-import { HiOutlineHeart, HiHeart, HiStar, HiShoppingBag, HiCheck } from "react-icons/hi";
+import { HiOutlineHeart, HiHeart, HiStar, HiShoppingBag, HiCheck, HiPlus } from "react-icons/hi";
 import { useCart } from "../../hooks/useCart.jsx";
 import { gsap } from "gsap";
 import { formatPrice } from "../../utils/currency";
@@ -88,30 +88,24 @@ export default function ProductCard({ product, onView }) {
 
         {/* Rating chip */}
         {rating && (
-          <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 flex items-center gap-1 text-[10px] text-primary shadow-sm rounded-md">
+          <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm px-2 py-0.5 flex items-center gap-1 text-[10px] text-primary shadow-sm rounded-md z-20">
             <span className="font-bold">{rating}</span>
             <HiStar className="text-yellow-400" size={11} />
             <span className="text-secondary font-light border-l border-stone-300 pl-1 ml-0.5">({product.reviews || 26})</span>
           </div>
         )}
 
-        {/* ADD / IN BAG button — slide up on desktop hover, always visible on mobile */}
-        <div className="absolute inset-x-0 bottom-0 z-10 md:translate-y-full md:group-hover:translate-y-0 transition-transform duration-300">
-          <button
-            onClick={handleAddToCart}
-            className={`w-full py-2.5 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all ${
-              inCart
-                ? "bg-amber-50 text-amber-700 border-t border-amber-200"
-                : "bg-gradient-to-r from-accent to-highlight text-white"
-            }`}
-          >
-            {inCart ? (
-              <><HiCheck size={14} /> In Bag</>
-            ) : (
-              <><HiShoppingBag size={14} /> Add to Bag</>
-            )}
-          </button>
-        </div>
+        {/* Quick Add Button - Aligned with Rating Along X-Axis */}
+        <button
+          onClick={handleAddToCart}
+          className={`absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shadow-md border-2 z-20 ${
+            inCart 
+              ? "bg-white text-stone-700 border-stone-200" 
+              : "bg-white text-[#CFB53B] border-[#CFB53B] hover:bg-[#CFB53B] hover:text-white"
+          }`}
+        >
+          {inCart ? <HiCheck size={18} /> : <HiPlus size={18} />}
+        </button>
       </div>
 
       {/* Product Details */}

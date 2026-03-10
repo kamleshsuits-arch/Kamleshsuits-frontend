@@ -6,7 +6,7 @@ const CATEGORIES = [
   { label: 'All Collection',  emoji: '🛍️', value: '', color: 'from-amber-100 to-amber-50' },
   { label: 'Royal Wedding',   emoji: '💍', value: 'Wedding', color: 'from-purple-100 to-purple-50' },
   { label: 'Party Glam',      emoji: '🎉', value: 'Party Wear', color: 'from-blue-100 to-blue-50' },
-  { label: 'Festive Vibes',   emoji: '🪔', value: 'Festive', color: 'from-rose-100 to-rose-50' },
+  { label: 'Festive Vibes',   emoji: '🪔', value: 'Festive', color: 'from-amber-100 to-amber-50' },
   { label: 'Daily Office',    emoji: '☀️', value: 'Daily Wear', color: 'from-emerald-100 to-emerald-50' },
   { label: 'Hot Sale',        emoji: '🏷️', value: 'Sale', href: '/sale', color: 'from-red-100 to-red-50' },
   { label: 'Just In',         emoji: '✨', value: 'New', href: '/new-arrivals', color: 'from-cyan-100 to-cyan-50' },

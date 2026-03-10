@@ -89,7 +89,7 @@ const DeliveryDemandInsights = () => {
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-3xl border border-stone-100 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-accent/10 text-accent rounded-xl flex items-center justify-center">
                 <HiMap size={24} />
               </div>
               <div>
@@ -119,7 +119,7 @@ const DeliveryDemandInsights = () => {
                   {(() => {
                     const cityMap = {};
                     demands.forEach(d => { cityMap[d.city || 'Unknown'] = (cityMap[d.city || 'Unknown'] || 0) + 1; });
-                    const colors = ['bg-rose-500', 'bg-orange-500', 'bg-amber-500', 'bg-blue-500', 'bg-violet-500', 'bg-emerald-500'];
+                    const colors = ['bg-accent', 'bg-orange-500', 'bg-amber-500', 'bg-blue-500', 'bg-violet-500', 'bg-emerald-500'];
                     return Object.entries(cityMap)
                       .sort((a, b) => b[1] - a[1])
                       .map(([city, count], i) => (

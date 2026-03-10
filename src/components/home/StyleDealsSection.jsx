@@ -1,7 +1,7 @@
 // StyleDealsSection.jsx — Fashion Deals inspired vibrant section (mobile-only)
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HiHeart, HiOutlineHeart, HiShoppingBag, HiChevronRight } from 'react-icons/hi';
+import { HiHeart, HiOutlineHeart, HiShoppingBag, HiChevronRight, HiCheck, HiPlus, HiStar } from 'react-icons/hi';
 import { fetchProducts } from '../../api/products';
 import { useCart } from '../../hooks/useCart';
 import { formatPrice } from '../../utils/currency';
@@ -30,27 +30,27 @@ const StyleDealsSection = () => {
   const getSafeImage = (p) => {
     const imgs = p.images || p.image;
     if (Array.isArray(imgs) && imgs.length > 0) return imgs[0];
-    if (typeof imgs === 'string' && imgs.length > 0) return imgs.replace(/[\[\]"]/g, '').split(',')[0];
+    if (typeof imgs === 'string' && imgs.length > 0) return imgs.replace(/[[\]"]/g, '').split(',')[0];
     return 'https://via.placeholder.com/300x400';
   };
 
   if (products.length === 0) return null;
 
   return (
-    <div className="md:hidden bg-rose-50/30 mt-1 pb-4">
+    <div className="md:hidden bg-[#E88A38]/5 mt-1 pb-4">
       {/* Section Header */}
       <div className="px-4 pt-4 pb-2 flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="font-serif text-2xl text-stone-900 leading-tight">
-              Style <span className="text-rose-500 italic">Collection</span>
+              Style <span className="text-[#E88A38] italic">Collection</span>
             </h2>
             <span className="text-xl">🛍️</span>
           </div>
           <p className="text-[10px] text-stone-500 uppercase tracking-widest mt-0.5">Curated suits, every budget</p>
         </div>
         {/* "Everything Under" badge */}
-        <div className="bg-rose-500 text-white rounded-xl px-2.5 py-1.5 text-right shadow-md">
+        <div className="bg-[#E88A38] text-white rounded-xl px-2.5 py-1.5 text-right shadow-md">
           <p className="text-[8px] uppercase tracking-widest font-bold opacity-80">UPTO</p>
           <p className="text-sm font-black leading-none">{PRICE_BANDS[activeBand].label}</p>
         </div>
@@ -65,12 +65,12 @@ const StyleDealsSection = () => {
               onClick={() => setActiveBand(idx)}
               className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-black border-2 transition-all duration-200 ${
                 activeBand === idx
-                  ? 'bg-rose-500 text-white border-rose-500 shadow-md'
+                  ? 'bg-[#E88A38] text-white border-[#E88A38] shadow-md'
                   : 'bg-white text-stone-700 border-stone-200'
               }`}
             >
               {band.label}
-              <span className={`ml-1.5 text-[9px] ${activeBand === idx ? 'text-rose-100' : 'text-stone-400'}`}>
+              <span className={`ml-1.5 text-[9px] ${activeBand === idx ? 'text-white/80' : 'text-stone-400'}`}>
                 ({count})
               </span>
             </button>
@@ -106,7 +106,7 @@ const StyleDealsSection = () => {
                 >
                   <img src={img} alt={product.title} className="w-full h-full object-cover" />
                   {discount > 0 && (
-                    <div className="absolute top-2 left-2 bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md">
+                    <div className="absolute top-2 left-2 bg-[#E88A38] text-white text-[9px] font-black px-1.5 py-0.5 rounded-md">
                       {discount}% OFF
                     </div>
                   )}
@@ -118,6 +118,24 @@ const StyleDealsSection = () => {
                       ? <HiHeart size={14} className="text-red-500" />
                       : <HiOutlineHeart size={14} className="text-stone-400" />
                     }
+                  </button>
+
+                  {/* Rating Chip - Bottom Left */}
+                  <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm px-1.5 py-0.5 flex items-center gap-0.5 text-[9px] text-stone-900 shadow-sm rounded-md z-20 border border-stone-100">
+                    <span className="font-bold">{(parseFloat(product.rating) || 4.2).toFixed(1)}</span>
+                    <HiStar className="text-yellow-400" size={10} />
+                  </div>
+
+                  {/* Quick Add Button - Bottom Right (Aligned with Rating Along X-Axis) */}
+                  <button
+                    onClick={e => { e.stopPropagation(); inCart ? removeFromCart(product.suitId) : addToCart(product); }}
+                    className={`absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all border-2 z-20 ${
+                      inCart
+                        ? 'bg-white text-stone-600 border-stone-100'
+                        : 'bg-white text-[#CFB53B] border-[#CFB53B] shadow-sm hover:bg-[#CFB53B] hover:text-white'
+                    }`}
+                  >
+                    {inCart ? <HiCheck size={14} /> : <HiPlus size={14} />}
                   </button>
                 </div>
 
@@ -132,18 +150,6 @@ const StyleDealsSection = () => {
                       <span className="text-[9px] text-stone-400 line-through">{formatPrice(product.mrp)}</span>
                     )}
                   </div>
-                  <button
-                    onClick={e => { e.stopPropagation(); inCart ? removeFromCart(product.suitId) : addToCart(product); }}
-                    className={`mt-2 w-full py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wide flex items-center justify-center gap-1 transition-all ${
-                      inCart
-                        ? 'bg-rose-50 text-rose-600 border border-rose-100'
-                        : 'text-white shadow-sm'
-                    }`}
-                    style={!inCart ? { background: 'linear-gradient(90deg, #fa709a, #f9d423)' } : {}}
-                  >
-                    <HiShoppingBag size={11} />
-                    {inCart ? 'In Bag' : 'Add'}
-                  </button>
                 </div>
               </div>
             );
@@ -151,16 +157,16 @@ const StyleDealsSection = () => {
 
           {/* See All card */}
           <div
-            className="flex-shrink-0 w-28 bg-rose-100/50 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer border-2 border-rose-200 shadow-inner"
+            className="flex-shrink-0 w-28 bg-[#E88A38]/10 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer border-2 border-[#E88A38]/20 shadow-inner"
             onClick={() => {
               navigate('/');
               setTimeout(() => document.getElementById('collection-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
             }}
           >
-            <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center">
-              <HiChevronRight size={20} className="text-rose-600" />
+            <div className="w-10 h-10 rounded-full bg-[#E88A38]/10 flex items-center justify-center">
+              <HiChevronRight size={20} className="text-[#E88A38]" />
             </div>
-            <p className="text-[10px] font-black text-rose-600 uppercase tracking-wide text-center px-2">See All →</p>
+            <p className="text-[10px] font-black text-[#E88A38] uppercase tracking-wide text-center px-2">See All →</p>
           </div>
         </div>
       )}
