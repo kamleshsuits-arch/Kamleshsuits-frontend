@@ -145,6 +145,32 @@ export const uploadProductImage = async (file) => {
   }
 };
 
+// --- DATA ANALYTICS API ---
+
+export const fetchAllUsers = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/admin/users`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Fetch all users error:", err);
+    throw err;
+  }
+};
+
+export const fetchAllOrders = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/admin/orders`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Fetch all orders error:", err);
+    throw err;
+  }
+};
+
 // --- DELIVERY API ---
 
 export const validateDelivery = async (pincode) => {
