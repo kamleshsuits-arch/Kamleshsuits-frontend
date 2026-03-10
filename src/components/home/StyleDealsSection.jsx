@@ -160,7 +160,7 @@ const StyleDealsSection = () => {
             className="flex-shrink-0 w-28 bg-[#E88A38]/10 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer border-2 border-[#E88A38]/20 shadow-inner"
             onClick={() => {
               navigate('/');
-              setTimeout(() => document.getElementById('collection-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
+              setTimeout(() => document.getElementById('collection-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
             }}
           >
             <div className="w-10 h-10 rounded-full bg-[#E88A38]/10 flex items-center justify-center">

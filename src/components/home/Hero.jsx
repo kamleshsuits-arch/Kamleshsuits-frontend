@@ -144,7 +144,7 @@ const Hero = () => {
             </p>
             <div className="pt-4">
               <button
-                onClick={() => document.getElementById('collection-section')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => document.getElementById('collection-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                 className="bg-gray-800 text-white px-10 py-4 rounded-none uppercase tracking-widest text-sm hover:bg-accent transition shadow-xl"
               >
                 Our Collection

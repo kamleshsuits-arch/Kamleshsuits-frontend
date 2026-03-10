@@ -38,7 +38,7 @@ export default function Home() {
       <StyleDealsSection />
 
       {/* Full product grid */}
-      <div id="collection-section" className="container mx-auto">
+      <div id="collection-section" className="container mx-auto scroll-mt-[8.75rem]">
         <ProductList />
       </div>
     </div>

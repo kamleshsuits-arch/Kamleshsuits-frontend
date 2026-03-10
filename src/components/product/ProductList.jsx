@@ -47,7 +47,7 @@ const ProductList = () => {
   }, []);
 
   const scrollToCollection = () => {
-    document.getElementById('collection-section')?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('collection-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   // Sync filters with URL search params
