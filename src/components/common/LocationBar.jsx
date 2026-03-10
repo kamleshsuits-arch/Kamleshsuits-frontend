@@ -24,7 +24,7 @@ const LocationBar = ({ className = "" }) => {
               </p>
             ) : (
               <p className="text-[13px] text-stone-500 font-medium">
-                Add delivery location to check extra discount {">>>"}
+                Select your location for better insights
               </p>
             )}
           </div>

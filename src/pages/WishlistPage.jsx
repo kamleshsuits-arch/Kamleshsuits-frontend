@@ -6,6 +6,7 @@ import { HiOutlineHeart } from 'react-icons/hi';
 import { fetchProducts } from '../api/products';
 import YouMayAlsoLike from '../components/home/YouMayAlsoLike';
 import SEO from '../components/common/SEO';
+import LocationBar from '../components/common/LocationBar';
 
 const WishlistPage = () => {
   const { wishlistItems } = useCart();
@@ -26,8 +27,8 @@ const WishlistPage = () => {
       
       {/* Premium Header - Teal Theme */}
       <div 
-        className="relative pt-12 pb-24 px-6 text-center text-white overflow-hidden animate-bg-pulse"
-        style={{ backgroundColor: 'var(--theme-teal)' }}
+        className="relative pt-20 pb-20 px-6 text-center text-white overflow-hidden animate-bg-pulse"
+        style={{ backgroundColor: 'var(--theme-cherry)' }}
       >
         <div className="relative z-10">
           <div className="flex justify-center mb-6">
@@ -46,7 +47,12 @@ const WishlistPage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 -mt-10 relative z-20">
+      {/* Address/LocationBar after banner on Mobile */}
+      <div className="md:hidden relative z-50 -mt-1">
+        <LocationBar className="!border-none" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 mt-8 md:-mt-10 relative z-20">
         {wishlistItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white border border-stone-100 rounded-[2rem] shadow-xl">
             <div className="bg-stone-50 p-6 rounded-full mb-6 text-teal-600/30">

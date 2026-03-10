@@ -93,7 +93,7 @@
   :root {
     --theme-gold: #CFB53B;
     --theme-orange: #FF8243;
-    --theme-teal: #069494;
+    --theme-cherry: #D15D6D; /* Light Cherry */
     --theme-coral: #FF8559;
     --theme-emerald: #50C878;
     --theme-charcoal: #36454F;
@@ -102,7 +102,7 @@
   .theme-bg-home { background-color: var(--theme-gold); }
   .theme-bg-new { background-color: var(--theme-coral); }
   .theme-bg-sale { background-color: var(--theme-orange); }
-  .theme-bg-wishlist { background-color: var(--theme-teal); }
+  .theme-bg-wishlist { background-color: var(--theme-cherry); }
 
   .mobile-nav-gradient {
     background-color: var(--theme-gold);
@@ -110,7 +110,7 @@
   }
   .page-new .mobile-nav-gradient { background-color: var(--theme-coral); }
   .page-sale .mobile-nav-gradient { background-color: var(--theme-orange); }
-  .page-wishlist .mobile-nav-gradient { background-color: var(--theme-teal); }
+  .page-wishlist .mobile-nav-gradient { background-color: var(--theme-cherry); }
 
   @keyframes bgPulse {
     0%, 100% { opacity: 0.95; }

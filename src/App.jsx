@@ -36,7 +36,7 @@ function App() {
 
   const isAuthPage = ['/login', '/signup', '/auth-test'].includes(location.pathname);
   const isHome = location.pathname === '/';
-  const isSpecialSession = ['/new-arrivals', '/sale'].includes(location.pathname);
+  const isSpecialSession = ['/new-arrivals', '/sale', '/wishlist'].includes(location.pathname);
   const skipGlobalPadding = isHome || isSpecialSession;
   const isProductPage = location.pathname.startsWith('/product');
 
@@ -52,7 +52,8 @@ function App() {
         onClose={hideToast} 
       />
       <main className={`flex-grow ${!isAuthPage && !skipGlobalPadding ? 'pt-14 md:pt-0' : ''}`}>
-        {!isAuthPage && !skipGlobalPadding && !isProductPage && !deliveryLocation && <LocationBar />}
+        {/* Global LocationBar removed per request - now page-specific */}
+        {/* {!isAuthPage && !skipGlobalPadding && !isProductPage && !deliveryLocation && <LocationBar />} */}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<ProductDetails />} />
