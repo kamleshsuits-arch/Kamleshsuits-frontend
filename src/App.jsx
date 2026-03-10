@@ -36,6 +36,9 @@ function App() {
 
   const isAuthPage = ['/login', '/signup', '/auth-test'].includes(location.pathname);
   const isHome = location.pathname === '/';
+  const isSpecialSession = ['/new-arrivals', '/sale'].includes(location.pathname);
+  const skipGlobalPadding = isHome || isSpecialSession;
+  const isProductPage = location.pathname.startsWith('/product');
 
   return (
     <div className={`flex flex-col min-h-screen ${!isAuthPage ? 'pb-16 md:pb-0' : ''}`}>
@@ -48,8 +51,8 @@ function App() {
         type={toast.type} 
         onClose={hideToast} 
       />
-      <main className={`flex-grow ${!isAuthPage && !isHome ? 'pt-14' : ''}`}>
-        {!isAuthPage && !isHome && !deliveryLocation && <LocationBar />}
+      <main className={`flex-grow ${!isAuthPage && !skipGlobalPadding ? 'pt-14 md:pt-0' : ''}`}>
+        {!isAuthPage && !skipGlobalPadding && !isProductPage && !deliveryLocation && <LocationBar />}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<ProductDetails />} />

@@ -26,19 +26,6 @@ const LaunchScreen = ({ onComplete }) => {
       '-=0.8'
     );
 
-    // 3. Text Reveal with Letter Stagger
-    tl.fromTo('.launch-title span',
-      { y: 40, opacity: 0, rotationX: -90 },
-      { y: 0, opacity: 1, rotationX: 0, duration: 0.8, stagger: 0.03, ease: 'power2.out' },
-      '-=0.6'
-    );
-
-    tl.fromTo('.launch-tagline',
-      { opacity: 0, letterSpacing: '0.1em' },
-      { opacity: 1, letterSpacing: '0.3em', duration: 1.2, ease: 'power2.out' },
-      '-=0.4'
-    );
-
     // 4. Captivating Exit
     tl.to('.launch-logo-container', {
       scale: 1.1,
@@ -56,8 +43,6 @@ const LaunchScreen = ({ onComplete }) => {
   }, [onComplete]);
 
   if (!isVisible) return null;
-
-  const title = "Kamlesh Suits";
 
   return (
     <div className="launch-screen fixed inset-0 z-[1000] bg-white flex flex-col items-center justify-center p-6 text-center overflow-hidden">
@@ -81,26 +66,15 @@ const LaunchScreen = ({ onComplete }) => {
         />
       ))}
 
-      <div className="relative z-10 space-y-12">
-        <div className="launch-logo-container relative">
+      <div className="relative z-10">
+        <div className="launch-logo-container relative opacity-0">
           {/* Animated Rings */}
           <div className="absolute inset-[-40px] rounded-full border-2 border-dashed border-[#CFB53B]/30 animate-spin-slow" />
           <div className="absolute inset-[-20px] rounded-full border border-[#CFB53B]/10 animate-spin-reverse" />
           
-          <div className="relative p-6 bg-white/40 backdrop-blur-md rounded-full shadow-[0_0_50px_rgba(207,181,59,0.2)]">
-            <img src={logo} alt="Kamlesh Suits" className="w-32 md:w-48 h-auto mix-blend-multiply" />
+          <div className="relative p-8 bg-white/40 backdrop-blur-md rounded-full shadow-[0_0_50px_rgba(207,181,59,0.2)]">
+            <img src={logo} alt="Kamlesh Suits" className="w-36 md:w-56 h-auto mix-blend-multiply" />
           </div>
-        </div>
-        
-        <div className="space-y-4">
-          <h2 className="launch-title text-3xl md:text-5xl font-serif text-primary tracking-tight perspective-1000">
-            {title.split("").map((char, i) => (
-              <span key={i} className="inline-block whitespace-pre">{char}</span>
-            ))}
-          </h2>
-          <p className="launch-tagline text-[10px] md:text-xs font-black uppercase tracking-[0.3em] text-[#CFB53B] opacity-0">
-            Elegance in Every Stitch
-          </p>
         </div>
       </div>
 

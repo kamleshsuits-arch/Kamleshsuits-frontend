@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Loader from '../components/common/Loader';
 import { HiTag } from 'react-icons/hi';
 import SEO from '../components/common/SEO';
+import LocationBar from '../components/common/LocationBar';
 
 const Sale = () => {
   const [products, setProducts] = useState([]);
@@ -53,7 +54,7 @@ const Sale = () => {
       />
       {/* Premium Header - Orange Theme with Waves */}
       <div 
-        className="relative pt-12 pb-24 px-6 text-center text-white overflow-hidden"
+        className="relative pt-20 pb-20 px-6 text-center text-white overflow-hidden md:pt-12 md:pb-24"
         style={{ backgroundColor: 'var(--theme-orange)' }}
       >
         {/* Layered Decorative Elements */}
@@ -101,8 +102,13 @@ const Sale = () => {
         </div>
       </div>
 
-      {/* Sticky Quick Switcher - Moved below banner */}
-      <div className="sticky top-[80px] z-40 bg-white/95 backdrop-blur-sm shadow-sm border-b border-stone-100 flex md:hidden">
+      {/* Address/LocationBar after banner on Mobile */}
+      <div className="md:hidden relative z-50 -mt-1">
+        <LocationBar className="!border-none" />
+      </div>
+
+      {/* Sticky Quick Switcher - Moved above buttons */}
+      <div className="sticky top-[80px] z-40 bg-white/95 backdrop-blur-sm border-t border-stone-100 flex md:hidden">
         <button 
           onClick={() => navigate('/new-arrivals')}
           className="flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-stone-400"

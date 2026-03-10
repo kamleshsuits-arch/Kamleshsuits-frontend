@@ -9,6 +9,7 @@ import { useCart } from '../hooks/useCart';
 import { getColorDisplay } from '../utils/colors';
 import Loader from '../components/common/Loader';
 import SEO from '../components/common/SEO';
+import LocationBar from '../components/common/LocationBar';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -167,8 +168,9 @@ const ProductDetails = () => {
         }}
       />
       {/* --- Top Navigation --- */}
-      <div className="sticky top-20 z-30 bg-white/90 backdrop-blur-sm border-b border-stone-100 px-4 py-4 transition-all">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+      <div className="sticky top-14 md:top-20 z-30 bg-white/90 backdrop-blur-sm border-b border-stone-100 flex flex-col transition-all">
+        <LocationBar className="!bg-transparent border-b border-stone-100/30" />
+        <div className="w-full max-w-7xl mx-auto flex justify-between items-center px-4 py-3 md:py-4">
           <button 
             onClick={() => navigate(-1)} 
             className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors"

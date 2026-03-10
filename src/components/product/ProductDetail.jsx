@@ -132,10 +132,28 @@ export default function ProductDetail({ product, onBack, allProducts = [], onPro
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isLightboxOpen, nextImage, prevImage]);
 
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.title,
+          text: `Check out ${product.title} on Kamlesh Suits!`,
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href)
+        .then(() => alert('Link copied to clipboard!'))
+        .catch((err) => console.error('Failed to copy link: ', err));
+    }
+  };
+
   return (
     <div className="bg-background min-h-screen font-sans text-secondary pb-20">
       {/* --- Top Navigation --- */}
-      <div className="sticky top-20 z-30 bg-white/80 backdrop-blur-md border-b border-stone-100 px-4 py-4 transition-all">
+      <div className="sticky top-14 md:top-20 z-30 bg-white/80 backdrop-blur-md border-b border-stone-100 px-4 py-4 transition-all">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <button 
             onClick={() => {
@@ -147,7 +165,7 @@ export default function ProductDetail({ product, onBack, allProducts = [], onPro
             <HiArrowLeft className="text-lg" /> Back
           </button>
           
-          <button className="text-secondary hover:text-primary transition">
+          <button onClick={handleShare} className="text-secondary hover:text-primary transition">
              <HiOutlineShare className="text-xl" />
           </button>
         </div>

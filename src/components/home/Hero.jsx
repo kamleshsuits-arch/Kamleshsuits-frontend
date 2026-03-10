@@ -108,7 +108,7 @@ const Hero = () => {
             <div className="text-xl drop-shadow-md">👗</div>
             <div className="flex-1 pr-2">
               <p className="text-white text-[10px] font-black uppercase tracking-wide">Free Shipping</p>
-              <p className="text-yellow-100/90 text-[9px]">On orders over ₹5,000</p>
+              <p className="text-yellow-100/90 text-[9px]">On orders over ₹4,999</p>
             </div>
             <div className="bg-white/20 text-white text-[8px] font-black px-2 py-0.5 rounded border border-white/30 uppercase tracking-widest shadow-inner">
               Auto

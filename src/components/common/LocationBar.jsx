@@ -12,7 +12,7 @@ const LocationBar = ({ className = "" }) => {
     <>
       <div 
         onClick={() => setIsModalOpen(true)}
-        className={`w-full bg-white border-b border-stone-100 py-3 px-4 cursor-pointer hover:bg-stone-50 transition-colors ${className}`}
+        className={`w-full bg-white py-3 px-4 cursor-pointer hover:bg-stone-50 transition-colors ${className}`}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2.5">

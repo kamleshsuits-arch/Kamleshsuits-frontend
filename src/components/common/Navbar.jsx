@@ -1,7 +1,7 @@
 
 // src/components/common/Navbar.jsx — Mobile: logo-only, no hamburger, no text
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from "../../hooks/useCart.jsx";
 import { useAuth } from "../../context/AuthContext";
 import { HiMenu, HiX, HiOutlineHeart, HiOutlineShoppingBag, HiChevronDown, HiUserCircle, HiLogout, HiShoppingBag, HiHeart, HiCollection, HiShieldCheck, HiGift, HiCheck, HiClipboard, HiOutlineUser } from 'react-icons/hi';
@@ -94,9 +94,12 @@ const Navbar = () => {
     }
   }, [menuOpen]);
 
+  const location = useLocation();
+  const isSpecialPage = ['/', '/new-arrivals', '/sale'].includes(location.pathname);
+
   return (
     <>
-      <nav className={`z-[100] transition-all duration-700 ${isScrolled ? 'fixed top-0 left-0 right-0 animate-in slide-in-from-top-2 mobile-nav-gradient md:bg-white shadow-lg' : 'absolute top-0 left-0 right-0 bg-transparent border-none'} md:sticky md:top-0 md:bg-white md:border-b md:border-stone-100`}>
+      <nav className={`z-[100] transition-all duration-700 ${isScrolled || !isSpecialPage ? 'fixed top-0 left-0 right-0 animate-in slide-in-from-top-2 mobile-nav-gradient md:bg-white shadow-lg' : 'absolute top-0 left-0 right-0 bg-transparent border-none'} md:sticky md:top-0 md:bg-white md:border-b md:border-stone-100`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 md:h-20">
 
