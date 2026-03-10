@@ -12,26 +12,24 @@ const LocationBar = ({ className = "" }) => {
     <>
       <div 
         onClick={() => setIsModalOpen(true)}
-        className={`w-full bg-white py-3 px-4 cursor-pointer hover:bg-stone-50 transition-colors ${className}`}
+        className={`w-full bg-white py-2.5 px-4 cursor-pointer hover:bg-stone-50 transition-colors border-b border-stone-100 ${className}`}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#CFB53B]/10 flex items-center justify-center text-[#CFB53B]">
-              <HiLocationMarker size={18} />
-            </div>
+          <div className="flex items-center gap-2">
+            <HiLocationMarker className="text-[#3b82f6]" size={16} />
             
             {deliveryLocation ? (
-              <p className="text-xs text-stone-600 font-bold tracking-tight">
-                Delivering to <span className="text-primary font-black">{deliveryLocation.city} - {deliveryLocation.pincode}</span>
+              <p className="text-[13px] text-stone-600 font-medium">
+                Delivering to <span className="text-stone-900 font-bold">{deliveryLocation.city} - {deliveryLocation.pincode}</span>
               </p>
             ) : (
-              <p className="text-xs text-stone-600 font-bold tracking-tight">
+              <p className="text-[13px] text-stone-500 font-medium">
                 Add delivery location to check extra discount {">>>"}
               </p>
             )}
           </div>
           
-          <HiChevronRight className="text-stone-400" size={20} />
+          <HiChevronRight className="text-stone-400" size={18} />
         </div>
       </div>
 

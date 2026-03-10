@@ -51,7 +51,7 @@ const Hero = () => {
         <div className="theme-blob-2 absolute bottom-[-30px] left-[-40px] w-48 h-48 rounded-full bg-black/20 blur-3xl pointer-events-none" />
         
         {/* Dot pattern overlay for texture */}
-        <div className="absolute inset-0 opacity-[0.08]" style={{
+        <div className="absolute inset-0 opacity-[0.08] pointer-events-none" style={{
           backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
           backgroundSize: '24px 24px'
         }} />

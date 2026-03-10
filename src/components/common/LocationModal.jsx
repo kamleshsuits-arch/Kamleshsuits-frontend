@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { HiX, HiLocationMarker } from 'react-icons/hi';
 import { useCart } from '../../hooks/useCart';
 import { SUPPORTED_REGIONS } from '../../utils/deliveryUtils';
@@ -34,26 +35,30 @@ const LocationModal = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-[1500] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-lg rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-500 p-8 sm:p-10 relative">
+  return createPortal(
+    <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-[2px] animate-in fade-in duration-300">
+      <div 
+        className="absolute inset-0 bg-transparent" 
+        onClick={onClose}
+      />
+      <div className="bg-white w-full max-w-lg rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-500 relative z-10 transition-all">
         {/* Header */}
-        <div className="px-8 py-6 border-b border-stone-100 flex justify-between items-center">
-          <h2 className="text-sm font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+        <div className="px-5 py-4 flex justify-between items-center border-b border-stone-100">
+          <h2 className="text-sm font-bold text-stone-700 uppercase tracking-tight">
             ADD DELIVERY LOCATION
           </h2>
           <button 
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-stone-50 flex items-center justify-center text-stone-400 hover:text-red-500 transition-colors"
+            className="p-1 text-stone-400 hover:text-stone-600 transition-colors"
           >
-            <HiX size={20} />
+            <HiX size={24} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-8 pb-12">
+        <div className="px-5 py-10 sm:py-12">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="relative group">
+            <div className="relative group border-b border-stone-300 pb-2 flex items-center gap-4">
               <input
                 type="number"
                 value={pincode}
@@ -62,31 +67,32 @@ const LocationModal = ({ isOpen, onClose }) => {
                   setError('');
                 }}
                 placeholder="Type Delivery Pincode"
-                className="w-full bg-transparent border-b-2 border-stone-200 py-4 text-lg font-bold text-primary placeholder:text-stone-300 focus:outline-none focus:border-[#CFB53B] transition-colors appearance-none"
+                className="flex-1 bg-transparent py-2 text-base font-medium text-stone-900 placeholder:text-stone-400 focus:outline-none appearance-none"
                 autoFocus
               />
               <button 
                 type="submit"
-                className="absolute right-0 top-1/2 -translate-y-1/2 text-[#CFB53B] font-black text-xs uppercase tracking-widest hover:opacity-80 transition-opacity"
+                className="text-accent font-bold text-sm uppercase tracking-wider hover:opacity-80 transition-opacity"
               >
                 SUBMIT
               </button>
             </div>
             
             {error && (
-              <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest">{error}</p>
+              <p className="text-red-500 text-[11px] font-medium">{error}</p>
             )}
 
-            <div className="flex items-start gap-3 bg-amber-50/50 p-4 rounded-2xl border border-amber-100/50">
-              <HiLocationMarker className="text-amber-500 mt-1 shrink-0" size={18} />
-              <p className="text-[10px] text-amber-800 font-bold uppercase tracking-wider leading-relaxed">
+            <div className="flex items-start gap-3 bg-stone-50 p-4 rounded-xl border border-stone-100">
+              <HiLocationMarker className="text-stone-400 mt-0.5 shrink-0" size={18} />
+              <p className="text-[11px] text-stone-500 font-medium leading-relaxed">
                 Enter your pincode to check delivery availability and unlock location-specific offers.
               </p>
             </div>
           </form>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
