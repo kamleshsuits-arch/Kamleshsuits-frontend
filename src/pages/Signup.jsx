@@ -103,7 +103,11 @@ const Signup = () => {
   const validatePassword = (password) => {
     if (!password) return 'Password is required';
     if (password.length < 6) return 'Password must be at least 6 characters';
-    // Removed hard error for length < 8 to allow 'Fair' strength passwords
+    
+    // Updated to match your new AWS Policy:
+    if (!/[0-9]/.test(password)) return 'Password must contain at least one number';
+    if (!/[a-z]/.test(password)) return 'Password must contain at least one lowercase letter';
+    
     return '';
   };
 
