@@ -8,7 +8,7 @@ const Signup = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    phoneNumber: '',
+    phoneNumber: '+91',
     password: '',
     confirmPassword: ''
   });
@@ -423,14 +423,25 @@ const Signup = () => {
                       name="phoneNumber"
                       type="text"
                       value={formData.phoneNumber}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        let value = e.target.value;
+                        // Ensure +91 is always present and only followed by digits
+                        if (!value.startsWith('+91')) {
+                          value = '+91' + value.replace(/\+91/g, '').replace(/\D/g, '');
+                        } else {
+                          // Keep the +91 and sanitize the rest
+                          const suffix = value.slice(3).replace(/\D/g, '').slice(0, 10);
+                          value = '+91' + suffix;
+                        }
+                        handleInputChange({ target: { name: 'phoneNumber', value } });
+                      }}
                       onBlur={() => handleBlur('phoneNumber')}
                       className={`w-full pl-11 pr-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-stone-300 ${
                         errors.phoneNumber && touched.phoneNumber
                           ? 'border-red-400 focus:border-red-400 bg-red-50/30'
                           : 'border-stone-200 focus:border-primary'
                       }`}
-                      placeholder="+919992304505"
+                      placeholder="9992304505"
                     />
                   </div>
                   {errors.phoneNumber && touched.phoneNumber && (
