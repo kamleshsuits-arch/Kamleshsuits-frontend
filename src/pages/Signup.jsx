@@ -53,7 +53,9 @@ const Signup = () => {
   // Phone number validation
   const validatePhoneNumber = (phone) => {
     if (!phone) return 'Phone number is required';
-    if (!/^\+[1-9]\d{1,14}$/.test(phone)) return 'Include +country code (e.g. +919992304505)';
+    // Allow spaces and hyphens for better UX
+    const cleanPhone = phone.replace(/[\s-]/g, '');
+    if (!/^\+[1-9]\d{1,14}$/.test(cleanPhone)) return 'Include +country code (e.g. +919992304505)';
     return '';
   };
 
@@ -101,7 +103,7 @@ const Signup = () => {
   const validatePassword = (password) => {
     if (!password) return 'Password is required';
     if (password.length < 6) return 'Password must be at least 6 characters';
-    if (password.length < 8) return 'For better security, use 8+ characters';
+    // Removed hard error for length < 8 to allow 'Fair' strength passwords
     return '';
   };
 

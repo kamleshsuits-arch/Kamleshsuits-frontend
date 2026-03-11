@@ -11,7 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 import { formatPrice } from '../../utils/currency';
 import { fetchProducts, placeOrder, validateDelivery, submitDeliveryDemand } from '../../api/products';
 import { validateCoupon, fetchPublicCoupons } from '../../api/coupons';
-import { isLikelySupportedPin, SUPPORTED_REGIONS } from '../../utils/deliveryUtils';
+import { isLikelySupportedPin, SUPPORTED_REGIONS, getStateFromPin } from '../../utils/deliveryUtils';
 import gsap from 'gsap';
 import YouMayAlsoLike from '../home/YouMayAlsoLike';
 import { HiX } from 'react-icons/hi';
@@ -760,7 +760,13 @@ const Cart = () => {
                           value={addressForm.pincode}
                           onChange={async (e) => {
                             const pin = e.target.value.replace(/\D/g, '').slice(0, 6);
-                            setAddressForm({ ...addressForm, pincode: pin });
+                            const localState = getStateFromPin(pin);
+                            
+                            setAddressForm(prev => ({ 
+                              ...prev, 
+                              pincode: pin,
+                              state: localState || prev.state
+                            }));
                             
                             if (pin.length === 6) {
                               setIsFetchingPincode(true);
@@ -771,8 +777,8 @@ const Cart = () => {
                                   const postOffice = data[0].PostOffice[0];
                                   setAddressForm(prev => ({
                                     ...prev,
-                                    city: postOffice.District,
-                                    state: postOffice.State
+                                    city: prev.city || postOffice.District,
+                                    state: postOffice.State || prev.state
                                   }));
                                 }
                               } catch (err) {
@@ -807,7 +813,7 @@ const Cart = () => {
                           className={`w-full p-3 rounded-xl border-2 bg-white outline-none transition-all ${addressErrors.state ? 'border-red-200' : 'border-stone-100 focus:border-primary'}`}
                           value={addressForm.state}
                           onChange={(e) => setAddressForm({...addressForm, state: e.target.value})}
-                          readOnly={isFetchingPincode}
+                          readOnly={false}
                         />
                       </div>
 

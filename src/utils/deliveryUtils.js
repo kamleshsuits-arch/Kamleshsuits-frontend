@@ -17,6 +17,23 @@ export const isLikelySupportedPin = (pin) => {
   return SUPPORTED_PREFIXES.some((prefix) => String(pin).startsWith(prefix));
 };
 
+// State mapping for supported prefixes
+export const STATE_MAP = {
+  '110': 'Delhi',
+  '122': 'Haryana',
+  '123': 'Haryana',
+  '124': 'Haryana'
+};
+
+/**
+ * Gets the state name based on pincode prefix
+ */
+export const getStateFromPin = (pin) => {
+  if (!pin || pin.length < 3) return '';
+  const prefix = String(pin).substring(0, 3);
+  return STATE_MAP[prefix] || '';
+};
+
 // Human-readable region names for populating hints
 export const SUPPORTED_REGIONS = [
   { prefix: '110', label: 'Delhi' },
