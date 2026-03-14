@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   HiLocationMarker, HiPhone, HiUser, HiClock, HiTrendingUp, 
-  HiMap, HiViewGrid, HiTable 
+  HiMap, HiViewGrid, HiTable, HiSparkles, HiRefresh 
 } from 'react-icons/hi';
-import { fetchDeliveryDemands } from '../../api/products';
+import { fetchDeliveryDemands, fetchAllUsers } from '../../api/products';
+import { isLikelySupportedPin } from '../../utils/deliveryUtils';
 import { format } from 'date-fns';
 
 const DeliveryDemandInsights = () => {
@@ -11,17 +12,57 @@ const DeliveryDemandInsights = () => {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('list'); // 'list', 'stats', or 'map'
 
-  useEffect(() => {
-    const loadDemands = async () => {
-      try {
-        const data = await fetchDeliveryDemands();
-        setDemands(data || []);
-      } catch (err) {
-        console.error("Failed to fetch demands", err);
-      } finally {
-        setLoading(false);
+  const loadDemands = async () => {
+    try {
+      setLoading(true);
+      // Fetch both explicit demands and all user profiles to find "hidden" leads
+      const [explicitDemands, allUsers] = await Promise.all([
+        fetchDeliveryDemands(),
+        fetchAllUsers()
+      ]);
+
+      // 1. Start with explicit requests (people who clicked "Notify Me")
+      let mergedDemands = [...(explicitDemands || [])];
+
+      // 2. Extract addresses from all user profiles that are NOT in supported areas
+      if (allUsers && Array.isArray(allUsers)) {
+        allUsers.forEach(user => {
+          if (user.addresses && Array.isArray(user.addresses)) {
+            user.addresses.forEach((addr, idx) => {
+              if (!isLikelySupportedPin(addr.pincode)) {
+                // Avoid duplicates if they also submitted an explicit demand
+                const exists = mergedDemands.find(d => 
+                  d.phone === addr.phone && d.pincode === addr.pincode
+                );
+                
+                if (!exists) {
+                  mergedDemands.push({
+                    suitId: `LEAD_REF#${user.user_id?.substring(0,8)}#${idx}`,
+                    name: addr.name || user.name || 'Saved Guest',
+                    phone: addr.phone,
+                    address: `${addr.houseNo}, ${addr.area}`,
+                    city: addr.city,
+                    pincode: addr.pincode,
+                    created_at: user.updated_at || new Date().toISOString(),
+                    isImplicit: true
+                  });
+                }
+              }
+            });
+          }
+        });
       }
-    };
+
+      // Sort by date newest first
+      setDemands(mergedDemands.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+    } catch (err) {
+      console.error("Failed to fetch leads", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadDemands();
   }, []);
 
@@ -30,17 +71,19 @@ const DeliveryDemandInsights = () => {
     const pinMap = {};
 
     demands.forEach(d => {
-      cityMap[d.city] = (cityMap[d.city] || 0) + 1;
-      pinMap[d.pincode] = (pinMap[d.pincode] || 0) + 1;
+      const city = String(d.city || 'Unknown').trim();
+      const pin = String(d.pincode || '000000').trim();
+      cityMap[city] = (cityMap[city] || 0) + 1;
+      pinMap[pin] = (pinMap[pin] || 0) + 1;
     });
 
     const topCities = Object.entries(cityMap)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
+      .slice(0, 10);
 
     const topPins = Object.entries(pinMap)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
+      .slice(0, 10);
 
     return { topCities, topPins };
   };
@@ -61,7 +104,16 @@ const DeliveryDemandInsights = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-serif text-primary">Delivery Area Expansion Leads</h2>
-          <p className="text-secondary text-sm">Tracking demand from unsupported regions</p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-secondary text-sm">Tracking demand from unsupported regions</p>
+            <button 
+              onClick={loadDemands}
+              className="p-1 text-stone-300 hover:text-accent transition-colors"
+              title="Refresh Data"
+            >
+              <HiRefresh size={14} />
+            </button>
+          </div>
         </div>
         <div className="flex bg-stone-100 p-1 rounded-xl">
           <button 
@@ -122,11 +174,12 @@ const DeliveryDemandInsights = () => {
                     const colors = ['bg-accent', 'bg-orange-500', 'bg-amber-500', 'bg-blue-500', 'bg-violet-500', 'bg-emerald-500'];
                     return Object.entries(cityMap)
                       .sort((a, b) => b[1] - a[1])
+                      .slice(0, 12)
                       .map(([city, count], i) => (
-                        <div key={city} className="flex items-center gap-2 bg-stone-50 px-4 py-2 rounded-full border border-stone-100">
+                        <div key={city} className="flex items-center gap-2 bg-stone-50 px-4 py-2 rounded-full border border-stone-100 animate-in zoom-in-50 duration-500">
                           <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${colors[i % colors.length]}`} />
                           <span className="font-bold text-primary text-sm">{city}</span>
-                          <span className="text-stone-400 text-xs font-bold">{count} req</span>
+                          <span className="text-stone-400 text-xs font-bold">{count} {count === 1 ? 'lead' : 'leads'}</span>
                         </div>
                       ));
                   })()}
@@ -210,10 +263,17 @@ const DeliveryDemandInsights = () => {
                   <tr key={demand.suitId} className="hover:bg-stone-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-stone-100 rounded-full flex items-center justify-center text-stone-400">
-                          <HiUser size={16} />
+                        <div className="w-8 h-8 bg-stone-100 rounded-full flex items-center justify-center text-stone-400 overflow-hidden">
+                          {demand.isImplicit ? (
+                            <div className="w-full h-full bg-accent/10 text-accent flex items-center justify-center" title="Implicit Lead from saved address">
+                              <HiSparkles size={14} />
+                            </div>
+                          ) : (
+                            <HiUser size={16} />
+                          )}
                         </div>
                         <span className="font-bold text-primary">{demand.name}</span>
+                        {demand.isImplicit && <span className="text-[7px] font-black bg-stone-100 px-1.5 py-0.5 rounded text-stone-400 uppercase tracking-tighter">Profile</span>}
                       </div>
                     </td>
                     <td className="px-6 py-4">

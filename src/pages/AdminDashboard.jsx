@@ -89,7 +89,7 @@ const AdminDashboard = () => {
 
     const pickColorFromImage = async () => {
         if (!window.EyeDropper) {
-            showToast('API Not Supported', 'Please use a modern browser (Chrome/Edge) for EyeDropper functionality.', 'error');
+            showToast('API Not Supported: Please use a modern browser (Chrome/Edge) for EyeDropper functionality.', null, 'error');
             return;
         }
         const eyeDropper = new window.EyeDropper();
@@ -99,7 +99,7 @@ const AdminDashboard = () => {
             setNewColor(result.sRGBHex);
             if (!formData.colors.includes(colorName)) {
                 setFormData(prev => ({...prev, colors: [...prev.colors, colorName]}));
-                showToast('Color Captured', `Shade ${colorName} registered in asset DNA.`, 'success');
+                showToast(`Color Captured: Shade ${colorName} registered in asset DNA.`, null, 'success');
             }
         } catch (e) {
             console.log('Color picker cancelled');
@@ -149,8 +149,9 @@ const AdminDashboard = () => {
             console.log("Successfully uploaded image to S3:", fileUrl);
             return fileUrl;
         } catch (err) {
-            console.error("Upload exception:", err);
-            showToast('System Error', 'An unexpected error occurred during asset relay.', 'error');
+            console.error("Upload exception details:", err.response?.data || err.message);
+            const backendMsg = err.response?.data?.message || err.response?.data?.error || 'An unexpected error occurred during asset relay.';
+            showToast('System Error: ' + backendMsg, null, 'error');
             return null;
         } finally {
             setUploading(false);
@@ -230,15 +231,15 @@ const AdminDashboard = () => {
         
         // Client-side validation
         if (!formData.title?.trim()) {
-            showToast('Input Required', 'Please enter an asset title.', 'error');
+            showToast('Input Required: Please enter an asset title.', null, 'error');
             return;
         }
         if (!formData.price || formData.price <= 0) {
-            showToast('Invalid Price', 'Asset must have a positive value.', 'error');
+            showToast('Invalid Price: Asset must have a positive value.', null, 'error');
             return;
         }
         if (!formData.fabric_family || !formData.fabric_category) {
-            showToast('Fabric Details Missing', 'Please select both family and category.', 'error');
+            showToast('Fabric Details Missing: Please select both family and category.', null, 'error');
             return;
         }
 
@@ -279,18 +280,19 @@ const AdminDashboard = () => {
             if (editingProduct) {
                 const updated = await updateProduct(editingProduct.suitId, dataToSave);
                 setProducts(prev => prev.map(p => p.suitId === editingProduct.suitId ? ({...p, ...updated}) : p));
-                showToast(`Asset Updated: ${formData.title}`, 'Successfully synchronized with global catalog.', 'success');
+                showToast(`Asset Updated: ${formData.title} - Successfully synchronized with global catalog.`, null, 'success');
             } else {
                 const created = await addProduct(dataToSave);
                 setProducts(prev => [created, ...prev]);
-                showToast(`Asset Published: ${formData.title}`, 'New suit is now live on the storefront.', 'success');
+                showToast(`Asset Published: ${formData.title} - New suit is now live on the storefront.`, null, 'success');
             }
             setIsModalOpen(false);
             // Re-fetch to ensure all fields are perfectly in sync with DB
             setTimeout(() => loadProducts(false), 500);
         } catch (error) {
             console.error("Submission Error:", error);
-            showToast('Sync Failure', error.response?.data?.message || error.message || 'The server rejected the asset broadcast.', 'error');
+            const errorMsg = error.response?.data?.message || error.message || 'The server rejected the asset broadcast.';
+            showToast('Sync Failure: ' + errorMsg, null, 'error');
         } finally {
             setIsSaving(false);
         }
@@ -302,7 +304,7 @@ const AdminDashboard = () => {
             const url = await uploadImage(file);
             if (url) {
                 setFormData({ ...formData, image: url });
-                showToast('Primary Visual Updated', 'New cover asset synchronized.', 'success');
+                showToast('Primary Visual Updated: New cover asset synchronized.', null, 'success');
             }
         }
     };
@@ -316,7 +318,7 @@ const AdminDashboard = () => {
         }
         if (newUrls.length > 0) {
             setFormData(prev => ({ ...prev, images: [...prev.images, ...newUrls] }));
-            showToast('Gallery Updated', `${newUrls.length} new assets registered.`, 'success');
+            showToast(`Gallery Updated: ${newUrls.length} new assets registered.`, null, 'success');
         }
     };
 
@@ -518,30 +520,36 @@ const AdminDashboard = () => {
                                     <div className="bg-stone-50 p-8 rounded-[2rem] border border-stone-100 space-y-6">
                                         <div className="space-y-1">
                                             <label className="text-[9px] font-black text-stone-500 uppercase tracking-widest ml-1">Fabric Family</label>
-                                            <select 
+                                            <input 
+                                                type="text"
+                                                list="fabric-families"
                                                 value={formData.fabric_family} 
-                                                onChange={(e) => setFormData({...formData, fabric_family: e.target.value, fabric_category: ''})} 
-                                                className="w-full px-6 py-4 bg-white border border-stone-200 rounded-2xl outline-none font-bold text-xs text-primary appearance-none focus:ring-2 focus:ring-accent shadow-sm"
-                                            >
-                                                <option value="">Select Fabric Family...</option>
+                                                onChange={(e) => setFormData({...formData, fabric_family: e.target.value})} 
+                                                placeholder="Select or type Fabric Family..."
+                                                className="w-full px-6 py-4 bg-white border border-stone-200 rounded-2xl outline-none font-bold text-xs text-primary focus:ring-2 focus:ring-accent shadow-sm"
+                                            />
+                                            <datalist id="fabric-families">
                                                 {Object.keys(FABRIC_STRUCTURE).map(family => (
-                                                    <option key={family} value={family}>{family}</option>
+                                                    <option key={family} value={family} />
                                                 ))}
-                                            </select>
+                                            </datalist>
                                         </div>
                                         <div className="space-y-1">
                                             <label className="text-[9px] font-black text-stone-500 uppercase tracking-widest ml-1">Specialized Category</label>
-                                            <select 
+                                            <input 
+                                                type="text"
+                                                list="fabric-categories"
                                                 value={formData.fabric_category} 
                                                 onChange={(e) => setFormData({...formData, fabric_category: e.target.value})} 
                                                 disabled={!formData.fabric_family}
-                                                className={`w-full px-6 py-4 bg-white border border-stone-200 rounded-2xl outline-none font-bold text-xs text-primary appearance-none focus:ring-2 focus:ring-accent shadow-sm ${!formData.fabric_family && 'opacity-50'}`}
-                                            >
-                                                <option value="">{formData.fabric_family ? 'Select Category...' : 'Choose Family First'}</option>
-                                                {formData.fabric_family && FABRIC_STRUCTURE[formData.fabric_family].map(cat => (
-                                                    <option key={cat} value={cat}>{cat}</option>
+                                                placeholder={formData.fabric_family ? "Select or type Category..." : "Choose Family First"}
+                                                className={`w-full px-6 py-4 bg-white border border-stone-200 rounded-2xl outline-none font-bold text-xs text-primary focus:ring-2 focus:ring-accent shadow-sm ${!formData.fabric_family && 'opacity-50 cursor-not-allowed'}`}
+                                            />
+                                            <datalist id="fabric-categories">
+                                                {FABRIC_STRUCTURE[formData.fabric_family] && FABRIC_STRUCTURE[formData.fabric_family].map(cat => (
+                                                    <option key={cat} value={cat} />
                                                 ))}
-                                            </select>
+                                            </datalist>
                                         </div>
                                     </div>
 

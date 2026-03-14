@@ -36,7 +36,7 @@ const CouponManager = ({ showToast }) => {
             setCoupons(data);
         } catch (error) {
             console.error('Failed to fetch coupons:', error);
-            showToast('System Error', 'Could not retrieve active coupons.', 'error');
+            showToast('System Error: Could not retrieve active coupons.', null, 'error');
         } finally {
             setLoading(false);
         }
@@ -62,13 +62,13 @@ const CouponManager = ({ showToast }) => {
         setIsSaving(true);
         try {
             await saveCoupon(formData);
-            showToast('Success', `Coupon ${formData.code} ${isEditing ? 'updated' : 'live now'}.`, 'success');
+            showToast(`Success: Coupon ${formData.code} ${isEditing ? 'updated' : 'live now'}.`, null, 'success');
             setShowForm(false);
             setIsEditing(false);
             setFormData({ code: '', discount: '', type: 'flat', min_purchase: '', usage_limit: '', expires_at: '', description: '' });
             loadData();
         } catch (error) {
-            showToast('Error', error.message, 'error');
+            showToast('Error: ' + error.message, null, 'error');
         } finally {
             setIsSaving(false);
         }
@@ -78,10 +78,10 @@ const CouponManager = ({ showToast }) => {
         if (!window.confirm(`Deactivate coupon ${code}?`)) return;
         try {
             await deleteCoupon(code);
-            showToast('Success', 'Coupon purged from system.', 'success');
+            showToast('Success: Coupon purged from system.', null, 'success');
             loadData();
         } catch (error) {
-            showToast('Error', 'Failed to delete coupon.', 'error');
+            showToast('Error: Failed to delete coupon.', null, 'error');
         }
     };
 
