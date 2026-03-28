@@ -1,5 +1,5 @@
 // src/components/Hero.jsx — Mobile: honey-gold gradient banner
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useAuth } from "../../context/AuthContext";
@@ -7,6 +7,9 @@ import { Link, useLocation } from "react-router-dom";
 import LocationBar from "../common/LocationBar";
 import hero1 from "../../assets/hero1.webp";
 import hero2 from "../../assets/hero2.jpg";
+import rustic from "../../assets/Rustic.jpeg";
+import naviBlue from "../../assets/Navi_blue.jpeg";
+import brown from "../../assets/Brown.jpeg";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -16,6 +19,36 @@ const Hero = () => {
   const textRef = useRef(null);
   const imageRef = useRef(null);
   const mobileHeroRef = useRef(null);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [prevIdx, setPrevIdx] = useState(0);
+
+  const images = [
+    { src: rustic, alt: "Rustic Suit" },
+    { src: naviBlue, alt: "Navi Blue Suit" },
+    { src: brown, alt: "Brown Suit" },
+    { src: hero1, alt: "Elegant Suit" },
+    { src: hero2, alt: "Cotton Suit" }
+  ];
+
+  // Auto-advance carousel
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPrevIdx(currentIdx);
+      setCurrentIdx((prev) => (prev + 1) % images.length);
+    }, 5000); // Change every 5 seconds
+    return () => clearInterval(timer);
+  }, [currentIdx, images.length]);
+
+  // Handle image transitions with GSAP (Clean fade, no blur)
+  useEffect(() => {
+    const imagesToFade = heroRef.current?.querySelectorAll('.image-overlay');
+    if (imagesToFade?.length) {
+      gsap.fromTo(imagesToFade,
+        { opacity: 0, scale: 1.05 },
+        { opacity: 1, scale: 1, duration: 1.2, ease: "sine.inOut" }
+      );
+    }
+  }, [currentIdx]);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -90,15 +123,33 @@ const Hero = () => {
               </div>
             </div>
 
-            {/* Model Images Block (Right) */}
+            {/* Model Images Block (Right) — Smooth Dual Transition */}
             <div className="w-[45%] h-[230px] relative pointer-events-none mt-4">
-              {/* hero1: Larger, background layer */}
-              <div className="absolute top-0 right-8 w-[115px] h-[155px] overflow-hidden rounded-xl shadow-xl z-10 border-[3px] border-white/80 rotate-[4deg]">
-                <img src={hero1} alt="Elegant Suit" className="w-full h-full object-cover" />
+              {/* Slot 1: Rotating Image stack */}
+              <div className="absolute top-0 right-8 w-[115px] h-[155px] overflow-hidden rounded-xl shadow-xl z-10 border-[3px] border-white/80 rotate-[4deg] bg-amber-50">
+                <img 
+                  src={images[prevIdx].src} 
+                  alt={images[prevIdx].alt} 
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <img 
+                  src={images[currentIdx].src} 
+                  alt={images[currentIdx].alt} 
+                  className="absolute inset-0 w-full h-full object-cover image-overlay opacity-0"
+                />
               </div>
-              {/* hero2: Smaller, top layer */}
-              <div className="absolute top-[90px] right-[-10px] w-[100px] h-[135px] overflow-hidden rounded-lg shadow-2xl z-20 border-[2px] border-white/60 -rotate-[6deg]">
-                <img src={hero2} alt="Cotton Suit" className="w-full h-full object-cover" />
+              {/* Slot 2: Sequential Image stack */}
+              <div className="absolute top-[90px] right-[-10px] w-[100px] h-[135px] overflow-hidden rounded-lg shadow-2xl z-20 border-[2px] border-white/60 -rotate-[6deg] bg-amber-50">
+                <img 
+                  src={images[(prevIdx + 1) % images.length].src} 
+                  alt={images[(prevIdx + 1) % images.length].alt} 
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <img 
+                  src={images[(currentIdx + 1) % images.length].src} 
+                  alt={images[(currentIdx + 1) % images.length].alt} 
+                  className="absolute inset-0 w-full h-full object-cover image-overlay opacity-0"
+                />
               </div>
             </div>
           </div>
@@ -152,11 +203,41 @@ const Hero = () => {
             </div>
           </div>
           <div ref={imageRef} className="relative h-[600px] hidden md:block">
-            <div className="absolute top-10 right-10 w-80 h-[500px] overflow-hidden shadow-2xl z-20">
-              <img src={hero1} alt="Elegant Suit" className="w-full h-full object-cover hover:scale-105 transition duration-700" />
+            {/* Slot 1: Desktop Main stack */}
+            <div className="absolute top-10 right-10 w-80 h-[500px] overflow-hidden shadow-2xl z-20 bg-muted">
+              <img 
+                src={images[prevIdx].src} 
+                alt={images[prevIdx].alt} 
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <img 
+                src={images[currentIdx].src} 
+                alt={images[currentIdx].alt} 
+                className="absolute inset-0 w-full h-full object-cover image-overlay opacity-0"
+              />
             </div>
-            <div className="absolute bottom-10 left-10 w-72 h-[400px] overflow-hidden shadow-xl z-10 border-4 border-white">
-              <img src={hero2} alt="Cotton Suit" className="w-full h-full object-cover hover:scale-105 transition duration-700" />
+            {/* Slot 2: Desktop Sub stack */}
+            <div className="absolute bottom-10 left-10 w-72 h-[400px] overflow-hidden shadow-xl z-10 border-4 border-white bg-muted">
+              <img 
+                src={images[(prevIdx + 1) % images.length].src} 
+                alt={images[(prevIdx + 1) % images.length].alt} 
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <img 
+                src={images[(currentIdx + 1) % images.length].src} 
+                alt={images[(currentIdx + 1) % images.length].alt} 
+                className="absolute inset-0 w-full h-full object-cover image-overlay opacity-0"
+              />
+            </div>
+
+            {/* Subtle Carousel Indicators */}
+            <div className="absolute bottom-0 right-10 flex gap-2 z-30">
+              {images.map((_, idx) => (
+                <div 
+                  key={idx}
+                  className={`h-1 transition-all duration-300 ${idx === currentIdx ? 'w-8 bg-amber-600' : 'w-4 bg-gray-300'}`}
+                />
+              ))}
             </div>
           </div>
         </div>

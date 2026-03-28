@@ -16,6 +16,8 @@ import gsap from 'gsap';
 import YouMayAlsoLike from '../home/YouMayAlsoLike';
 import { HiX } from 'react-icons/hi';
 import OrderSuccessAnimation from '../common/OrderSuccessAnimation';
+import phonePeQR from "../../assets/PhonePe_kamlesh_suits.jpeg";
+import { SiPhonepe } from 'react-icons/si';
 
 
 const Cart = () => {
@@ -45,7 +47,7 @@ const Cart = () => {
   const [couponCode, setCouponCode] = useState('');
   const [couponError, setCouponError] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [paymentMethod, setPaymentMethod] = useState('phonepe');
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const summaryRef = useRef(null);
   const navigate = useNavigate();
@@ -59,6 +61,7 @@ const Cart = () => {
   const [unsupportedPincode, setUnsupportedPincode] = useState('');
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
   const [lastAddrCount, setLastAddrCount] = useState(addresses.length);
+  const [showPhonePeModal, setShowPhonePeModal] = useState(false);
 
   // Ensure user lands at top of cart page
   useEffect(() => {
@@ -263,7 +266,14 @@ const Cart = () => {
           emailSent: result.emailSent
         });
         clearCart();
-        window.scrollTo(0, 0);
+        
+        if (paymentMethod === 'phonepe') {
+          // 🚀 Automatic App Handoff: Immediate UPI intent triggers PhonePe
+          const upiUrl = `upi://pay?pa=9992304505@ybl&pn=KamleshSuits&am=${total}&cu=INR&tn=Order_${result.orderId}`;
+          window.location.href = upiUrl;
+        } else {
+          window.scrollTo(0, 0);
+        }
       }
     } catch (error) {
       console.error("Order placement failed:", error);
@@ -362,15 +372,6 @@ const Cart = () => {
     setShowAddressForm(true);
   };
 
-  if (orderConfirmed) {
-    return (
-      <OrderSuccessAnimation 
-        orderId={orderConfirmed.orderId}
-        name={orderConfirmed.name}
-        onClose={() => setOrderConfirmed(null)}
-      />
-    );
-  }
 
   // --- DELIVERY VALIDATION LOGIC ---
   useEffect(() => {
@@ -450,7 +451,17 @@ const Cart = () => {
       }
     };
 
+    if (orderConfirmed) {
     return (
+      <OrderSuccessAnimation 
+        orderId={orderConfirmed.orderId}
+        name={orderConfirmed.name}
+        onClose={() => setOrderConfirmed(null)}
+      />
+    );
+  }
+
+  return (
       <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
         <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 p-8 sm:p-10 relative">
           <button 
@@ -537,6 +548,16 @@ const Cart = () => {
     );
   };
 
+  if (orderConfirmed) {
+    return (
+      <OrderSuccessAnimation 
+        orderId={orderConfirmed.orderId}
+        name={orderConfirmed.name}
+        onClose={() => setOrderConfirmed(null)}
+      />
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 pt-1 sm:pt-2 pb-8 relative overflow-x-hidden">
       <div id="confetti-container" className="fixed inset-0 pointer-events-none z-50"></div>
@@ -589,7 +610,17 @@ const Cart = () => {
                     ? item.image 
                     : (Array.isArray(item.images) ? item.images[0] : (item.images || "").split(",")[0]);
                   
-                  return (
+                  if (orderConfirmed) {
+    return (
+      <OrderSuccessAnimation 
+        orderId={orderConfirmed.orderId}
+        name={orderConfirmed.name}
+        onClose={() => setOrderConfirmed(null)}
+      />
+    );
+  }
+
+  return (
                   <div key={item.suitId} className="group flex flex-row gap-4 sm:gap-6 py-6 sm:py-8 border-b border-stone-100 last:border-0 hover:bg-stone-50/30 transition-colors p-2 sm:p-4 rounded-xl">
                       {/* Image */}
                       <div 
@@ -1041,33 +1072,33 @@ const Cart = () => {
                     <h4 className="text-xs font-black text-primary uppercase tracking-[0.15em]">Secure Checkout</h4>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-3 mb-6">
-                    <label className={`flex flex-col items-center justify-center p-3 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'card' ? 'border-primary bg-stone-50 shadow-sm' : 'border-stone-100 bg-white hover:border-stone-200'}`}>
-                      <input 
-                        type="radio" 
-                        name="payment" 
-                        value="card" 
-                        className="hidden"
-                        checked={paymentMethod === 'card'}
-                        onChange={() => setPaymentMethod('card')}
-                      />
-                      <HiCreditCard size={20} className={paymentMethod === 'card' ? 'text-primary' : 'text-stone-400'} />
-                      <span className={`text-[9px] font-black uppercase tracking-widest mt-2 ${paymentMethod === 'card' ? 'text-primary' : 'text-stone-500'}`}>Digital</span>
-                    </label>
-                    
-                    <label className={`flex flex-col items-center justify-center p-3 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'cod' ? 'border-primary bg-stone-50 shadow-sm' : 'border-stone-100 bg-white hover:border-stone-200'}`}>
-                      <input 
-                        type="radio" 
-                        name="payment" 
-                        value="cod" 
-                        className="hidden"
-                        checked={paymentMethod === 'cod'}
-                        onChange={() => setPaymentMethod('cod')}
-                      />
-                      <HiCash size={20} className={paymentMethod === 'cod' ? 'text-primary' : 'text-stone-400'} />
-                      <span className={`text-[9px] font-black uppercase tracking-widest mt-2 ${paymentMethod === 'cod' ? 'text-primary' : 'text-stone-500'}`}>COD</span>
-                    </label>
-                  </div>
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                      <label className={`flex flex-col items-center justify-center p-3 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'phonepe' ? 'border-[#5f259f] bg-[#5f259f]/5 shadow-sm' : 'border-stone-100 bg-white hover:border-stone-200'}`}>
+                        <input 
+                          type="radio" 
+                          name="payment" 
+                          value="phonepe" 
+                          className="hidden"
+                          checked={paymentMethod === 'phonepe'}
+                          onChange={() => setPaymentMethod('phonepe')}
+                        />
+                        <SiPhonepe size={20} className={paymentMethod === 'phonepe' ? 'text-[#5f259f]' : 'text-stone-400'} />
+                        <span className={`text-[9px] font-black uppercase tracking-widest mt-2 ${paymentMethod === 'phonepe' ? 'text-[#5f259f]' : 'text-stone-500'}`}>PhonePe</span>
+                      </label>
+                      
+                      <label className={`flex flex-col items-center justify-center p-3 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'cod' ? 'border-primary bg-stone-50 shadow-sm' : 'border-stone-100 bg-white hover:border-stone-200'}`}>
+                        <input 
+                          type="radio" 
+                          name="payment" 
+                          value="cod" 
+                          className="hidden"
+                          checked={paymentMethod === 'cod'}
+                          onChange={() => setPaymentMethod('cod')}
+                        />
+                        <HiCash size={20} className={paymentMethod === 'cod' ? 'text-primary' : 'text-stone-400'} />
+                        <span className={`text-[9px] font-black uppercase tracking-widest mt-2 ${paymentMethod === 'cod' ? 'text-primary' : 'text-stone-500'}`}>COD</span>
+                      </label>
+                    </div>
 
                   <button 
                     onClick={handlePlaceOrder}
@@ -1258,6 +1289,7 @@ const Cart = () => {
              />
           </div>
           
+
           {showDemandModal && <DeliveryDemandModal />}
         </>
       )}

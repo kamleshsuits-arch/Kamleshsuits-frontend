@@ -14,6 +14,7 @@ import { BiLoaderAlt } from 'react-icons/bi';
 import AnalyticsTerminal from '../components/admin/AnalyticsTerminal';
 import CouponManager from '../components/admin/CouponManager';
 import DeliveryDemandInsights from '../components/admin/DeliveryDemandInsights';
+import OrderManager from '../components/admin/OrderManager';
 import Loader from '../components/common/Loader';
 import { useCart } from '../hooks/useCart';
 import { getColorName, getColorDisplay } from '../utils/colors';
@@ -348,6 +349,12 @@ const AdminDashboard = () => {
                             <HiDatabase size={16} /> Inventory Terminal
                         </button>
                         <button 
+                            onClick={() => setActiveTab('orders')} 
+                            className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === 'orders' ? 'bg-primary text-white shadow-xl' : 'text-stone-400 hover:text-stone-600'}`}
+                        >
+                            <HiCollection size={16} /> Orders
+                        </button>
+                        <button 
                             onClick={() => setActiveTab('coupons')} 
                             className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === 'coupons' ? 'bg-primary text-white shadow-xl' : 'text-stone-400 hover:text-stone-600'}`}
                         >
@@ -486,6 +493,8 @@ const AdminDashboard = () => {
                             </div>
                         )}
                     </>
+                ) : activeTab === 'orders' ? (
+                    <OrderManager showToast={showToast} />
                 ) : activeTab === 'coupons' ? (
                     <CouponManager showToast={showToast} />
                 ) : activeTab === 'delivery' ? (
