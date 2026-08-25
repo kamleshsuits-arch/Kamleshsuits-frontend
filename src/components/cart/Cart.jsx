@@ -230,6 +230,54 @@ const Cart = () => {
     }
   };
 
+  const applyDetectedLocation = async (place, fallbackLatitude, fallbackLongitude, isApproximate = false) => {
+    if (place.countryCode && place.countryCode !== 'IN') {
+      throw new Error('Please choose a delivery location in India.');
+    }
+
+    const latitudeValue = Number(place.latitude ?? fallbackLatitude);
+    const longitudeValue = Number(place.longitude ?? fallbackLongitude);
+    const latitude = Number.isFinite(latitudeValue) ? Number(latitudeValue.toFixed(6)) : null;
+    const longitude = Number.isFinite(longitudeValue) ? Number(longitudeValue.toFixed(6)) : null;
+    const city = place.city || place.locality || '';
+    const area = place.locality || city;
+    const pincode = String(place.postcode || '').replace(/\D/g, '').slice(0, 6);
+    const state = place.principalSubdivision || getStateFromPin(pincode) || '';
+
+    setAddressForm(prev => ({
+      ...prev,
+      pincode,
+      houseNo: !prev.houseNo || prev.houseNo.startsWith('GPS pin near')
+        ? `GPS pin near ${area || city}`
+        : prev.houseNo,
+      area,
+      city,
+      state,
+      latitude,
+      longitude
+    }));
+
+    const hasCompleteAddress = pincode.length === 6 && city && state && area;
+    setShowManualAddress(!hasCompleteAddress);
+    setLocationMessage(isApproximate
+      ? 'Approximate location found using your internet connection. Check the map and edit it if needed.'
+      : 'Location found. Please check the map and save your address.');
+    if (pincode.length === 6) await fillFromPincode(pincode, true);
+  };
+
+  const reverseGeocodeLocation = async (latitude, longitude, isApproximate = false) => {
+    const url = new URL('https://api.bigdatacloud.net/data/reverse-geocode-client');
+    if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+      url.searchParams.set('latitude', latitude);
+      url.searchParams.set('longitude', longitude);
+    }
+    url.searchParams.set('localityLanguage', 'en');
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Location lookup failed');
+    const place = await response.json();
+    await applyDetectedLocation(place, latitude, longitude, isApproximate);
+  };
+
   const handleUseCurrentLocation = () => {
     setLocationError('');
     setLocationMessage('');
@@ -246,36 +294,7 @@ const Cart = () => {
       const longitude = Number(coords.longitude.toFixed(6));
 
       try {
-        const url = new URL('https://api.bigdatacloud.net/data/reverse-geocode-client');
-        url.searchParams.set('latitude', latitude);
-        url.searchParams.set('longitude', longitude);
-        url.searchParams.set('localityLanguage', 'en');
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Location lookup failed');
-        const place = await response.json();
-
-        if (place.countryCode && place.countryCode !== 'IN') {
-          throw new Error('Please choose a delivery location in India.');
-        }
-
-        const city = place.city || place.locality || '';
-        const area = place.locality || city;
-        const pincode = String(place.postcode || '').replace(/\D/g, '').slice(0, 6);
-        const state = place.principalSubdivision || getStateFromPin(pincode) || '';
-
-        setAddressForm(prev => ({
-          ...prev,
-          pincode,
-          houseNo: prev.houseNo || `GPS pin near ${area || city}`,
-          area,
-          city,
-          state,
-          latitude,
-          longitude
-        }));
-        setShowManualAddress(false);
-        setLocationMessage('Location found. Please check the map and save your address.');
-        if (pincode.length === 6) await fillFromPincode(pincode, true);
+        await reverseGeocodeLocation(latitude, longitude);
       } catch (error) {
         console.error('Reverse geocoding failed:', error);
         setAddressForm(prev => ({ ...prev, latitude, longitude }));
@@ -284,19 +303,36 @@ const Cart = () => {
       } finally {
         setIsLocating(false);
       }
-    }, (error) => {
+    }, async (error) => {
       const messages = {
         1: 'Location permission was not allowed. Tap “Enter address manually” below.',
-        2: 'Your location could not be detected. Turn on phone location and try again.',
-        3: 'Location is taking too long. Please try again or enter the address manually.'
+        2: 'Your precise location could not be detected.',
+        3: 'Precise GPS is taking too long.'
       };
+
+      if (error.code === 2 || error.code === 3) {
+        setLocationMessage('GPS is slow. Finding your approximate location from the internet...');
+        try {
+          await reverseGeocodeLocation(undefined, undefined, true);
+          setLocationError('');
+        } catch (fallbackError) {
+          console.error('Approximate location lookup failed:', fallbackError);
+          setLocationMessage('');
+          setLocationError(`${messages[error.code]} Please turn on phone location and try again, or enter the address manually.`);
+          setShowManualAddress(true);
+        } finally {
+          setIsLocating(false);
+        }
+        return;
+      }
+
       setLocationError(messages[error.code] || 'Could not detect your location. Please enter the address manually.');
       setShowManualAddress(true);
       setIsLocating(false);
     }, {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 60000
+      enableHighAccuracy: false,
+      timeout: 12000,
+      maximumAge: 600000
     });
   };
 
