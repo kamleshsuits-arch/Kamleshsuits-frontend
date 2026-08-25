@@ -8,17 +8,21 @@ import ProductFilter from "./ProductFilter";
 import { useCart } from "../../hooks/useCart.jsx";
 import { HiFilter, HiSortAscending, HiX, HiCheck, HiChevronUp } from "react-icons/hi";
 import Loader from "../common/Loader";
+import { useProductTaxonomy } from "../../hooks/useProductTaxonomy";
+import { DEFAULT_PRODUCT_CATEGORY } from "../../utils/productTaxonomy";
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { taxonomy } = useProductTaxonomy();
 
   // Filters
   const [filters, setFilters] = useState({
     minPrice: 0,
     maxPrice: null,
     type: [],
+    productCategory: [],
     color: [],
     sort: "",
     minDiscount: 0,
@@ -54,12 +58,16 @@ const ProductList = () => {
   useEffect(() => {
     const categoryParam = searchParams.get('category');
     if (categoryParam) {
+      const isProductCategory = taxonomy.some(category => category.id === categoryParam);
       setFilters(prev => ({
         ...prev,
-        type: [categoryParam]
+        productCategory: isProductCategory ? [categoryParam] : [],
+        type: isProductCategory ? [] : [categoryParam]
       }));
+    } else {
+      setFilters(prev => ({ ...prev, productCategory: [], type: [] }));
     }
-  }, [searchParams]);
+  }, [searchParams, taxonomy]);
 
   // --- Lazy loading / paging state ---
   const PAGE_SIZE = 12; // items per "page" loaded
@@ -106,6 +114,11 @@ const ProductList = () => {
       const min = filters.minPrice ?? 0;
       const max = filters.maxPrice ?? Infinity;
       if (price < min || price > max) return false;
+
+      if (filters.productCategory && filters.productCategory.length > 0) {
+        const categoryId = p.product_category || DEFAULT_PRODUCT_CATEGORY;
+        if (!filters.productCategory.includes(categoryId)) return false;
+      }
 
       if (filters.type && filters.type.length > 0) {
         const pCategories = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []);
@@ -228,9 +241,9 @@ const ProductList = () => {
           >
             <HiFilter size={15} /> Filter
             {/* Active filter count */}
-            {(filters.type?.length > 0 || filters.color?.length > 0 || filters.minDiscount > 0) && (
+            {(filters.productCategory?.length > 0 || filters.type?.length > 0 || filters.color?.length > 0 || filters.minDiscount > 0) && (
               <span className="absolute -top-1.5 -right-1 bg-gradient-to-r from-accent to-highlight text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                {(filters.type?.length || 0) + (filters.color?.length || 0) + (filters.minDiscount > 0 ? 1 : 0)}
+                {(filters.productCategory?.length || 0) + (filters.type?.length || 0) + (filters.color?.length || 0) + (filters.minDiscount > 0 ? 1 : 0)}
               </span>
             )}
           </button>

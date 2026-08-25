@@ -111,7 +111,7 @@ export default function ProductCard({ product, onView }) {
       {/* Product Details */}
       <div className="p-3 bg-white">
         <h3 className="text-sm sm:text-base font-serif text-primary line-clamp-2 leading-tight overflow-hidden h-[2.5rem] mb-1">
-          {product.title.replace(/suit/gi, '').trim()}
+          {product.title}
         </h3>
 
 

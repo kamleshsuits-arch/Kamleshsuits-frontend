@@ -20,6 +20,8 @@ import Loader from '../components/common/Loader';
 import { useCart } from '../hooks/useCart';
 import { getColorName, getColorDisplay } from '../utils/colors';
 import { formatAssetSize, isSupportedProductAsset, optimizeProductAsset } from '../utils/productAssetOptimizer';
+import { useProductTaxonomy } from '../hooks/useProductTaxonomy';
+import { getProductCategory } from '../utils/productTaxonomy';
 import './AdminDashboard.css';
 
 const MAX_PRODUCT_ASSETS = 10;
@@ -58,6 +60,7 @@ const FABRIC_STRUCTURE = {
 const AdminDashboard = () => {
     const { isAdmin, loading: authLoading } = useAuth();
     const { showToast } = useCart();
+    const { taxonomy: productTaxonomy, defaultCategory } = useProductTaxonomy();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -80,6 +83,8 @@ const AdminDashboard = () => {
     // Enhanced Form Data
     const [formData, setFormData] = useState({
         title: '',
+        product_category: 'suits',
+        product_subcategory: '',
         categories: [],
         fabric_family: '',
         fabric_category: '',
@@ -239,6 +244,8 @@ const AdminDashboard = () => {
                 (p.session || "").toLowerCase().includes(search) ||
                 categoriesStr.toLowerCase().includes(search) ||
                 p.type?.toLowerCase().includes(search) ||
+                p.product_category?.toLowerCase().includes(search) ||
+                p.product_subcategory?.toLowerCase().includes(search) ||
                 p.fabric_family?.toLowerCase().includes(search) ||
                 p.fabric_category?.toLowerCase().includes(search)
             );
@@ -250,6 +257,8 @@ const AdminDashboard = () => {
             if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
             return 0;
         });
+
+    const selectedCategoryDefinition = getProductCategory(productTaxonomy, formData.product_category);
 
     const handleOpenModal = (product = null) => {
         setAssetProgress([]);
@@ -263,6 +272,8 @@ const AdminDashboard = () => {
             setFormData({ 
                 ...product, 
                 categories: cats,
+                product_category: product.product_category || defaultCategory,
+                product_subcategory: product.product_subcategory || '',
                 images: product.images || [], 
                 colors: product.colors || [],
                 fabric_family: product.fabric_family || '',
@@ -273,7 +284,7 @@ const AdminDashboard = () => {
         } else {
             setEditingProduct(null);
             setFormData({ 
-                title: '', categories: [], price: '', discount: 0, description: '', 
+                title: '', product_category: defaultCategory, product_subcategory: '', categories: [], price: '', discount: 0, description: '',
                 image: '', images: [], colors: [], stock: 4,
                 fabric_family: '', fabric_category: '',
                 rating: 4.1, reviews: 26
@@ -306,7 +317,12 @@ const AdminDashboard = () => {
             showToast('Invalid Price: Asset must have a positive value.', null, 'error');
             return;
         }
-        if (!formData.fabric_family || !formData.fabric_category) {
+        const selectedProductCategory = getProductCategory(productTaxonomy, formData.product_category);
+        if (!selectedProductCategory) {
+            showToast('Category Required: Please select a product category.', null, 'error');
+            return;
+        }
+        if (selectedProductCategory.requiresFabric && (!formData.fabric_family || !formData.fabric_category)) {
             showToast('Fabric Details Missing: Please select both family and category.', null, 'error');
             return;
         }
@@ -332,7 +348,9 @@ const AdminDashboard = () => {
                 price: safePrice, 
                 discount: safeDiscount,
                 mrp: safeMrp,
-                type: 'suit',
+                type: 'product',
+                product_category: formData.product_category,
+                product_subcategory: formData.product_subcategory || '',
                 image: formData.images[0] || '',
                 images: formData.images || [],
                 colors: formData.colors || [],
@@ -342,7 +360,11 @@ const AdminDashboard = () => {
                 stock: safeStock,
                 rating: parseFloat(formData.rating) || 4.1,
                 reviews: parseInt(formData.reviews) || 26,
-                session: `${formData.fabric_category}${formData.fabric_family ? ` (${formData.fabric_family})` : ''} - [${(formData.categories || []).join(", ")}]`
+                session: [
+                    formData.product_subcategory,
+                    formData.fabric_category && `${formData.fabric_category}${formData.fabric_family ? ` (${formData.fabric_family})` : ''}`,
+                    (formData.categories || []).length ? `[${formData.categories.join(", ")}]` : ''
+                ].filter(Boolean).join(' - ')
             };
             
             if (editingProduct) {
@@ -572,7 +594,7 @@ const AdminDashboard = () => {
                                     <div className="flex items-center gap-3">
                                         <h2 className="text-xl font-black text-primary uppercase tracking-tight">Active Collection</h2>
                                         <span className="px-3 py-1 bg-stone-100 rounded-full text-[9px] font-black text-stone-500 uppercase tracking-widest border border-stone-200">
-                                            {filteredProducts.length} Total Suits
+                                            {filteredProducts.length} Total Products
                                         </span>
                                     </div>
                                     <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Manage Global Assets</p>
@@ -610,8 +632,8 @@ const AdminDashboard = () => {
                                         <thead className="bg-stone-50/80 backdrop-blur-md">
                                             <tr className="border-b border-stone-100">
                                                 <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-stone-400">Asset Info</th>
-                                                <TableHead label="Category" sortKey="session" currentSort={sortConfig} onSort={handleSort} />
-                                                <TableHead label="Fabric" sortKey="fabric_family" currentSort={sortConfig} onSort={handleSort} />
+                                                <TableHead label="Product Category" sortKey="product_category" currentSort={sortConfig} onSort={handleSort} />
+                                                <TableHead label="Type / Fabric" sortKey="product_subcategory" currentSort={sortConfig} onSort={handleSort} />
                                                 <TableHead label="Price" sortKey="price" currentSort={sortConfig} onSort={handleSort} />
                                                 <TableHead label="Disp %" sortKey="discount" currentSort={sortConfig} onSort={handleSort} />
                                                 <TableHead label="Stock" sortKey="stock" currentSort={sortConfig} onSort={handleSort} />
@@ -638,17 +660,17 @@ const AdminDashboard = () => {
                                                             </div>
                                                             <div className="flex flex-col justify-center min-w-0">
                                                                 <p className="text-sm font-black text-primary leading-tight mb-1">{product.title}</p>
-                                                                <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest leading-none">Suit</p>
+                                                                <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest leading-none">{getProductCategory(productTaxonomy, product.product_category || defaultCategory)?.label || 'Product'}</p>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-8 py-5">
-                                                        <span className="px-3 py-1.5 bg-primary/5 text-primary rounded-lg text-[9px] font-black uppercase tracking-widest block w-fit leading-relaxed">{product.session || product.categories || 'N/A'}</span>
+                                                        <span className="px-3 py-1.5 bg-primary/5 text-primary rounded-lg text-[9px] font-black uppercase tracking-widest block w-fit leading-relaxed">{getProductCategory(productTaxonomy, product.product_category || defaultCategory)?.label || 'Suits'}</span>
                                                     </td>
                                                     <td className="px-8 py-5 font-bold text-xs text-stone-600">
                                                          <div className="flex flex-col">
-                                                              <span className="text-[10px] font-black text-primary uppercase">{product.fabric_family || 'Standard'}</span>
-                                                              <span className="text-[9px] text-stone-400 uppercase font-bold">{product.fabric_category || 'General'}</span>
+                                                              <span className="text-[10px] font-black text-primary uppercase">{product.product_subcategory || product.fabric_category || 'General'}</span>
+                                                              <span className="text-[9px] text-stone-400 uppercase font-bold">{product.fabric_family || (Array.isArray(product.categories) ? product.categories.slice(0, 2).join(', ') : product.categories) || 'Standard'}</span>
                                                          </div>
                                                     </td>
                                                     <td className="px-8 py-5 font-black text-sm text-primary">₹{(product.price || 0).toString()}</td>
@@ -716,60 +738,113 @@ const AdminDashboard = () => {
                             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-7">
                                 {/* Left Form Section */}
                                 <div className="space-y-6">
-                                    <FormSectionTitle number="01" label="Fabric Architecture" description="Choose the material family, then its exact fabric type." />
+                                    <FormSectionTitle number="01" label="Product Classification" description="Choose where this item appears in the storefront catalogue." />
                                     <div className="asset-section-card space-y-5">
                                         <div className="grid gap-3 sm:grid-cols-[36px_1fr] sm:items-start">
                                             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-xs font-black text-white">1</span>
                                             <div className="space-y-2">
-                                                <label htmlFor="fabric-family" className="block text-sm font-black text-stone-800">Fabric family</label>
+                                                <label htmlFor="product-category" className="block text-sm font-black text-stone-800">Product category</label>
                                                 <select
-                                                    id="fabric-family"
-                                                    value={formData.fabric_family}
-                                                    onChange={(e) => setFormData({ ...formData, fabric_family: e.target.value, fabric_category: '' })}
+                                                    id="product-category"
+                                                    value={formData.product_category}
+                                                    onChange={(e) => {
+                                                        const nextCategory = getProductCategory(productTaxonomy, e.target.value);
+                                                        setFormData({
+                                                            ...formData,
+                                                            product_category: e.target.value,
+                                                            product_subcategory: '',
+                                                            fabric_family: nextCategory?.requiresFabric ? formData.fabric_family : '',
+                                                            fabric_category: nextCategory?.requiresFabric ? formData.fabric_category : ''
+                                                        });
+                                                    }}
                                                     className="asset-control"
                                                     required
                                                 >
-                                                    <option value="">Select a fabric family</option>
-                                                    {formData.fabric_family && !Object.hasOwn(FABRIC_STRUCTURE, formData.fabric_family) && (
-                                                        <option value={formData.fabric_family}>{formData.fabric_family} (existing)</option>
-                                                    )}
-                                                    {Object.keys(FABRIC_STRUCTURE).map(family => (
-                                                        <option key={family} value={family}>{family}</option>
+                                                    <option value="">Select a product category</option>
+                                                    {productTaxonomy.map(category => (
+                                                        <option key={category.id} value={category.id}>{category.label}</option>
                                                     ))}
                                                 </select>
-                                                <p className="text-xs font-medium text-stone-500">This controls the fabric types shown in the next field.</p>
+                                                <p className="text-xs font-medium text-stone-500">Customers can use this category to find the product.</p>
                                             </div>
                                         </div>
 
                                         <div className="h-px bg-stone-100 sm:ml-12" />
 
                                         <div className="grid gap-3 sm:grid-cols-[36px_1fr] sm:items-start">
-                                            <span className={`flex h-9 w-9 items-center justify-center rounded-xl text-xs font-black ${formData.fabric_family ? 'bg-accent text-white' : 'bg-stone-100 text-stone-400'}`}>2</span>
+                                            <span className={`flex h-9 w-9 items-center justify-center rounded-xl text-xs font-black ${formData.product_category ? 'bg-accent text-white' : 'bg-stone-100 text-stone-400'}`}>2</span>
                                             <div className="space-y-2">
-                                                <label htmlFor="fabric-category" className="block text-sm font-black text-stone-800">Fabric type</label>
+                                                <label htmlFor="product-subcategory" className="block text-sm font-black text-stone-800">Product type <span className="font-medium text-stone-400">(optional)</span></label>
                                                 <select
-                                                    id="fabric-category"
-                                                    value={formData.fabric_category}
-                                                    onChange={(e) => setFormData({ ...formData, fabric_category: e.target.value })}
-                                                    disabled={!formData.fabric_family}
+                                                    id="product-subcategory"
+                                                    value={formData.product_subcategory}
+                                                    onChange={(e) => setFormData({ ...formData, product_subcategory: e.target.value })}
+                                                    disabled={!formData.product_category}
                                                     className="asset-control disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
-                                                    required
                                                 >
-                                                    <option value="">{formData.fabric_family ? 'Select the fabric type' : 'Select a family first'}</option>
-                                                    {formData.fabric_category && !(FABRIC_STRUCTURE[formData.fabric_family] || []).includes(formData.fabric_category) && (
-                                                        <option value={formData.fabric_category}>{formData.fabric_category} (existing)</option>
+                                                    <option value="">{formData.product_category ? 'Select the product type' : 'Select a category first'}</option>
+                                                    {formData.product_subcategory && !(selectedCategoryDefinition?.subcategories || []).includes(formData.product_subcategory) && (
+                                                        <option value={formData.product_subcategory}>{formData.product_subcategory} (existing)</option>
                                                     )}
-                                                    {(FABRIC_STRUCTURE[formData.fabric_family] || []).map(category => (
-                                                        <option key={category} value={category}>{category}</option>
+                                                    {(selectedCategoryDefinition?.subcategories || []).map(subcategory => (
+                                                        <option key={subcategory} value={subcategory}>{subcategory}</option>
                                                     ))}
                                                 </select>
                                             </div>
                                         </div>
+
+                                        {selectedCategoryDefinition?.requiresFabric && (
+                                            <div className="space-y-4 rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
+                                                <div>
+                                                    <p className="text-sm font-black text-stone-800">Suit fabric details</p>
+                                                    <p className="mt-1 text-xs font-medium text-stone-500">Required only for products in the Suits category.</p>
+                                                </div>
+                                                <div className="grid gap-3 sm:grid-cols-2">
+                                                    <div className="space-y-2">
+                                                        <label htmlFor="fabric-family" className="block text-xs font-black text-stone-700">Fabric family</label>
+                                                        <select
+                                                            id="fabric-family"
+                                                            value={formData.fabric_family}
+                                                            onChange={(e) => setFormData({ ...formData, fabric_family: e.target.value, fabric_category: '' })}
+                                                            className="asset-control"
+                                                            required
+                                                        >
+                                                            <option value="">Select family</option>
+                                                            {formData.fabric_family && !Object.hasOwn(FABRIC_STRUCTURE, formData.fabric_family) && (
+                                                                <option value={formData.fabric_family}>{formData.fabric_family} (existing)</option>
+                                                            )}
+                                                            {Object.keys(FABRIC_STRUCTURE).map(family => (
+                                                                <option key={family} value={family}>{family}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label htmlFor="fabric-category" className="block text-xs font-black text-stone-700">Fabric type</label>
+                                                        <select
+                                                            id="fabric-category"
+                                                            value={formData.fabric_category}
+                                                            onChange={(e) => setFormData({ ...formData, fabric_category: e.target.value })}
+                                                            disabled={!formData.fabric_family}
+                                                            className="asset-control disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
+                                                            required
+                                                        >
+                                                            <option value="">{formData.fabric_family ? 'Select fabric type' : 'Select family first'}</option>
+                                                            {formData.fabric_category && !(FABRIC_STRUCTURE[formData.fabric_family] || []).includes(formData.fabric_category) && (
+                                                                <option value={formData.fabric_category}>{formData.fabric_category} (existing)</option>
+                                                            )}
+                                                            {(FABRIC_STRUCTURE[formData.fabric_family] || []).map(category => (
+                                                                <option key={category} value={category}>{category}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <FormSectionTitle number="02" label="Product Details" description="Add the customer-facing name, occasion and price." />
                                     <div className="asset-section-card space-y-5">
-                                    <InputBox label="Product name" value={formData.title} onChange={(v) => setFormData({...formData, title: v})} placeholder="Example: Royal Blue Cotton Suit" />
+                                    <InputBox label="Product name" value={formData.title} onChange={(v) => setFormData({...formData, title: v})} placeholder={`Example: Premium ${selectedCategoryDefinition?.label || 'Product'}`} />
 
                                     <div className="space-y-2">
                                         <label className="block text-sm font-black text-stone-800">Suitable for</label>

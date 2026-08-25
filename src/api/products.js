@@ -209,6 +209,16 @@ export const fetchDeliveryDemands = async () => {
   }
 };
 
+export const fetchProductTaxonomy = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/product-taxonomy`);
+    return response.data;
+  } catch (err) {
+    console.error("Fetch product taxonomy error:", err);
+    throw err;
+  }
+};
+
 export const trackGuestOrder = async ({ orderId, trackingToken, phone }) => {
   const response = await axios.post(`${API_URL}/orders/track`, { orderId, trackingToken, phone });
   return response.data;

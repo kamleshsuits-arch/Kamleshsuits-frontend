@@ -1,21 +1,25 @@
 import React, { useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useProductTaxonomy } from '../../hooks/useProductTaxonomy';
 
-// Premium card chips
-const CATEGORIES = [
-  { label: 'All Collection',  emoji: '🛍️', value: '', color: 'from-amber-100 to-amber-50' },
-  { label: 'Royal Wedding',   emoji: '💍', value: 'Wedding', color: 'from-purple-100 to-purple-50' },
-  { label: 'Party Glam',      emoji: '🎉', value: 'Party Wear', color: 'from-blue-100 to-blue-50' },
-  { label: 'Festive Vibes',   emoji: '🪔', value: 'Festive', color: 'from-amber-100 to-amber-50' },
-  { label: 'Daily Office',    emoji: '☀️', value: 'Daily Wear', color: 'from-emerald-100 to-emerald-50' },
-  { label: 'Hot Sale',        emoji: '🏷️', value: 'Sale', href: '/sale', color: 'from-red-100 to-red-50' },
-  { label: 'Just In',         emoji: '✨', value: 'New', href: '/new-arrivals', color: 'from-cyan-100 to-cyan-50' },
-];
+const CATEGORY_EMOJIS = ['👗', '🛏️', '🧣', '🛌', '✨', '🧵', '👔', '🪡', '👖'];
 
 const MobileCategoryBar = () => {
+  const { taxonomy } = useProductTaxonomy();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const activeCategory = searchParams.get('category') || '';
+  const categories = [
+    { label: 'All Products', emoji: '🛍️', value: '', color: 'from-amber-100 to-amber-50' },
+    ...taxonomy.map((category, index) => ({
+      label: category.label,
+      emoji: CATEGORY_EMOJIS[index] || '📦',
+      value: category.id,
+      color: index % 2 ? 'from-amber-100 to-amber-50' : 'from-stone-100 to-white'
+    })),
+    { label: 'Hot Sale', emoji: '🏷️', value: 'Sale', href: '/sale', color: 'from-red-100 to-red-50' },
+    { label: 'Just In', emoji: '✨', value: 'New', href: '/new-arrivals', color: 'from-cyan-100 to-cyan-50' },
+  ];
 
   const handleCategoryClick = (cat) => {
     if (cat.href) { navigate(cat.href); return; }
@@ -31,13 +35,13 @@ const MobileCategoryBar = () => {
       id="mobile-category-bar"
     >
       <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 py-3 items-center">
-        {CATEGORIES.map((cat) => {
+        {categories.map((cat) => {
           const isActive = activeCategory === cat.value && !cat.href;
           return (
             <button
               key={cat.label}
               onClick={() => handleCategoryClick(cat)}
-              className={`flex-shrink-0 relative group transition-all duration-300 w-[68px] h-[60px] rounded-2xl overflow-hidden ${
+              className={`flex-shrink-0 relative group transition-all duration-300 w-[78px] h-[60px] rounded-2xl overflow-hidden ${
                 isActive ? 'glass-chip-active scale-105 z-10' : 'glass-chip'
               }`}
             >
@@ -50,10 +54,10 @@ const MobileCategoryBar = () => {
                 <span className={`text-xl mb-0.5 transition-transform duration-300 ${isActive ? 'scale-110 drop-shadow-sm' : 'group-hover:scale-110'}`}>
                   {cat.emoji}
                 </span>
-                <span className={`text-[8px] font-black uppercase text-center leading-[1.1] tracking-tighter w-full truncate ${
+                <span className={`line-clamp-2 w-full text-center text-[8px] font-black uppercase leading-[1.1] tracking-tighter ${
                   isActive ? 'text-white' : 'text-stone-800'
                 }`}>
-                  {cat.label.split(' ')[0]}<br/>{cat.label.split(' ')[1] || ''}
+                  {cat.label}
                 </span>
               </div>
               

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import { useProductTaxonomy } from "../../hooks/useProductTaxonomy";
 
 const ProductFilter = ({ filters, setFilters, products }) => {
+  const { taxonomy } = useProductTaxonomy();
   // Extract unique options dynamically
   const CATEGORIES = [
     "Wedding",
@@ -14,7 +16,6 @@ const ProductFilter = ({ filters, setFilters, products }) => {
   ];
 
   const availableTags = new Set([
-    ...products.map((p) => p.type),
     ...products.flatMap((p) => p.categories || []),
     ...products.map((p) => p.session)
   ].filter(Boolean));
@@ -103,9 +104,32 @@ const ProductFilter = ({ filters, setFilters, products }) => {
         </div>
       </div>
 
-      {/* Category / Type */}
+      {/* Storefront product categories */}
       <div>
-        <h4 className="text-sm font-bold text-primary uppercase tracking-widest mb-3">Category</h4>
+        <h4 className="text-sm font-bold text-primary uppercase tracking-widest mb-3">Products</h4>
+        <div className="space-y-2">
+          {taxonomy.map((category) => (
+            <label key={category.id} className="flex min-h-9 cursor-pointer items-center gap-3 group">
+              <div className="relative flex items-center">
+                <input
+                  type="checkbox"
+                  checked={(filters.productCategory || []).includes(category.id)}
+                  onChange={() => handleCheckboxChange("productCategory", category.id)}
+                  className="peer h-4 w-4 appearance-none rounded-sm border border-stone-300 transition-colors checked:border-primary checked:bg-primary"
+                />
+                <svg className="pointer-events-none absolute left-0.5 hidden h-3 w-3 text-white peer-checked:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <span className="text-sm text-secondary transition group-hover:text-primary">{category.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Occasion / use */}
+      <div>
+        <h4 className="text-sm font-bold text-primary uppercase tracking-widest mb-3">Occasion</h4>
         <div className="space-y-2">
           {uniqueTypes.slice(0, filters.showAllTypes ? undefined : 8).map((type) => (
             <label key={type} className="flex items-center gap-3 cursor-pointer group">

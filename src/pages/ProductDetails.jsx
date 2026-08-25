@@ -10,6 +10,7 @@ import { getColorDisplay } from '../utils/colors';
 import Loader from '../components/common/Loader';
 import SEO from '../components/common/SEO';
 import LocationBar from '../components/common/LocationBar';
+import { getProductCategoryLabel } from '../utils/productTaxonomy';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -134,12 +135,14 @@ const ProductDetails = () => {
     <Loader message="Retrieving Product Specification..." />
   );
 
+  const productCategoryLabel = getProductCategoryLabel(product);
+
 
   return (
     <div className="bg-background min-h-screen font-sans text-secondary pb-20">
       <SEO 
         title={product.title}
-        description={`Buy ${product.title} at Kamlesh Suits. ${product.fabric_family || ''} ${product.fabric_category || ''} suit for only ${formatPrice(product.price)}. Discover premium ethnic wear in Gurugram.`}
+        description={`Buy ${product.title} at Kamlesh Suits. ${product.product_subcategory || product.fabric_category || productCategoryLabel} for only ${formatPrice(product.price)}. Discover our collection in Gurugram.`}
         image={product.image || product.images?.[0]}
         url={`/product/${id}`}
         type="product"
@@ -245,13 +248,13 @@ const ProductDetails = () => {
           <div className="flex flex-col h-full">
             <div className="sticky top-24">
               <p className="text-stone-600 font-bold text-[10px] uppercase tracking-[0.2em] mb-1">
-                {product.fabric_family || 'Standard'} • {product.fabric_category || 'General'}
+                {productCategoryLabel} • {product.product_subcategory || product.fabric_category || 'General'}
               </p>
               <h1 className="text-2xl md:text-4xl font-serif font-bold text-primary mb-2">
-                {product.title.replace(/suit/gi, '').trim()}
+                {product.title}
               </h1>
               <p className="text-xs md:text-sm text-secondary uppercase tracking-widest mb-6">
-                {Array.isArray(product.categories) ? product.categories.join(" • ") : (product.categories || 'Suit Collection')}
+                {Array.isArray(product.categories) && product.categories.length ? product.categories.join(" • ") : (product.categories || `${productCategoryLabel} Collection`)}
               </p>
               
               {/* Price Section */}
