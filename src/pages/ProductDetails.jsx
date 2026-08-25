@@ -18,11 +18,11 @@ const ProductDetails = () => {
   const [allProducts, setAllProducts] = useState([]);
   const [selectedImage, setSelectedImage] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
+  const [colorError, setColorError] = useState('');
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { addToCart, toggleWishlist, isInWishlist, isInCart, removeFromCart } = useCart();
   const containerRef = useRef();
-  const lightboxRef = useRef();
 
   useEffect(() => {
     // Scroll to top on ID change to prevent blur/sticky header issues
@@ -42,12 +42,9 @@ const ProductDetails = () => {
         setSelectedImage(data.image);
       }
 
-      // Set initial color
-      if (data?.colors?.length > 0) {
-        setSelectedColor(data.colors[0]);
-      } else if (data?.color) {
-        setSelectedColor(data.color);
-      }
+      // Customers must actively confirm a variation to avoid wrong-colour orders.
+      setSelectedColor('');
+      setColorError('');
     };
     load();
   }, [id]);
@@ -277,24 +274,30 @@ const ProductDetails = () => {
               {/* Color Selection - Dynamic from Admin */}
               {product.colors && product.colors.length > 0 && (
                 <div className="mb-8">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 text-stone-600">Select Variation</h3>
+                  <h3 className="text-xs font-black uppercase tracking-[0.12em] mb-2 text-stone-700">Choose a colour *</h3>
+                  <p className="text-xs text-stone-500 mb-4">Please select one colour before adding this item.</p>
                   <div className="flex flex-wrap gap-4">
                     {product.colors.map((color, idx) => (
                       <button
                         key={idx}
-                        onClick={() => setSelectedColor(color)}
-                        className={`w-10 h-10 rounded-full border-2 transition-all p-0.5 ${
+                        onClick={() => { setSelectedColor(color); setColorError(''); }}
+                        aria-pressed={selectedColor === color}
+                        aria-label={`Select ${color}`}
+                        className={`min-w-20 min-h-11 px-3 py-2 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
                           selectedColor === color ? 'border-primary ring-2 ring-primary/20 scale-110' : 'border-stone-200'
                         }`}
                         title={color}
                       >
                         <div 
-                          className="w-full h-full rounded-full shadow-inner border border-stone-100" 
+                          className="w-5 h-5 rounded-full shadow-inner border border-stone-200"
                           style={{ backgroundColor: getColorDisplay(color) }} 
                         />
+                        <span className="text-[10px] font-bold text-primary">{color}</span>
                       </button>
                     ))}
                   </div>
+                  {selectedColor && <p className="text-xs font-bold text-emerald-700 mt-4">Selected colour: {selectedColor}</p>}
+                  {colorError && <p className="text-xs font-bold text-red-600 mt-4" role="alert">{colorError}</p>}
                 </div>
               )}
 
@@ -306,6 +309,10 @@ const ProductDetails = () => {
                     if (isInCart(product.suitId)) {
                       removeFromCart(product.suitId);
                     } else {
+                      if (product.colors?.length > 0 && !selectedColor) {
+                        setColorError('Choose a colour before adding to cart.');
+                        return;
+                      }
                       addToCart({ ...product, selectedColor });
                     }
                   }}
@@ -336,7 +343,7 @@ const ProductDetails = () => {
               <div className="mt-12 border-t border-gray-200 pt-8 space-y-4 text-sm text-secondary">
                 <div className="flex justify-between">
                   <span>Free Shipping</span>
-                  <span>On orders over {formatPrice(5000)}</span>
+                  <span>On orders of {formatPrice(5000)} or more</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Returns</span>

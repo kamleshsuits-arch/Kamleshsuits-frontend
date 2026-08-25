@@ -40,7 +40,7 @@ const YouMayAlsoLike = ({ currentProduct, allProducts, onProductSelect, maxResul
   return (
     <div className="w-full">
       <div className="flex flex-col items-center mb-6 sm:mb-12">
-        <span className="text-accent text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2">Curated For You</span>
+        <span className="text-accent text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2">Recommended Products</span>
         <h2 className="text-xl sm:text-2xl md:text-4xl font-serif text-primary text-center">You May Also Like</h2>
         <div className="w-12 sm:w-16 md:w-24 h-1 bg-accent mt-3 sm:mt-4"></div>
       </div>

@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { gsap } from 'gsap';
-import { HiCheck, HiOutlineShoppingBag } from 'react-icons/hi';
+import { HiCheck, HiOutlineShoppingBag, HiPhone } from 'react-icons/hi';
+import { FaWhatsapp } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-const OrderSuccessAnimation = ({ orderId, name, onClose }) => {
+const OrderSuccessAnimation = ({ orderId, name, whatsappUrl, onClose }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,43 +37,13 @@ const OrderSuccessAnimation = ({ orderId, name, onClose }) => {
       '-=0.2'
     );
 
-    // Confetti burst
-    triggerBurst();
   }, []);
-
-  const triggerBurst = () => {
-    const colors = ['#CFB53B', '#1C5BBA', '#10B981', '#F59E0B'];
-    const container = document.getElementById('success-burst-container');
-    if (!container) return;
-
-    for (let i = 0; i < 40; i++) {
-      const particle = document.createElement('div');
-      particle.classList.add('absolute', 'w-1.5', 'h-1.5', 'rounded-full');
-      particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-      particle.style.left = '50%';
-      particle.style.top = '40%';
-      container.appendChild(particle);
-
-      gsap.to(particle, {
-        x: (Math.random() - 0.5) * 400,
-        y: (Math.random() - 0.5) * 400 - 100,
-        opacity: 0,
-        scale: 0.5,
-        rotation: Math.random() * 360,
-        duration: 1.5 + Math.random(),
-        ease: 'power2.out',
-        onComplete: () => particle.remove(),
-      });
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div className="success-backdrop absolute inset-0 bg-stone-900/40 backdrop-blur-md" />
       
-      <div id="success-burst-container" className="absolute inset-0 pointer-events-none" />
-
       {/* Main Card */}
       <div className="success-card relative w-full max-w-sm bg-white rounded-[3rem] shadow-2xl overflow-hidden text-center p-10">
         <div className="checkmark-circle w-24 h-24 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-emerald-200">
@@ -80,15 +51,15 @@ const OrderSuccessAnimation = ({ orderId, name, onClose }) => {
         </div>
 
         <div className="success-content space-y-4">
-          <h2 className="text-2xl font-serif text-primary">Order Placed!</h2>
+          <h2 className="text-2xl font-serif text-primary">Order Request Received</h2>
           <p className="text-secondary text-sm leading-relaxed">
-            Beautiful choice, {name}! Your order <span className="text-primary font-black tracking-tight">#{orderId}</span> is being prepared.
+            Thank you, {name}. Your order <span className="text-primary font-black tracking-tight">{orderId}</span> is waiting for store confirmation.
           </p>
           
           <div className="py-6 scale-90">
              <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#CFB53B] mb-2">
                 <HiOutlineShoppingBag size={16} />
-                Est. Delivery: 3-5 Days
+                Next step: confirm on WhatsApp or call
              </div>
              <div className="w-full h-1 bg-stone-100 rounded-full overflow-hidden">
                 <div className="w-1/3 h-full bg-[#CFB53B] rounded-full animate-pulse" />
@@ -96,6 +67,18 @@ const OrderSuccessAnimation = ({ orderId, name, onClose }) => {
           </div>
 
           <div className="space-y-3 pt-6">
+            <a
+              href={whatsappUrl}
+              className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl flex items-center justify-center gap-2"
+            >
+              <FaWhatsapp size={18} /> Confirm on WhatsApp
+            </a>
+            <a
+              href="tel:+919992304505"
+              className="w-full bg-white border-2 border-primary text-primary py-4 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2"
+            >
+              <HiPhone size={18} /> Call the Store
+            </a>
             <button 
               onClick={() => {
                 navigate('/');

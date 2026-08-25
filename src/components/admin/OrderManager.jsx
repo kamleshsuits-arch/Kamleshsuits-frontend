@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { fetchAllOrders } from '../../api/products';
+import { fetchAllOrders, updateOrderStatus } from '../../api/products';
 import { 
     HiTrendingUp, HiUsers, HiCube, HiRefresh, HiSearch, 
     HiChevronDown, HiChevronUp, HiOfficeBuilding, HiTruck,
@@ -10,6 +10,8 @@ import { formatPrice } from '../../utils/currency';
 
 const OrderStatusPill = ({ status }) => {
     const styles = {
+        'Awaiting Confirmation': 'bg-amber-50 text-amber-700 border-amber-200',
+        'Confirmed': 'bg-violet-50 text-violet-700 border-violet-200',
         'Pending': 'bg-orange-50 text-orange-600 border-orange-200',
         'Shipped': 'bg-blue-50 text-blue-600 border-blue-200',
         'Delivered': 'bg-emerald-50 text-emerald-600 border-emerald-200',
@@ -28,6 +30,7 @@ const OrderManager = ({ showToast }) => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedOrder, setExpandedOrder] = useState(null);
+    const [updatingOrder, setUpdatingOrder] = useState(null);
 
     const loadOrders = async () => {
         try {
@@ -46,6 +49,23 @@ const OrderManager = ({ showToast }) => {
     useEffect(() => {
         loadOrders();
     }, []);
+
+    const handleStatusUpdate = async (order, status) => {
+        try {
+            setUpdatingOrder(order.orderId);
+            const paymentStatus = status === 'Confirmed'
+                ? (order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Pending')
+                : order.paymentStatus;
+            const updated = await updateOrderStatus(order.orderId, status, paymentStatus);
+            setOrders(current => current.map(item => item.orderId === order.orderId ? { ...item, ...updated } : item));
+            if (showToast) showToast(`Order marked ${status}.`, null, 'success');
+        } catch (error) {
+            console.error('Failed to update order:', error);
+            if (showToast) showToast('Could not update order. Please try again.', null, 'error');
+        } finally {
+            setUpdatingOrder(null);
+        }
+    };
 
     const filteredOrders = orders.filter(order => {
         const search = searchTerm.toLowerCase();
@@ -87,7 +107,7 @@ const OrderManager = ({ showToast }) => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <StatCard label="Total Revenue" value={formatPrice(orders.reduce((acc, o) => acc + o.total, 0))} icon={<HiTrendingUp />} color="bg-primary" />
                 <StatCard label="Active Orders" value={orders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled').length} icon={<HiCube />} color="bg-accent" />
-                <StatCard label="Pending Verify" value={orders.filter(o => o.status === 'Pending').length} icon={<HiClock />} color="bg-orange-500" />
+                <StatCard label="Awaiting Confirmation" value={orders.filter(o => ['Awaiting Confirmation', 'Pending'].includes(o.status)).length} icon={<HiClock />} color="bg-orange-500" />
                 <StatCard label="Total Reach" value={new Set(orders.map(o => o.user_id)).size} icon={<HiUsers />} color="bg-emerald-500" />
             </div>
 
@@ -148,6 +168,7 @@ const OrderManager = ({ showToast }) => {
                                                 <div className={`w-2 h-2 rounded-full ${order.paymentMethod === 'cod' ? 'bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.5)]' : 'bg-[#5f259f] shadow-[0_0_8px_rgba(95,37,159,0.5)]'}`} />
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-stone-500">{order.paymentMethod}</span>
                                             </div>
+                                            <p className="text-[9px] text-stone-400 mt-1">{order.paymentStatus || 'Not Requested'}</p>
                                         </td>
                                         <td className="px-8 py-5">
                                             <OrderStatusPill status={order.status} />
@@ -227,10 +248,28 @@ const OrderManager = ({ showToast }) => {
                                                                     <p className="text-lg font-black text-primary">{formatPrice(order.total)}</p>
                                                                 </div>
                                                                 <div className="flex gap-3">
-                                                                    <button className="bg-white text-stone-400 border border-stone-200 px-6 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest hover:text-red-500 hover:border-red-100 transition-all">Cancel Order</button>
-                                                                    <button className="bg-primary text-white border border-primary px-6 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-accent hover:border-accent transition-all flex items-center gap-2">
-                                                                        <HiTruck size={14} /> Dispatch Order
-                                                                    </button>
+                                                                    <button
+                                                                        disabled={updatingOrder === order.orderId || order.status === 'Cancelled'}
+                                                                        onClick={() => handleStatusUpdate(order, 'Cancelled')}
+                                                                        className="bg-white text-stone-500 border border-stone-200 px-6 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest hover:text-red-500 hover:border-red-100 transition-all disabled:opacity-40"
+                                                                    >Cancel Order</button>
+                                                                    {['Awaiting Confirmation', 'Pending'].includes(order.status) ? (
+                                                                        <button
+                                                                            disabled={updatingOrder === order.orderId}
+                                                                            onClick={() => handleStatusUpdate(order, 'Confirmed')}
+                                                                            className="bg-emerald-600 text-white border border-emerald-600 px-6 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl disabled:opacity-50 flex items-center gap-2"
+                                                                        >
+                                                                            <HiCheckCircle size={14} /> Customer Confirmed
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button
+                                                                            disabled={updatingOrder === order.orderId || ['Shipped', 'Delivered', 'Cancelled'].includes(order.status)}
+                                                                            onClick={() => handleStatusUpdate(order, 'Shipped')}
+                                                                            className="bg-primary text-white border border-primary px-6 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-accent hover:border-accent transition-all flex items-center gap-2 disabled:opacity-50"
+                                                                        >
+                                                                            <HiTruck size={14} /> Mark Shipped
+                                                                        </button>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>

@@ -1,22 +1,19 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  HiOutlineTrash, HiMinus, HiPlus, HiCreditCard, HiCash, HiArrowLeft, 
-  HiShieldCheck, HiTag, HiCheck, HiLocationMarker, HiHome, HiOfficeBuilding,
+  HiOutlineTrash, HiMinus, HiPlus, HiCash,
+  HiTag, HiCheck, HiLocationMarker, HiHome, HiOfficeBuilding,
   HiPlusCircle, HiPencilAlt
 } from 'react-icons/hi';
-import { FaWhatsapp } from 'react-icons/fa';
 import { useCart } from '../../hooks/useCart';
 import { useAuth } from '../../context/AuthContext';
 import { formatPrice } from '../../utils/currency';
-import { fetchProducts, placeOrder, validateDelivery, submitDeliveryDemand } from '../../api/products';
+import { placeOrder, validateDelivery, submitDeliveryDemand } from '../../api/products';
 import { validateCoupon, fetchPublicCoupons } from '../../api/coupons';
 import { isLikelySupportedPin, SUPPORTED_REGIONS, getStateFromPin } from '../../utils/deliveryUtils';
 import gsap from 'gsap';
-import YouMayAlsoLike from '../home/YouMayAlsoLike';
 import { HiX } from 'react-icons/hi';
 import OrderSuccessAnimation from '../common/OrderSuccessAnimation';
-import phonePeQR from "../../assets/PhonePe_kamlesh_suits.jpeg";
 import { SiPhonepe } from 'react-icons/si';
 
 
@@ -44,24 +41,19 @@ const Cart = () => {
   const [addressErrors, setAddressErrors] = useState({});
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [couponCode, setCouponCode] = useState('');
   const [couponError, setCouponError] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('phonepe');
-  const [recommendedProducts, setRecommendedProducts] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState('cod');
   const summaryRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [availableCoupons, setAvailableCoupons] = useState([]);
-  const [isFetchingCoupons, setIsFetchingCoupons] = useState(false);
   const [deliveryDetails, setDeliveryDetails] = useState({ isAllowed: true, deliveryFee: 0 });
   const [isValidatingDelivery, setIsValidatingDelivery] = useState(false);
   const [showDemandModal, setShowDemandModal] = useState(false);
   const [unsupportedPincode, setUnsupportedPincode] = useState('');
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
   const [lastAddrCount, setLastAddrCount] = useState(addresses.length);
-  const [showPhonePeModal, setShowPhonePeModal] = useState(false);
 
   // Ensure user lands at top of cart page
   useEffect(() => {
@@ -80,8 +72,11 @@ const Cart = () => {
 
   const gst = Math.round(subtotal * 0.05);
 
-  // Calculate Shipping (Dynamic based on distance, default/fallback if subtotal > 5000)
-  const shippingFee = (subtotal >= 5000) ? 0 : (deliveryDetails.deliveryFee || Math.round(subtotal * 0.03));
+  // Shipping is only final after a delivery address has been selected and checked.
+  const shippingFee = !selectedAddressId || subtotal >= 5000
+    ? 0
+    : Number(deliveryDetails.deliveryFee || 0);
+  const isTotalEstimated = !selectedAddressId;
 
   // Total Payable
   let total = subtotal + gst + shippingFee;
@@ -100,32 +95,6 @@ const Cart = () => {
   }, 0);
 
   const discountOnMrp = mrpTotal - subtotal;
-
-  const handleApplyCoupon = async () => {
-    if (isCouponApplied) {
-      setIsCouponApplied(false);
-      setAppliedCoupon(null);
-      setCouponCode('');
-      setCouponError('');
-    } else {
-      try {
-        const coupon = await validateCoupon(couponCode, subtotal);
-        setIsCouponApplied(true);
-        setAppliedCoupon(coupon);
-        setCouponError('');
-        if (summaryRef.current) {
-          gsap.fromTo(summaryRef.current, 
-            { scale: 0.98, backgroundColor: "#f0fdf4" },
-            { scale: 1, backgroundColor: "#ffffff", duration: 0.5, ease: "power2.out" }
-          );
-        }
-      } catch (error) {
-        setCouponError(error.message);
-        setIsCouponApplied(false);
-        setAppliedCoupon(null);
-      }
-    }
-  };
 
   useEffect(() => {
     if (total >= 5000 && !showConfetti) {
@@ -146,31 +115,15 @@ const Cart = () => {
     }
   }, [subtotal]);
 
-  // Fetch Recommendations
-  useEffect(() => {
-    const loadRecommendations = async () => {
-      try {
-        const products = await fetchProducts();
-        setRecommendedProducts(products);
-      } catch (error) {
-        console.error("Failed to fetch recommendations", error);
-      }
-    };
-    loadRecommendations();
-  }, []);
-
   // Fetch Available Coupons
   useEffect(() => {
     const loadCoupons = async () => {
       try {
-        setIsFetchingCoupons(true);
         const data = await fetchPublicCoupons();
         setAvailableCoupons(data || []);
       } catch (error) {
         console.error("Failed to fetch available coupons", error);
-      } finally {
-        setIsFetchingCoupons(false);
-      }
+      } finally { /* loading state is intentionally not shown */ }
     };
     loadCoupons();
   }, []);
@@ -188,7 +141,6 @@ const Cart = () => {
       const validated = await validateCoupon(coupon.code, subtotal);
       setIsCouponApplied(true);
       setAppliedCoupon(validated);
-      setCouponCode(validated.code);
       setCouponError('');
       if (summaryRef.current) {
         gsap.fromTo(summaryRef.current, 
@@ -230,14 +182,23 @@ const Cart = () => {
     }
   };
 
+  const buildWhatsAppMessage = (selectedAddr, orderId) => {
+    const itemsText = cartItems.map((item, index) => {
+      const colorText = item.selectedColor ? ` (Color: ${item.selectedColor})` : '';
+      return `${index + 1}. *${item.title}${colorText}* x ${item.quantity || 1} - ${formatPrice(item.price * (item.quantity || 1))}`;
+    }).join('\n');
+    return `*ORDER CONFIRMATION REQUEST - KAMLESH SUITS*\n` +
+      `Order: *${orderId}*\n--------------------------\n` +
+      `*Customer:* ${selectedAddr.name}\n*Phone:* ${selectedAddr.phone}\n` +
+      `*Address:* ${selectedAddr.houseNo}, ${selectedAddr.area}, ${selectedAddr.city}, ${selectedAddr.state} - ${selectedAddr.pincode}\n\n` +
+      `*Items:*\n${itemsText}\n\n*Total:* ${formatPrice(total)}\n` +
+      `*Payment preference:* ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'UPI after store confirmation'}\n\n` +
+      `_Please confirm this order._`;
+  };
+
   const handlePlaceOrder = async () => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-    
     if (addresses.length === 0) {
-      alert("Please add a delivery address first.");
+      alert("Please add your delivery address and mobile number first.");
       setShowAddressForm(true);
       return;
     }
@@ -260,20 +221,14 @@ const Cart = () => {
       });
 
       if (result.orderId) {
+        const whatsappMessage = buildWhatsAppMessage(selectedAddr, result.orderId);
         setOrderConfirmed({
           orderId: result.orderId,
           name: selectedAddr.name,
-          emailSent: result.emailSent
+          whatsappUrl: `https://wa.me/919992304505?text=${encodeURIComponent(whatsappMessage)}`
         });
         clearCart();
-        
-        if (paymentMethod === 'phonepe') {
-          // 🚀 Automatic App Handoff: Immediate UPI intent triggers PhonePe
-          const upiUrl = `upi://pay?pa=9992304505@ybl&pn=KamleshSuits&am=${total}&cu=INR&tn=Order_${result.orderId}`;
-          window.location.href = upiUrl;
-        } else {
-          window.scrollTo(0, 0);
-        }
+        window.scrollTo(0, 0);
       }
     } catch (error) {
       console.error("Order placement failed:", error);
@@ -281,58 +236,6 @@ const Cart = () => {
     } finally {
       setIsPlacingOrder(false);
     }
-  };
-
-  const handleWhatsAppOrder = () => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-    
-    if (addresses.length === 0) {
-      alert("Please add a delivery address first.");
-      setShowAddressForm(true);
-      return;
-    }
-
-    if (!selectedAddressId) {
-      alert("Please select a delivery address.");
-      return;
-    }
-
-    const selectedAddr = addresses.find(a => a.id === selectedAddressId);
-    
-    // Format Message
-    const itemsText = cartItems.map((item, index) => {
-      const colorText = item.selectedColor ? ` (Color: ${item.selectedColor})` : '';
-      return `${index + 1}. *${item.title}${colorText}* x ${item.quantity || 1} - ${formatPrice(item.price * (item.quantity || 1))}`;
-    }).join('\n');
-
-    const couponDiscount = isCouponApplied && appliedCoupon 
-      ? (appliedCoupon.discount_type === 'percent' ? (subtotal * (appliedCoupon.discount / 100)) : appliedCoupon.discount)
-      : 0;
-
-    const discountText = isCouponApplied && appliedCoupon 
-      ? `\n- Coupon (${appliedCoupon.code}): -${formatPrice(couponDiscount)}`
-      : '';
-
-    const message = `*NEW ORDER - KAMLESH SUITS*\n` +
-      `--------------------------\n` +
-      `*Customer:* ${selectedAddr.name}\n` +
-      `*Phone:* ${selectedAddr.phone}\n` +
-      `*Address:* ${selectedAddr.houseNo}, ${selectedAddr.area}, ${selectedAddr.city}, ${selectedAddr.state} - ${selectedAddr.pincode}\n\n` +
-      `*Order Items:*\n${itemsText}\n\n` +
-      `*Price Summary:*\n` +
-      `- Subtotal: ${formatPrice(subtotal)}\n` +
-      `- GST (5%): ${formatPrice(gst)}\n` +
-      `- Shipping: ${subtotal >= 5000 ? 'FREE' : formatPrice(shippingFee)}` +
-      `${discountText}\n` +
-      `--------------------------\n` +
-      `*GRAND TOTAL: ${formatPrice(total)}*\n\n` +
-      `_Please confirm my order._`;
-
-    const whatsappUrl = `https://wa.me/919992304505?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
   };
 
   const handleAddressSubmit = (e) => {
@@ -444,7 +347,7 @@ const Cart = () => {
         await submitDeliveryDemand(demandForm);
         alert("Thank you! We've received your request and will notify you when we expand to your area.");
         setShowDemandModal(false);
-      } catch (err) {
+      } catch {
         alert("Something went wrong. Please try again.");
       } finally {
         setIsSubmitting(false);
@@ -456,6 +359,7 @@ const Cart = () => {
       <OrderSuccessAnimation 
         orderId={orderConfirmed.orderId}
         name={orderConfirmed.name}
+        whatsappUrl={orderConfirmed.whatsappUrl}
         onClose={() => setOrderConfirmed(null)}
       />
     );
@@ -475,9 +379,9 @@ const Cart = () => {
             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
               <HiLocationMarker size={32} />
             </div>
-            <h3 className="font-serif text-2xl text-primary mb-2">🚫 Delivery Not Available Yet</h3>
+            <h3 className="font-serif text-2xl text-primary mb-2">Delivery Not Available Yet</h3>
             <p className="text-secondary text-sm leading-relaxed">
-              Currently we are not delivering in your area (<b>{unsupportedPincode}</b>), but we are working to expand our service soon.
+              We currently deliver only in Delhi, Gurugram, Rewari and Jhajjar. PIN <b>{unsupportedPincode}</b> is outside our delivery area.
             </p>
             <p className="text-stone-400 text-xs mt-2 font-medium bg-stone-50 py-2 rounded-lg border border-stone-100 max-w-xs mx-auto">
               Store location: Near Farrukhnagar (122504)
@@ -542,6 +446,12 @@ const Cart = () => {
             >
               {isSubmitting ? 'Submitting...' : 'Notify Me on Expansion'}
             </button>
+            <a
+              href={`https://wa.me/919992304505?text=${encodeURIComponent(`Please check delivery availability for PIN ${unsupportedPincode}.`)}`}
+              className="w-full border-2 border-[#25D366] text-[#128C7E] py-3 rounded-xl font-black uppercase tracking-widest text-xs flex items-center justify-center"
+            >
+              Ask on WhatsApp
+            </a>
           </form>
         </div>
       </div>
@@ -553,6 +463,7 @@ const Cart = () => {
       <OrderSuccessAnimation 
         orderId={orderConfirmed.orderId}
         name={orderConfirmed.name}
+        whatsappUrl={orderConfirmed.whatsappUrl}
         onClose={() => setOrderConfirmed(null)}
       />
     );
@@ -615,6 +526,7 @@ const Cart = () => {
       <OrderSuccessAnimation 
         orderId={orderConfirmed.orderId}
         name={orderConfirmed.name}
+        whatsappUrl={orderConfirmed.whatsappUrl}
         onClose={() => setOrderConfirmed(null)}
       />
     );
@@ -694,7 +606,8 @@ const Cart = () => {
                               <button 
                                 onClick={() => updateQuantity(item.suitId, (item.quantity || 1) - 1)}
                                 disabled={(item.quantity || 1) <= 1}
-                                className="w-8 h-8 rounded-full hover:bg-white hover:shadow-sm disabled:opacity-20 text-secondary transition flex items-center justify-center"
+                                aria-label={`Decrease quantity of ${item.title}`}
+                                className="w-11 h-11 rounded-full hover:bg-white hover:shadow-sm disabled:opacity-20 text-secondary transition flex items-center justify-center"
                               >
                                 <HiMinus size={12} />
                               </button>
@@ -702,7 +615,8 @@ const Cart = () => {
                               <button 
                                 onClick={() => updateQuantity(item.suitId, (item.quantity || 1) + 1)}
                                 disabled={(item.quantity || 1) >= 2}
-                                className="w-8 h-8 rounded-full hover:bg-white hover:shadow-sm disabled:opacity-20 text-secondary transition flex items-center justify-center"
+                                aria-label={`Increase quantity of ${item.title}`}
+                                className="w-11 h-11 rounded-full hover:bg-white hover:shadow-sm disabled:opacity-20 text-secondary transition flex items-center justify-center"
                               >
                                 <HiPlus size={12} />
                               </button>
@@ -760,9 +674,12 @@ const Cart = () => {
                     <form onSubmit={handleAddressSubmit} className="grid sm:grid-cols-2 gap-4">
                       {/* Name & Phone */}
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Full Name *</label>
+                        <label htmlFor="delivery-name" className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Full Name *</label>
                         <input 
+                          id="delivery-name"
+                          name="name"
                           type="text" 
+                          autoComplete="name"
                           placeholder="Recipient's Name"
                           className={`w-full p-3 rounded-xl border-2 bg-white outline-none transition-all ${addressErrors.name ? 'border-red-200' : 'border-stone-100 focus:border-primary'}`}
                           value={addressForm.name}
@@ -770,9 +687,13 @@ const Cart = () => {
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Phone Number *</label>
+                        <label htmlFor="delivery-phone" className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Phone Number *</label>
                         <input 
-                          type="text" 
+                          id="delivery-phone"
+                          name="phone"
+                          type="tel"
+                          inputMode="numeric"
+                          autoComplete="tel"
                           placeholder="10-digit mobile"
                           className={`w-full p-3 rounded-xl border-2 bg-white outline-none transition-all ${addressErrors.phone ? 'border-red-200' : 'border-stone-100 focus:border-primary'}`}
                           value={addressForm.phone}
@@ -782,9 +703,13 @@ const Cart = () => {
 
                       {/* Pincode & State */}
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Pincode *</label>
+                        <label htmlFor="delivery-pincode" className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Pincode *</label>
                         <input
+                          id="delivery-pincode"
+                          name="postal-code"
                           type="text"
+                          inputMode="numeric"
+                          autoComplete="postal-code"
                           placeholder="Enter 6-digit Pincode"
                           maxLength={6}
                           className={`w-full p-3 rounded-xl border-2 bg-white outline-none transition-all ${addressErrors.pincode ? 'border-red-200' : 'border-stone-100 focus:border-primary'} ${isFetchingPincode ? 'opacity-50 cursor-wait' : ''}`}
@@ -828,18 +753,21 @@ const Cart = () => {
                             </p>
                           ) : (
                             <p className="text-[10px] text-amber-600 font-bold flex items-center gap-1 mt-1">
-                              ⚠️ Delivery may not be available — we'll verify on selection
+                              Delivery is currently unavailable for this PIN code.
                             </p>
                           )
                         )}
                         <p className="text-[9px] text-stone-400 mt-1">
-                          Supported: Delhi (110xxx), Gurgaon (122xxx), Rewari (123xxx), Jhajjar (124xxx)
+                          We currently deliver in Delhi, Gurugram, Rewari and Jhajjar.
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">State *</label>
+                        <label htmlFor="delivery-state" className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">State *</label>
                         <input 
+                          id="delivery-state"
+                          name="state"
                           type="text" 
+                          autoComplete="address-level1"
                           placeholder="State (Auto-filled)"
                           className={`w-full p-3 rounded-xl border-2 bg-white outline-none transition-all ${addressErrors.state ? 'border-red-200' : 'border-stone-100 focus:border-primary'}`}
                           value={addressForm.state}
@@ -850,9 +778,12 @@ const Cart = () => {
 
                       {/* House No & Area */}
                       <div className="sm:col-span-2 space-y-1">
-                        <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Flat, House no., Building, Apartment *</label>
+                        <label htmlFor="delivery-house" className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Flat, House no., Building, Apartment *</label>
                         <input 
+                          id="delivery-house"
+                          name="address-line1"
                           type="text" 
+                          autoComplete="address-line1"
                           placeholder="Detailed address"
                           className={`w-full p-3 rounded-xl border-2 bg-white outline-none transition-all ${addressErrors.houseNo ? 'border-red-200' : 'border-stone-100 focus:border-primary'}`}
                           value={addressForm.houseNo}
@@ -860,9 +791,12 @@ const Cart = () => {
                         />
                       </div>
                       <div className="sm:col-span-2 space-y-1">
-                        <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Area, Street, Sector, Village *</label>
+                        <label htmlFor="delivery-area" className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Area, Street, Sector, Village *</label>
                         <input 
+                          id="delivery-area"
+                          name="address-line2"
                           type="text" 
+                          autoComplete="address-line2"
                           placeholder="Locality details"
                           className={`w-full p-3 rounded-xl border-2 bg-white outline-none transition-all ${addressErrors.area ? 'border-red-200' : 'border-stone-100 focus:border-primary'}`}
                           value={addressForm.area}
@@ -872,9 +806,12 @@ const Cart = () => {
 
                       {/* City & Landmark */}
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Town/City *</label>
+                        <label htmlFor="delivery-city" className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Town/City *</label>
                         <input 
+                          id="delivery-city"
+                          name="city"
                           type="text" 
+                          autoComplete="address-level2"
                           placeholder="e.g. Rohtak"
                           className={`w-full p-3 rounded-xl border-2 bg-white outline-none transition-all ${addressErrors.city ? 'border-red-200' : 'border-stone-100 focus:border-primary'}`}
                           value={addressForm.city}
@@ -882,8 +819,10 @@ const Cart = () => {
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Landmark (Optional)</label>
+                        <label htmlFor="delivery-landmark" className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Landmark (Optional)</label>
                         <input 
+                          id="delivery-landmark"
+                          name="landmark"
                           type="text" 
                           placeholder="e.g. Near Big Temple"
                           className="w-full p-3 rounded-xl border-2 bg-white border-stone-100 focus:border-primary outline-none transition-all"
@@ -962,13 +901,15 @@ const Cart = () => {
                             <div className="flex flex-col gap-2">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); startEditAddress(addr); }}
-                                className="p-2 text-stone-400 hover:text-accent transition-colors"
+                                aria-label={`Edit address for ${addr.name}`}
+                                className="p-3 min-w-11 min-h-11 text-stone-400 hover:text-accent transition-colors"
                               >
                                 <HiPencilAlt size={18} />
                               </button>
                               <button 
                                 onClick={(e) => { e.stopPropagation(); removeAddress(addr.id); }}
-                                className="p-2 text-stone-400 hover:text-red-500 transition-colors"
+                                aria-label={`Remove address for ${addr.name}`}
+                                className="p-3 min-w-11 min-h-11 text-stone-400 hover:text-red-500 transition-colors"
                               >
                                 <HiOutlineTrash size={18} />
                               </button>
@@ -1060,7 +1001,7 @@ const Cart = () => {
                   )}
 
                   <div className="pt-2 flex justify-between font-sans font-black text-2xl text-primary">
-                    <span className="uppercase text-xs tracking-[0.2em] self-center">Grand Total</span>
+                    <span className="uppercase text-xs tracking-[0.2em] self-center">{isTotalEstimated ? 'Estimated Total' : 'Grand Total'}</span>
                     <span>{formatPrice(total)}</span>
                   </div>
                 </div>
@@ -1069,21 +1010,21 @@ const Cart = () => {
                 <div className="mt-8 pt-6 border-t border-stone-100">
                   <div className="flex items-center gap-2 mb-6">
                     <div className="w-1 h-4 rounded-full bg-primary" />
-                    <h4 className="text-xs font-black text-primary uppercase tracking-[0.15em]">Secure Checkout</h4>
+                    <h4 className="text-xs font-black text-primary uppercase tracking-[0.15em]">Payment Preference</h4>
                   </div>
                   
                     <div className="grid grid-cols-2 gap-3 mb-6">
-                      <label className={`flex flex-col items-center justify-center p-3 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'phonepe' ? 'border-[#5f259f] bg-[#5f259f]/5 shadow-sm' : 'border-stone-100 bg-white hover:border-stone-200'}`}>
+                      <label className={`flex flex-col items-center justify-center p-3 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'upi_after_confirmation' ? 'border-[#5f259f] bg-[#5f259f]/5 shadow-sm' : 'border-stone-100 bg-white hover:border-stone-200'}`}>
                         <input 
                           type="radio" 
                           name="payment" 
-                          value="phonepe" 
-                          className="hidden"
-                          checked={paymentMethod === 'phonepe'}
-                          onChange={() => setPaymentMethod('phonepe')}
+                          value="upi_after_confirmation"
+                          className="sr-only"
+                          checked={paymentMethod === 'upi_after_confirmation'}
+                          onChange={() => setPaymentMethod('upi_after_confirmation')}
                         />
-                        <SiPhonepe size={20} className={paymentMethod === 'phonepe' ? 'text-[#5f259f]' : 'text-stone-400'} />
-                        <span className={`text-[9px] font-black uppercase tracking-widest mt-2 ${paymentMethod === 'phonepe' ? 'text-[#5f259f]' : 'text-stone-500'}`}>PhonePe</span>
+                        <SiPhonepe size={20} className={paymentMethod === 'upi_after_confirmation' ? 'text-[#5f259f]' : 'text-stone-400'} />
+                        <span className={`text-[9px] font-black uppercase tracking-widest mt-2 text-center ${paymentMethod === 'upi_after_confirmation' ? 'text-[#5f259f]' : 'text-stone-500'}`}>UPI after confirmation</span>
                       </label>
                       
                       <label className={`flex flex-col items-center justify-center p-3 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'cod' ? 'border-primary bg-stone-50 shadow-sm' : 'border-stone-100 bg-white hover:border-stone-200'}`}>
@@ -1091,33 +1032,24 @@ const Cart = () => {
                           type="radio" 
                           name="payment" 
                           value="cod" 
-                          className="hidden"
+                          className="sr-only"
                           checked={paymentMethod === 'cod'}
                           onChange={() => setPaymentMethod('cod')}
                         />
                         <HiCash size={20} className={paymentMethod === 'cod' ? 'text-primary' : 'text-stone-400'} />
-                        <span className={`text-[9px] font-black uppercase tracking-widest mt-2 ${paymentMethod === 'cod' ? 'text-primary' : 'text-stone-500'}`}>COD</span>
+                        <span className={`text-[9px] font-black uppercase tracking-widest mt-2 text-center ${paymentMethod === 'cod' ? 'text-primary' : 'text-stone-500'}`}>Cash on Delivery</span>
                       </label>
                     </div>
 
                   <button 
                     onClick={handlePlaceOrder}
-                    disabled={total <= 0 || isPlacingOrder || !deliveryDetails.isAllowed}
-                    className={`w-full bg-primary text-white py-4 text-xs font-black uppercase tracking-[0.2em] hover:bg-accent transition-all duration-500 shadow-xl hover:shadow-primary/20 rounded-2xl flex items-center justify-center gap-3 active:scale-95 mb-3 ${((!selectedAddressId && user) || isPlacingOrder || !deliveryDetails.isAllowed) ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+                    disabled={total <= 0 || isPlacingOrder || !deliveryDetails.isAllowed || !selectedAddressId}
+                    className={`w-full bg-primary text-white py-4 text-xs font-black uppercase tracking-[0.14em] hover:bg-accent transition-all duration-500 shadow-xl hover:shadow-primary/20 rounded-2xl flex items-center justify-center gap-3 active:scale-95 ${(!selectedAddressId || isPlacingOrder || !deliveryDetails.isAllowed) ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
                   >
-                    {isPlacingOrder ? 'Processing...' : !user ? 'Sign In to Continue' : addresses.length === 0 ? 'Add Address First' : !selectedAddressId ? 'Select an Address' : !deliveryDetails.isAllowed ? 'Delivery Not Available' : 'Confirm & Place Order'}
+                    {isPlacingOrder ? 'Saving Order...' : addresses.length === 0 ? 'Add Address First' : !selectedAddressId ? 'Select an Address' : !deliveryDetails.isAllowed ? 'Delivery Not Available' : 'Place Order Request'}
                     <HiCheck size={18} />
                   </button>
-
-                  <button 
-                    onClick={handleWhatsAppOrder}
-                    disabled={total <= 0 || !deliveryDetails.isAllowed}
-                    className={`w-full bg-[#25D366] text-white py-4 text-xs font-black uppercase tracking-[0.2em] hover:bg-[#128C7E] transition-all duration-500 shadow-xl hover:shadow-emerald-200/50 rounded-2xl flex items-center justify-center gap-3 active:scale-95 ${(!deliveryDetails.isAllowed) ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
-                  >
-                    Order on WhatsApp
-                    <FaWhatsapp size={18} />
-                  </button>
-                  <p className="text-[9px] text-stone-400 font-bold uppercase text-center mt-4 tracking-widest opacity-60">Verified & Secure Connection</p>
+                  <p className="text-[11px] text-stone-500 font-medium text-center mt-4 leading-relaxed">No sign-in or online payment needed. We will confirm your order by WhatsApp or phone call.</p>
                 </div>
                 
                 {/* Coupon Selection Area */}
@@ -1129,7 +1061,7 @@ const Cart = () => {
                               <HiTag size={20} />
                            </div>
                            <div>
-                              <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none mb-1">Applied DNA</p>
+                              <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none mb-1">Coupon Applied</p>
                               <h4 className="text-base font-black text-primary uppercase leading-none">{appliedCoupon?.code}</h4>
                            </div>
                         </div>
@@ -1137,7 +1069,6 @@ const Cart = () => {
                           onClick={() => {
                             setIsCouponApplied(false);
                             setAppliedCoupon(null);
-                            setCouponCode('');
                           }}
                           className="px-4 py-2 bg-white border border-red-100 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-sm"
                         >
@@ -1152,7 +1083,7 @@ const Cart = () => {
                             <div className="flex items-center justify-between">
                                <div className="flex items-center gap-2">
                                  <div className="w-1 h-4 rounded-full bg-gradient-to-b from-highlight to-accent" />
-                                 <h4 className="text-xs font-black text-primary uppercase tracking-[0.15em]">Discovery Rewards</h4>
+                                 <h4 className="text-xs font-black text-primary uppercase tracking-[0.15em]">Available Offers</h4>
                                </div>
                                <span className="text-[9px] font-black text-white uppercase bg-gradient-to-r from-accent to-highlight px-2.5 py-1 rounded-full shadow-sm">{availableCoupons.length} Active</span>
                             </div>
@@ -1250,46 +1181,6 @@ const Cart = () => {
             </div>
           </div>
           
-          {/* Auth Required Modal */}
-          {showAuthModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-              <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                <div className="p-10 text-center">
-                  <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-stone-100">
-                    <HiShieldCheck className="text-secondary text-4xl" />
-                  </div>
-                  <h3 className="font-serif text-2xl text-primary mb-3">Authentication Required</h3>
-                  <p className="text-secondary text-sm leading-relaxed mb-8">
-                    To ensure the safety of your transactions and provide personalized service, please sign in to your account before placing an order.
-                  </p>
-                  <div className="space-y-3">
-                    <button 
-                      onClick={() => navigate('/login')}
-                      className="w-full bg-primary text-white py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-accent transition-all shadow-lg hover:shadow-xl"
-                    >
-                      Sign In Now
-                    </button>
-                    <button 
-                      onClick={() => setShowAuthModal(false)}
-                      className="w-full py-4 text-stone-400 font-bold uppercase tracking-widest text-[10px] hover:text-primary transition-colors"
-                    >
-                      Continue Shopping
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Recommendations Section - Moved to bottom like Wishlist */}
-          <div className="mt-8 sm:mt-16 border-t border-stone-200 pt-8 sm:pt-16">
-             <YouMayAlsoLike 
-               allProducts={recommendedProducts} 
-               onProductSelect={handleViewProduct}
-             />
-          </div>
-          
-
           {showDemandModal && <DeliveryDemandModal />}
         </>
       )}

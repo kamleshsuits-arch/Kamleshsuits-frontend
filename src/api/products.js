@@ -104,8 +104,10 @@ export const saveUserProfile = async (profile) => {
 
 export const placeOrder = async (orderData) => {
   try {
-    const response = await axios.post(`${API_URL}/user/orders`, orderData, {
-      headers: getAuthHeader()
+    const authHeader = getAuthHeader();
+    const endpoint = authHeader.Authorization ? '/user/orders' : '/orders';
+    const response = await axios.post(`${API_URL}${endpoint}`, orderData, {
+      headers: authHeader
     });
     return response.data;
   } catch (err) {
@@ -203,6 +205,20 @@ export const fetchDeliveryDemands = async () => {
     return response.data;
   } catch (err) {
     console.error("Fetch demands error:", err);
+    throw err;
+  }
+};
+
+export const updateOrderStatus = async (orderId, status, paymentStatus) => {
+  try {
+    const response = await axios.patch(
+      `${API_URL}/admin/orders/${encodeURIComponent(orderId)}/status`,
+      { status, paymentStatus },
+      { headers: getAuthHeader() }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Update order status error:", err);
     throw err;
   }
 };

@@ -7,16 +7,12 @@ import { useAuth } from "../../context/AuthContext";
 import { HiMenu, HiX, HiOutlineHeart, HiOutlineShoppingBag, HiChevronDown, HiUserCircle, HiLogout, HiShoppingBag, HiHeart, HiCollection, HiShieldCheck, HiGift, HiCheck, HiClipboard, HiOutlineUser } from 'react-icons/hi';
 import { gsap } from 'gsap';
 import logo from "../../assets/K_suit.png";
-import { fetchPublicCoupons } from '../../api/coupons';
 
 const Navbar = () => {
   const { cartItems, wishlistItems } = useCart();
   const { user, isAdmin, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [coupons, setCoupons] = useState([]);
-  const [isFetchingCoupons, setIsFetchingCoupons] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(null);
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const wishlistRef = useRef(null);
@@ -51,26 +47,8 @@ const Navbar = () => {
     }
   }, []);
 
-  const [expandedCategory, setExpandedCategory] = useState(null);
-  const toggleCategory = (category) => setExpandedCategory(expandedCategory === category ? null : category);
-
   const handleLogout = async () => {
     try { await logout(); navigate('/login'); } catch (error) { console.error('Logout failed:', error); }
-  };
-
-  const copyToClipboard = (text) => {
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text);
-    } else {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      textArea.style.position = "fixed";
-      textArea.style.left = "-999999px";
-      document.body.appendChild(textArea);
-      textArea.focus(); textArea.select();
-      try { document.execCommand('copy'); } catch (err) { console.error('Copy failed', err); }
-      document.body.removeChild(textArea);
-    }
   };
 
   useEffect(() => {
@@ -80,20 +58,6 @@ const Navbar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    if (menuOpen) {
-      const loadCoupons = async () => {
-        try {
-          setIsFetchingCoupons(true);
-          const data = await fetchPublicCoupons();
-          setCoupons(data || []);
-        } catch (error) { console.error("Failed to fetch coupons", error); }
-        finally { setIsFetchingCoupons(false); }
-      };
-      loadCoupons();
-    }
-  }, [menuOpen]);
 
   const location = useLocation();
   const isSpecialPage = ['/', '/new-arrivals', '/sale', '/wishlist'].includes(location.pathname);
@@ -123,7 +87,7 @@ const Navbar = () => {
 
             {/* Desktop right icons */}
             <div className="hidden md:flex items-center gap-6">
-              <Link to="/wishlist" className="group relative p-2" title="Wishlist">
+              <Link to="/wishlist" className="group relative p-2" title="Wishlist" aria-label="Wishlist">
                 <div ref={wishlistRef} className="relative">
                   <HiOutlineHeart size={26} className="text-accent group-hover:text-primary transition" />
                   {wishlistItems.length > 0 && (
@@ -131,7 +95,7 @@ const Navbar = () => {
                   )}
                 </div>
               </Link>
-              <Link to="/cart" className="group relative p-2" title="Cart">
+              <Link to="/cart" className="group relative p-2" title="Cart" aria-label="Cart">
                 <div ref={cartRef} className="relative">
                   <HiOutlineShoppingBag size={26} className="text-accent group-hover:text-primary transition" />
                   {cartItems.length > 0 && (
@@ -191,20 +155,20 @@ const Navbar = () => {
 
             {/* Mobile right icons — wishlist + account ONLY (cart is floating FAB) */}
             <div className="flex items-center md:hidden gap-1">
-              <Link to="/wishlist" className="relative p-2">
+              <Link to="/wishlist" className="relative p-3 min-w-11 min-h-11" aria-label="Wishlist">
                 <HiOutlineHeart size={22} className="text-white/90" />
                 {wishlistItems.length > 0 && (
                   <span className="absolute top-0.5 right-0.5 bg-white text-accent text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">{wishlistItems.length}</span>
                 )}
               </Link>
               {user ? (
-                <Link to="/account" className="relative p-2">
+                <Link to="/account" className="relative p-3 min-w-11 min-h-11" aria-label="My account">
                   <div className="w-7 h-7 rounded-full bg-white/20 border border-white/40 text-white flex items-center justify-center text-xs font-black">
                     {(user.name?.[0] || user.email?.[0] || 'U').toUpperCase()}
                   </div>
                 </Link>
               ) : (
-                <Link to="/login" className="relative p-2">
+                <Link to="/login" className="relative p-3 min-w-11 min-h-11" aria-label="Sign in">
                   <HiOutlineUser size={22} className="text-white/90" />
                 </Link>
               )}

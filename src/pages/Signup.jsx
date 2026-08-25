@@ -348,14 +348,16 @@ const Signup = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Full Name */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Full Name</label>
+                  <label htmlFor="signup-name" className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Full Name</label>
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">
                       <HiUser size={18} />
                     </div>
                     <input
+                      id="signup-name"
                       name="fullName"
                       type="text"
+                      autoComplete="name"
                       value={formData.fullName}
                       onChange={handleInputChange}
                       onBlur={() => handleBlur('fullName')}
@@ -381,14 +383,16 @@ const Signup = () => {
 
                 {/* Email */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Email</label>
+                  <label htmlFor="signup-email" className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Email</label>
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">
                       <HiMail size={18} />
                     </div>
                     <input
+                      id="signup-email"
                       name="email"
                       type="email"
+                      autoComplete="email"
                       value={formData.email}
                       onChange={handleInputChange}
                       onBlur={() => handleBlur('email')}
@@ -414,14 +418,17 @@ const Signup = () => {
 
                 {/* Phone Number */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Phone Number</label>
+                  <label htmlFor="signup-phone" className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Phone Number</label>
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">
                       <span className="text-lg">📱</span>
                     </div>
                     <input
+                      id="signup-phone"
                       name="phoneNumber"
-                      type="text"
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel"
                       value={formData.phoneNumber}
                       onChange={(e) => {
                         let value = e.target.value;
@@ -453,14 +460,16 @@ const Signup = () => {
 
                 {/* Password */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Password</label>
+                  <label htmlFor="signup-password" className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Password</label>
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">
                       <HiLockClosed size={18} />
                     </div>
                     <input
+                      id="signup-password"
                       name="password"
                       type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
                       value={formData.password}
                       onChange={handleInputChange}
                       onBlur={() => handleBlur('password')}
@@ -473,6 +482,7 @@ const Signup = () => {
                     />
                     <button
                       type="button"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-primary transition-colors"
                     >
@@ -513,14 +523,16 @@ const Signup = () => {
 
                 {/* Confirm Password */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Confirm Password</label>
+                  <label htmlFor="signup-confirm-password" className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Confirm Password</label>
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">
                       <HiLockClosed size={18} />
                     </div>
                     <input
+                      id="signup-confirm-password"
                       name="confirmPassword"
                       type={showConfirmPassword ? "text" : "password"}
+                      autoComplete="new-password"
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
                       onBlur={() => handleBlur('confirmPassword')}
@@ -535,6 +547,7 @@ const Signup = () => {
                     />
                     <button
                       type="button"
+                      aria-label={showConfirmPassword ? 'Hide confirmation password' : 'Show confirmation password'}
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-primary transition-colors"
                     >

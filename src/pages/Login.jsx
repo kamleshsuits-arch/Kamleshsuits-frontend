@@ -373,13 +373,16 @@ const Login = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Email Field */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Email</label>
+                  <label htmlFor="login-email" className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Email</label>
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">
                       <HiMail size={18} />
                     </div>
                     <input
+                      id="login-email"
+                      name="email"
                       type="email"
+                      autoComplete="email"
                       value={email}
                       onChange={handleEmailChange}
                       onBlur={() => handleBlur('email')}
@@ -399,7 +402,7 @@ const Login = () => {
                 {/* Password Field */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Password</label>
+                    <label htmlFor="login-password" className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Password</label>
                     <button 
                       type="button"
                       onClick={() => setView('forgot')}
@@ -413,7 +416,10 @@ const Login = () => {
                       <HiLockClosed size={18} />
                     </div>
                     <input
+                      id="login-password"
+                      name="password"
                       type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
                       value={password}
                       onChange={handlePasswordChange}
                       onBlur={() => handleBlur('password')}
@@ -426,6 +432,7 @@ const Login = () => {
                     />
                     <button
                       type="button"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-primary transition-colors"
                     >

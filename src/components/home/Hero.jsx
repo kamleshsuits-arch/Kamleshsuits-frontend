@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useAuth } from "../../context/AuthContext";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import LocationBar from "../common/LocationBar";
 import hero1 from "../../assets/hero1.webp";
 import hero2 from "../../assets/hero2.jpg";
@@ -159,7 +159,7 @@ const Hero = () => {
             <div className="text-xl drop-shadow-md">👗</div>
             <div className="flex-1 pr-2">
               <p className="text-white text-[10px] font-black uppercase tracking-wide">Free Shipping</p>
-              <p className="text-yellow-100/90 text-[9px]">On orders over ₹4,999</p>
+              <p className="text-yellow-100/90 text-[9px]">On orders of ₹5,000 or more</p>
             </div>
             <div className="bg-white/20 text-white text-[8px] font-black px-2 py-0.5 rounded border border-white/30 uppercase tracking-widest shadow-inner">
               Auto
