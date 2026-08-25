@@ -55,6 +55,61 @@
   letter-spacing: 0.025em !important;
 }
 
+.asset-modal-shell {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif !important;
+}
+
+.asset-modal-shell :is(h1, h2, h3, h4, p, label, button, input, select, textarea) {
+  font-family: inherit !important;
+}
+
+.asset-modal-header {
+  background:
+    radial-gradient(circle at 82% -40%, rgba(234, 179, 8, 0.42), transparent 45%),
+    linear-gradient(125deg, #2d1f1a 0%, #4b2e26 55%, #6b3b2d 100%);
+}
+
+.asset-section-card {
+  border: 1px solid #e7e5e4;
+  border-radius: 1.5rem;
+  background: #fff;
+  padding: 1.25rem;
+  box-shadow: 0 10px 30px rgba(41, 37, 36, 0.045);
+}
+
+.asset-control {
+  width: 100%;
+  min-height: 3rem;
+  border: 1px solid #d6d3d1;
+  border-radius: 0.875rem;
+  background: #fff;
+  padding: 0.75rem 1rem;
+  color: #292524;
+  font-size: 0.875rem;
+  font-weight: 650;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.asset-control::placeholder {
+  color: #a8a29e;
+  font-weight: 500;
+}
+
+.asset-control:hover:not(:disabled) {
+  border-color: #a8a29e;
+}
+
+.asset-control:focus {
+  border-color: #8b5e3c;
+  box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.14);
+}
+
+select.asset-control {
+  cursor: pointer;
+}
+
 @media (max-width: 640px) {
   .admin-dashboard {
     padding-top: 1.25rem;
@@ -64,5 +119,10 @@
   .admin-dashboard table td {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+
+  .asset-section-card {
+    border-radius: 1.25rem;
+    padding: 1rem;
   }
 }

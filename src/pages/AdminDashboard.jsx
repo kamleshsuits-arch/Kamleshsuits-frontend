@@ -8,7 +8,8 @@ import {
     HiTag, HiCube, HiX, HiCollection, HiCheck,
     HiSearch, HiTrendingUp, HiUsers, HiCubeTransparent, HiChevronDown, HiChevronUp,
     HiCloudUpload, HiScissors, HiPresentationChartLine, HiDatabase, HiRefresh,
-    HiCamera, HiIdentification, HiColorSwatch, HiCursorClick, HiStar, HiTruck, HiBell
+    HiCamera, HiIdentification, HiColorSwatch, HiCursorClick, HiStar, HiTruck, HiBell,
+    HiSparkles, HiInformationCircle
 } from 'react-icons/hi';
 import { BiLoaderAlt } from 'react-icons/bi';
 import AnalyticsTerminal from '../components/admin/AnalyticsTerminal';
@@ -94,6 +95,7 @@ const AdminDashboard = () => {
     });
 
     const [newColor, setNewColor] = useState('#000000');
+    const [manualColorName, setManualColorName] = useState('');
 
 
 
@@ -177,6 +179,13 @@ const AdminDashboard = () => {
         return () => { document.title = 'Kamlesh Suits'; };
     }, [pendingOrderCount]);
 
+    useEffect(() => {
+        if (!isModalOpen) return undefined;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = previousOverflow; };
+    }, [isModalOpen]);
+
     const loadProducts = async (showLoader = true) => {
         try {
             if (showLoader) setLoading(true);
@@ -244,6 +253,7 @@ const AdminDashboard = () => {
 
     const handleOpenModal = (product = null) => {
         setAssetProgress([]);
+        setManualColorName('');
         if (product) {
             setEditingProduct(product);
             const cats = Array.isArray(product.categories) 
@@ -463,11 +473,25 @@ const AdminDashboard = () => {
         }
     };
 
+    const addColor = (name) => {
+        const cleanName = (name || '').trim().replace(/\s+/g, ' ');
+        if (!cleanName) {
+            showToast('Enter a colour name first.', null, 'error');
+            return;
+        }
+        if (formData.colors.some(color => color.toLowerCase() === cleanName.toLowerCase())) {
+            showToast(`${cleanName} is already added.`, null, 'error');
+            return;
+        }
+        setFormData(prev => ({ ...prev, colors: [...prev.colors, cleanName] }));
+        setManualColorName('');
+    };
+
     const ColorPill = ({ color, onRemove }) => (
-        <div className="group/color relative flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-stone-100 shadow-sm">
-            <div className="w-3 h-3 rounded-full border border-stone-100" style={{ backgroundColor: getColorDisplay(color) }} />
-            <span className="text-[9px] font-bold text-stone-500 uppercase">{color}</span>
-            <button type="button" onClick={() => onRemove(color)} className="ml-1 opacity-100 text-red-500"><HiX size={10} /></button>
+        <div className="flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 bg-white px-3 py-2 shadow-sm">
+            <div className="h-6 w-6 shrink-0 rounded-full border-2 border-white shadow ring-1 ring-stone-200" style={{ backgroundColor: getColorDisplay(color) }} />
+            <span className="min-w-0 flex-1 truncate text-xs font-bold text-stone-700">{color}</span>
+            <button type="button" onClick={() => onRemove(color)} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-stone-400 transition hover:bg-red-50 hover:text-red-600" aria-label={`Remove ${color}`}><HiX size={14} /></button>
         </div>
     );
 
@@ -669,70 +693,89 @@ const AdminDashboard = () => {
 
             {/* Global Modal System */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden max-h-[95vh] flex flex-col scale-in-center">
-                        <div className="px-10 py-8 border-b border-stone-100 flex justify-between items-center bg-stone-50/50">
-                            <div>
-                                <h2 className="text-2xl font-black text-primary uppercase tracking-widest flex items-center gap-3">
-                                    <HiCubeTransparent className="text-accent" />
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-stone-950/65 p-2 backdrop-blur-sm animate-in fade-in duration-300 sm:p-5">
+                    <div className="asset-modal-shell flex max-h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl scale-in-center">
+                        <div className="asset-modal-header flex items-center justify-between gap-5 border-b border-white/10 px-5 py-5 sm:px-8 sm:py-6">
+                            <div className="flex min-w-0 items-center gap-4">
+                                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/20">
+                                    <HiSparkles size={24} />
+                                </span>
+                                <div className="min-w-0">
+                                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-white/65">Product catalogue</p>
+                                <h2 className="truncate text-xl font-black text-white sm:text-2xl">
                                     {editingProduct ? 'Update Asset' : 'New Asset'}
                                 </h2>
-                                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mt-1">Fabric Intelligence & Inventory System</p>
+                                </div>
                             </div>
-                            <button type="button" onClick={() => setIsModalOpen(false)} disabled={uploading || isSaving} className="w-12 h-12 rounded-full bg-white border border-stone-200 flex items-center justify-center text-stone-400 hover:text-red-500 transition-all shadow-sm disabled:cursor-wait disabled:opacity-50">
+                            <button type="button" onClick={() => setIsModalOpen(false)} disabled={uploading || isSaving} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white hover:text-primary disabled:cursor-wait disabled:opacity-50" aria-label="Close product form">
                                 <HiX size={20} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="px-10 py-10 overflow-y-auto custom-scrollbar bg-white">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <form onSubmit={handleSubmit} className="asset-modal-form overflow-y-auto bg-stone-50/80 px-4 py-5 custom-scrollbar sm:px-8 sm:py-8">
+                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-7">
                                 {/* Left Form Section */}
-                                <div className="space-y-8">
-                                    <FormSectionTitle label="Fabric Architecture" />
-                                    <div className="bg-stone-50 p-8 rounded-[2rem] border border-stone-100 space-y-6">
-                                        <div className="space-y-1">
-                                            <label className="text-[9px] font-black text-stone-500 uppercase tracking-widest ml-1">Fabric Family</label>
-                                            <input 
-                                                type="text"
-                                                list="fabric-families"
-                                                value={formData.fabric_family} 
-                                                onChange={(e) => setFormData({...formData, fabric_family: e.target.value})} 
-                                                placeholder="Select or type Fabric Family..."
-                                                className="w-full px-6 py-4 bg-white border border-stone-200 rounded-2xl outline-none font-bold text-xs text-primary focus:ring-2 focus:ring-accent shadow-sm"
-                                            />
-                                            <datalist id="fabric-families">
-                                                {Object.keys(FABRIC_STRUCTURE).map(family => (
-                                                    <option key={family} value={family} />
-                                                ))}
-                                            </datalist>
+                                <div className="space-y-6">
+                                    <FormSectionTitle number="01" label="Fabric Architecture" description="Choose the material family, then its exact fabric type." />
+                                    <div className="asset-section-card space-y-5">
+                                        <div className="grid gap-3 sm:grid-cols-[36px_1fr] sm:items-start">
+                                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-xs font-black text-white">1</span>
+                                            <div className="space-y-2">
+                                                <label htmlFor="fabric-family" className="block text-sm font-black text-stone-800">Fabric family</label>
+                                                <select
+                                                    id="fabric-family"
+                                                    value={formData.fabric_family}
+                                                    onChange={(e) => setFormData({ ...formData, fabric_family: e.target.value, fabric_category: '' })}
+                                                    className="asset-control"
+                                                    required
+                                                >
+                                                    <option value="">Select a fabric family</option>
+                                                    {formData.fabric_family && !Object.hasOwn(FABRIC_STRUCTURE, formData.fabric_family) && (
+                                                        <option value={formData.fabric_family}>{formData.fabric_family} (existing)</option>
+                                                    )}
+                                                    {Object.keys(FABRIC_STRUCTURE).map(family => (
+                                                        <option key={family} value={family}>{family}</option>
+                                                    ))}
+                                                </select>
+                                                <p className="text-xs font-medium text-stone-500">This controls the fabric types shown in the next field.</p>
+                                            </div>
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[9px] font-black text-stone-500 uppercase tracking-widest ml-1">Specialized Category</label>
-                                            <input 
-                                                type="text"
-                                                list="fabric-categories"
-                                                value={formData.fabric_category} 
-                                                onChange={(e) => setFormData({...formData, fabric_category: e.target.value})} 
-                                                disabled={!formData.fabric_family}
-                                                placeholder={formData.fabric_family ? "Select or type Category..." : "Choose Family First"}
-                                                className={`w-full px-6 py-4 bg-white border border-stone-200 rounded-2xl outline-none font-bold text-xs text-primary focus:ring-2 focus:ring-accent shadow-sm ${!formData.fabric_family && 'opacity-50 cursor-not-allowed'}`}
-                                            />
-                                            <datalist id="fabric-categories">
-                                                {FABRIC_STRUCTURE[formData.fabric_family] && FABRIC_STRUCTURE[formData.fabric_family].map(cat => (
-                                                    <option key={cat} value={cat} />
-                                                ))}
-                                            </datalist>
+
+                                        <div className="h-px bg-stone-100 sm:ml-12" />
+
+                                        <div className="grid gap-3 sm:grid-cols-[36px_1fr] sm:items-start">
+                                            <span className={`flex h-9 w-9 items-center justify-center rounded-xl text-xs font-black ${formData.fabric_family ? 'bg-accent text-white' : 'bg-stone-100 text-stone-400'}`}>2</span>
+                                            <div className="space-y-2">
+                                                <label htmlFor="fabric-category" className="block text-sm font-black text-stone-800">Fabric type</label>
+                                                <select
+                                                    id="fabric-category"
+                                                    value={formData.fabric_category}
+                                                    onChange={(e) => setFormData({ ...formData, fabric_category: e.target.value })}
+                                                    disabled={!formData.fabric_family}
+                                                    className="asset-control disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
+                                                    required
+                                                >
+                                                    <option value="">{formData.fabric_family ? 'Select the fabric type' : 'Select a family first'}</option>
+                                                    {formData.fabric_category && !(FABRIC_STRUCTURE[formData.fabric_family] || []).includes(formData.fabric_category) && (
+                                                        <option value={formData.fabric_category}>{formData.fabric_category} (existing)</option>
+                                                    )}
+                                                    {(FABRIC_STRUCTURE[formData.fabric_family] || []).map(category => (
+                                                        <option key={category} value={category}>{category}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <FormSectionTitle label="Core Attributes" />
-                                    <InputBox label="Asset Title" value={formData.title} onChange={(v) => setFormData({...formData, title: v})} />
-                                    
+                                    <FormSectionTitle number="02" label="Product Details" description="Add the customer-facing name, occasion and price." />
+                                    <div className="asset-section-card space-y-5">
+                                    <InputBox label="Product name" value={formData.title} onChange={(v) => setFormData({...formData, title: v})} placeholder="Example: Royal Blue Cotton Suit" />
+
                                     <div className="space-y-2">
-                                        <label className="text-[9px] font-black text-stone-500 uppercase tracking-widest pl-2">Segment Classification</label>
-                                        <div className="grid grid-cols-2 gap-3 p-6 bg-stone-50 rounded-[2rem] border border-stone-100">
+                                        <label className="block text-sm font-black text-stone-800">Suitable for</label>
+                                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                                             {["Wedding", "Daily Wear", "Party Wear", "Festive", "Karvachauth Spec.", "Outdoor", "Office", "Casual"].map(cat => (
-                                                <label key={cat} className="flex items-center gap-3 cursor-pointer group">
+                                                <label key={cat} className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 transition ${formData.categories.includes(cat) ? 'border-primary bg-primary/5 text-primary' : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300'}`}>
                                                     <input 
                                                         type="checkbox" 
                                                         checked={formData.categories.includes(cat)}
@@ -742,23 +785,24 @@ const AdminDashboard = () => {
                                                                 : formData.categories.filter(c => c !== cat);
                                                             setFormData({...formData, categories: newCats});
                                                         }}
-                                                        className="w-4 h-4 border-stone-300 rounded text-primary focus:ring-accent"
+                                                        className="h-4 w-4 shrink-0 rounded border-stone-300 text-primary focus:ring-accent"
                                                     />
-                                                    <span className="text-[10px] font-black text-stone-500 uppercase group-hover:text-primary">{cat}</span>
+                                                    <span className="text-xs font-bold leading-tight">{cat}</span>
                                                 </label>
                                             ))}
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
                                         <InputBox label="Price (₹)" type="number" value={formData.price} onChange={(v) => setFormData({...formData, price: v})} icon={<HiCurrencyRupee />} />
-                                        <InputBox label="Disc (%)" type="number" color="text-highlight" value={formData.discount} onChange={(v) => setFormData({...formData, discount: v})} icon={<HiTag />} />
+                                        <InputBox label="Discount (%)" type="number" color="text-highlight" value={formData.discount} onChange={(v) => setFormData({...formData, discount: v})} icon={<HiTag />} />
+                                    </div>
                                     </div>
                                 </div>
 
                                 {/* Right Form Section */}
-                                <div className="space-y-8">
-                                    <FormSectionTitle label="Visual Identity" />
+                                <div className="space-y-6">
+                                    <FormSectionTitle number="03" label="Product Gallery" description="Show the product clearly from multiple angles." />
                                     <div className="space-y-4">
                                         <div className="flex items-end justify-between gap-4 px-1">
                                             <div>
@@ -867,60 +911,102 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
 
-                                    <FormSectionTitle label="Thread & Dye" />
-                                    <div className="bg-stone-50 p-8 rounded-[2rem] space-y-6 border border-stone-100">
-                                        <div className="flex gap-4">
-                                            <input type="color" value={newColor} onChange={(e) => setNewColor(e.target.value)} className="w-14 h-14 rounded-2xl cursor-pointer border-4 border-white shadow-sm transition-transform hover:scale-105" title="Choose Shade" />
-                                            <button 
-                                                type="button" 
-                                                onClick={pickColorFromImage}
-                                                className="flex-1 bg-accent text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-primary hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
-                                            >
-                                                <HiCursorClick size={16} /> Sample From Image
-                                            </button>
+                                    <FormSectionTitle number="04" label="Available Colours" description="Pick a shade or type the exact colour name customers should see." />
+                                    <div className="asset-section-card space-y-5">
+                                        <div className="grid gap-4 rounded-2xl bg-stone-50 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                                            <div className="flex items-center gap-4">
+                                                <label className="relative flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-4 border-white shadow-md ring-1 ring-stone-200" title="Open colour picker">
+                                                    <span className="absolute inset-0" style={{ backgroundColor: newColor }} />
+                                                    <input type="color" value={newColor} onChange={(e) => setNewColor(e.target.value)} className="absolute inset-0 cursor-pointer opacity-0" aria-label="Choose a colour" />
+                                                    <HiColorSwatch className="relative text-white drop-shadow" size={22} />
+                                                </label>
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-bold text-stone-500">Selected shade</p>
+                                                    <p className="truncate text-base font-black text-stone-800">{getColorName(newColor)}</p>
+                                                    <p className="mt-0.5 font-mono text-xs font-bold uppercase text-stone-500">{newColor}</p>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-1">
+                                                <button type="button" onClick={() => addColor(getColorName(newColor))} className="min-h-11 rounded-xl bg-primary px-4 text-xs font-black text-white transition hover:bg-accent">
+                                                    Add shade
+                                                </button>
+                                                <button type="button" onClick={pickColorFromImage} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-4 text-xs font-black text-stone-700 transition hover:border-accent hover:text-accent">
+                                                    <HiCursorClick size={17} /> Pick from screen
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-wrap gap-3">
-                                            {formData.colors.map(c => <ColorPill key={c} color={c} onRemove={(color) => setFormData({...formData, colors: formData.colors.filter(x => x !== color)})} />)}
-                                            {formData.colors.length === 0 && <span className="text-[10px] text-stone-400 font-bold uppercase py-2 tracking-wider">No variants registered.</span>}
+
+                                        <div className="rounded-2xl border border-stone-200 p-4">
+                                            <label htmlFor="manual-colour-name" className="block text-sm font-black text-stone-800">Add colour name manually</label>
+                                            <p className="mt-1 text-xs font-medium text-stone-500">Useful for names such as Rani Pink, Mehendi Green or Dual Tone.</p>
+                                            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                                                <input
+                                                    id="manual-colour-name"
+                                                    type="text"
+                                                    value={manualColorName}
+                                                    onChange={(e) => setManualColorName(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            addColor(manualColorName);
+                                                        }
+                                                    }}
+                                                    maxLength={40}
+                                                    placeholder="Type colour name"
+                                                    className="asset-control flex-1"
+                                                />
+                                                <button type="button" onClick={() => addColor(manualColorName)} className="min-h-12 rounded-xl bg-accent px-6 text-sm font-black text-white transition hover:bg-primary">
+                                                    Add colour
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => {
-                                                const name = getColorName(newColor);
-                                                if (!formData.colors.includes(name)) {
-                                                    setFormData({...formData, colors: [...formData.colors, name]});
-                                                }
-                                            }} 
-                                            className="w-full py-3 bg-primary text-white rounded-xl font-black text-[9px] uppercase tracking-[0.2em] hover:bg-stone-800 transition-all"
-                                        >
-                                            Register Manual Shade Name
-                                        </button>
+
+                                        <div>
+                                            <div className="mb-3 flex items-center justify-between gap-3">
+                                                <p className="text-sm font-black text-stone-800">Added colours</p>
+                                                <span className="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-bold text-stone-600">{formData.colors.length}</span>
+                                            </div>
+                                            {formData.colors.length > 0 ? (
+                                                <div className="grid gap-2 sm:grid-cols-2">
+                                                    {formData.colors.map(c => <ColorPill key={c} color={c} onRemove={(color) => setFormData({...formData, colors: formData.colors.filter(x => x !== color)})} />)}
+                                                </div>
+                                            ) : (
+                                                <div className="flex min-h-16 items-center gap-3 rounded-xl border border-dashed border-stone-300 px-4 text-xs font-medium text-stone-500">
+                                                    <HiInformationCircle size={20} className="shrink-0 text-stone-400" /> No colours added yet. This field is optional.
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-6">
+                                    <FormSectionTitle number="05" label="Inventory & Description" description="Finish with stock information and a short product summary." />
+                                    <div className="asset-section-card space-y-5">
+                                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
                                         <InputBox label="Stock Level" type="number" value={formData.stock} onChange={(v) => setFormData({...formData, stock: v})} icon={<HiCube />} />
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-2 gap-2 sm:gap-3">
                                             <InputBox label="Rating" type="number" value={formData.rating} onChange={(v) => setFormData({...formData, rating: v})} icon={<HiStar className="text-yellow-400" />} />
                                             <InputBox label="Reviews" type="number" value={formData.reviews} onChange={(v) => setFormData({...formData, reviews: v})} icon={<HiUsers />} />
                                         </div>
                                     </div>
 
-                                    <div className="space-y-1.5">
-                                        <label className="text-[9px] font-black text-stone-500 uppercase tracking-widest ml-1">Asset Narrative (Description)</label>
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-black text-stone-800">Product description</label>
                                         <textarea 
                                             value={formData.description} 
                                             onChange={(e) => setFormData({...formData, description: e.target.value})}
-                                            placeholder="Describe the weave, the fall, and the occasion..."
-                                            className="w-full h-38 px-6 py-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none font-bold text-xs text-primary shadow-sm focus:ring-2 focus:ring-accent transition-all resize-none"
+                                            placeholder="Describe the fabric, fit, work and suitable occasion..."
+                                            className="asset-control min-h-32 resize-y"
                                         />
+                                    </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <button 
-                                type="submit" 
+                            <div className="sticky bottom-0 z-20 -mx-4 -mb-5 mt-8 flex flex-col gap-3 border-t border-stone-200 bg-white/95 px-4 py-4 backdrop-blur sm:-mx-8 sm:-mb-8 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+                                <p className="text-xs font-medium text-stone-500"><span className="font-black text-stone-700">Ready to publish?</span> Product name, fabric and price are required.</p>
+                            <button
+                                type="submit"
                                 disabled={isSaving || uploading}
-                                className="w-full mt-12 py-6 bg-primary text-white rounded-[3rem] font-black uppercase tracking-[0.4em] text-sm shadow-2xl shadow-primary/30 hover:bg-accent transition-all transform hover:-translate-y-1 flex items-center justify-center gap-4 disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="flex min-h-13 items-center justify-center gap-3 rounded-2xl bg-primary px-8 text-sm font-black text-white shadow-lg shadow-primary/20 transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-56"
                             >
                                 {isSaving || uploading ? (
                                     <>
@@ -928,9 +1014,10 @@ const AdminDashboard = () => {
                                         <span>{uploading ? 'Uploading Assets...' : 'Saving Product...'}</span>
                                     </>
                                 ) : (
-                                    editingProduct ? 'Finalize Asset Update' : 'Add Suit'
+                                    editingProduct ? 'Save Changes' : 'Publish Product'
                                 )}
                             </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -953,22 +1040,27 @@ const TableHead = ({ label, sortKey, currentSort, onSort }) => (
     </th>
 );
 
-const FormSectionTitle = ({ label }) => (
-    <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.4em] flex items-center gap-3">
-        <span className="w-6 h-px bg-stone-200" /> {label}
-    </h3>
+const FormSectionTitle = ({ number, label, description }) => (
+    <div className="flex items-start gap-3 px-1">
+        {number && <span className="mt-0.5 text-xs font-black text-accent">{number}</span>}
+        <div>
+            <h3 className="text-base font-black text-stone-900">{label}</h3>
+            {description && <p className="mt-1 text-xs font-medium leading-5 text-stone-500">{description}</p>}
+        </div>
+    </div>
 );
 
-const InputBox = ({ label, type = 'text', value, onChange, icon, color }) => (
-    <div className="space-y-1.5 w-full">
-        <label className="text-[9px] font-black text-stone-500 uppercase tracking-widest ml-1">{label}</label>
+const InputBox = ({ label, type = 'text', value, onChange, icon, color, placeholder = '' }) => (
+    <div className="w-full space-y-2">
+        <label className="block text-sm font-black text-stone-800">{label}</label>
         <div className="relative">
             {icon && <div className="absolute left-5 top-1/2 -translate-y-1/2 text-stone-400">{icon}</div>}
             <input 
                 type={type} required 
-                value={value} 
-                onChange={(e) => onChange(e.target.value)} 
-                className={`w-full ${icon ? 'pl-14' : 'px-6'} py-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none font-bold text-xs shadow-sm focus:ring-2 focus:ring-accent transition-all ${color || 'text-primary'}`} 
+                value={value}
+                placeholder={placeholder}
+                onChange={(e) => onChange(e.target.value)}
+                className={`asset-control ${icon ? 'pl-12' : ''} ${color || 'text-primary'}`}
             />
         </div>
     </div>
