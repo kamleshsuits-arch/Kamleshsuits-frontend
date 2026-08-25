@@ -97,6 +97,10 @@
   font-weight: 500;
 }
 
+.asset-control.asset-control-with-icon {
+  padding-left: 3rem;
+}
+
 .asset-control:hover:not(:disabled) {
   border-color: #a8a29e;
 }

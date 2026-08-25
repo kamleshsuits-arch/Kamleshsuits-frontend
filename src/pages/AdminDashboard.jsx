@@ -1001,7 +1001,7 @@ const AdminDashboard = () => {
                                 </div>
                             </div>
 
-                            <div className="sticky bottom-0 z-20 -mx-4 -mb-5 mt-8 flex flex-col gap-3 border-t border-stone-200 bg-white/95 px-4 py-4 backdrop-blur sm:-mx-8 sm:-mb-8 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+                            <div className="mt-8 flex flex-col gap-3 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
                                 <p className="text-xs font-medium text-stone-500"><span className="font-black text-stone-700">Ready to publish?</span> Product name, fabric and price are required.</p>
                             <button
                                 type="submit"
@@ -1054,13 +1054,13 @@ const InputBox = ({ label, type = 'text', value, onChange, icon, color, placehol
     <div className="w-full space-y-2">
         <label className="block text-sm font-black text-stone-800">{label}</label>
         <div className="relative">
-            {icon && <div className="absolute left-5 top-1/2 -translate-y-1/2 text-stone-400">{icon}</div>}
+            {icon && <div className="pointer-events-none absolute left-4 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center text-stone-400">{icon}</div>}
             <input 
                 type={type} required 
                 value={value}
                 placeholder={placeholder}
                 onChange={(e) => onChange(e.target.value)}
-                className={`asset-control ${icon ? 'pl-12' : ''} ${color || 'text-primary'}`}
+                className={`asset-control ${icon ? 'asset-control-with-icon' : ''} ${color || 'text-primary'}`}
             />
         </div>
     </div>
