@@ -18,7 +18,11 @@ import OrderManager from '../components/admin/OrderManager';
 import Loader from '../components/common/Loader';
 import { useCart } from '../hooks/useCart';
 import { getColorName, getColorDisplay } from '../utils/colors';
+import { formatAssetSize, isSupportedProductAsset, optimizeProductAsset } from '../utils/productAssetOptimizer';
 import './AdminDashboard.css';
+
+const MAX_PRODUCT_ASSETS = 10;
+const MAX_ASSET_SIZE = 20 * 1024 * 1024;
 
 const FABRIC_STRUCTURE = {
     "Cotton Family (Most Selling – Daily Wear)": [
@@ -69,6 +73,7 @@ const AdminDashboard = () => {
     const galleryInputRef = useRef(null);
     const cameraInputRef = useRef(null);
     const [uploading, setUploading] = useState(false);
+    const [assetProgress, setAssetProgress] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
 
     // Enhanced Form Data
@@ -238,6 +243,7 @@ const AdminDashboard = () => {
         });
 
     const handleOpenModal = (product = null) => {
+        setAssetProgress([]);
         if (product) {
             setEditingProduct(product);
             const cats = Array.isArray(product.categories) 
@@ -362,15 +368,98 @@ const AdminDashboard = () => {
     };
 
     const handleGalleryUpload = async (e) => {
-        const files = Array.from(e.target.files);
-        const newUrls = [];
-        for (const file of files) {
-            const url = await uploadImage(file);
-            if (url) newUrls.push(url);
+        const input = e.target;
+        const selectedFiles = Array.from(input.files || []);
+        input.value = '';
+        if (!selectedFiles.length) return;
+
+        const availableSlots = MAX_PRODUCT_ASSETS - formData.images.length;
+        if (availableSlots <= 0) {
+            showToast('Gallery Full: A product can have up to 10 images or GIFs.', null, 'error');
+            return;
         }
-        if (newUrls.length > 0) {
-            setFormData(prev => ({ ...prev, images: [...prev.images, ...newUrls] }));
-            showToast(`Gallery Updated: ${newUrls.length} new assets registered.`, null, 'success');
+
+        const accepted = [];
+        const rejected = [];
+        selectedFiles.slice(0, availableSlots).forEach((file, index) => {
+            if (!isSupportedProductAsset(file)) {
+                rejected.push(`${file.name}: unsupported format`);
+            } else if (file.size > MAX_ASSET_SIZE) {
+                rejected.push(`${file.name}: larger than 20 MB`);
+            } else {
+                accepted.push({ file, id: `${Date.now()}-${index}-${file.name}` });
+            }
+        });
+
+        if (selectedFiles.length > availableSlots) {
+            rejected.push(`${selectedFiles.length - availableSlots} file(s): gallery limit reached`);
+        }
+        if (rejected.length) {
+            showToast(`Some files were skipped. ${rejected.join('; ')}`, null, 'error');
+        }
+        if (!accepted.length) return;
+
+        setUploading(true);
+        setAssetProgress(accepted.map(item => ({
+            id: item.id,
+            name: item.file.name,
+            status: 'Optimizing',
+            originalSize: item.file.size,
+            finalSize: null,
+            note: ''
+        })));
+
+        const updateProgress = (id, patch) => {
+            setAssetProgress(current => current.map(item => item.id === id ? { ...item, ...patch } : item));
+        };
+
+        const processFile = async item => {
+            try {
+                const result = await optimizeProductAsset(item.file);
+                updateProgress(item.id, {
+                    status: 'Uploading',
+                    finalSize: result.finalSize,
+                    note: result.note
+                });
+                const url = await uploadProductImage(result.file);
+                updateProgress(item.id, { status: 'Ready', url });
+                return url;
+            } catch (error) {
+                console.error('Gallery asset upload failed:', error);
+                updateProgress(item.id, {
+                    status: 'Failed',
+                    note: error.response?.data?.message || error.message || 'Upload failed'
+                });
+                return null;
+            }
+        };
+
+        try {
+            // Three workers keep batch uploads quick without flooding slower mobile connections.
+            const queue = [...accepted];
+            const uploadedById = new Map();
+            const worker = async () => {
+                while (queue.length) {
+                    const item = queue.shift();
+                    const url = await processFile(item);
+                    if (url) uploadedById.set(item.id, url);
+                }
+            };
+            await Promise.all(Array.from({ length: Math.min(3, accepted.length) }, worker));
+            const uploadedUrls = accepted.map(item => uploadedById.get(item.id)).filter(Boolean);
+
+            if (uploadedUrls.length) {
+                setFormData(prev => ({
+                    ...prev,
+                    images: [...prev.images, ...uploadedUrls].slice(0, MAX_PRODUCT_ASSETS)
+                }));
+                showToast(`${uploadedUrls.length} product asset${uploadedUrls.length > 1 ? 's' : ''} optimized and uploaded.`, null, 'success');
+            }
+            if (uploadedUrls.length !== accepted.length) {
+                showToast(`${accepted.length - uploadedUrls.length} asset upload failed. You can select it again to retry.`, null, 'error');
+            }
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -586,11 +675,11 @@ const AdminDashboard = () => {
                             <div>
                                 <h2 className="text-2xl font-black text-primary uppercase tracking-widest flex items-center gap-3">
                                     <HiCubeTransparent className="text-accent" />
-                                    {editingProduct ? 'Update Asset' : 'New Listing'}
+                                    {editingProduct ? 'Update Asset' : 'New Asset'}
                                 </h2>
                                 <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mt-1">Fabric Intelligence & Inventory System</p>
                             </div>
-                            <button onClick={() => setIsModalOpen(false)} className="w-12 h-12 rounded-full bg-white border border-stone-200 flex items-center justify-center text-stone-400 hover:text-red-500 transition-all shadow-sm">
+                            <button type="button" onClick={() => setIsModalOpen(false)} disabled={uploading || isSaving} className="w-12 h-12 rounded-full bg-white border border-stone-200 flex items-center justify-center text-stone-400 hover:text-red-500 transition-all shadow-sm disabled:cursor-wait disabled:opacity-50">
                                 <HiX size={20} />
                             </button>
                         </div>
@@ -671,21 +760,29 @@ const AdminDashboard = () => {
                                 <div className="space-y-8">
                                     <FormSectionTitle label="Visual Identity" />
                                     <div className="space-y-4">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <label className="text-[9px] font-black text-stone-500 uppercase tracking-widest ml-2">Product Assets Gallery</label>
-                                            <span className="text-[8px] font-black text-accent uppercase tracking-widest">First image is Primary</span>
+                                        <div className="flex items-end justify-between gap-4 px-1">
+                                            <div>
+                                                <label className="block text-sm font-black text-stone-800">Product gallery</label>
+                                                <p className="mt-1 text-xs font-medium text-stone-500">Add up to 10 JPG, PNG, WebP or animated GIF files.</p>
+                                            </div>
+                                            <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${formData.images.length >= MAX_PRODUCT_ASSETS ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-700'}`}>
+                                                {formData.images.length} / {MAX_PRODUCT_ASSETS}
+                                            </span>
                                         </div>
-                                        
-                                        <div className="grid grid-cols-4 gap-4 p-6 bg-stone-50 rounded-[2rem] min-h-[160px] border border-stone-100">
+
+                                        <div className="rounded-3xl border border-stone-200 bg-stone-50 p-4 sm:p-5">
+                                            {formData.images.length > 0 && (
+                                                <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                                             {formData.images.map((img, idx) => (
-                                                <div key={idx} className={`relative aspect-[3/4] rounded-2xl overflow-hidden border-2 group/img transition-all ${idx === 0 ? 'border-accent shadow-lg scale-105 z-10' : 'border-stone-200'}`}>
-                                                    <img src={img} className="w-full h-full object-cover" />
-                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                <div key={img} className={`relative aspect-[3/4] overflow-hidden rounded-2xl border-2 bg-white ${idx === 0 ? 'border-accent shadow-md' : 'border-stone-200'}`}>
+                                                    <img src={img} alt={`Product asset ${idx + 1}`} className="h-full w-full object-cover" />
+                                                    <div className="absolute right-2 top-2 flex gap-2">
                                                         <button 
                                                             type="button" 
                                                             onClick={() => setFormData({...formData, images: formData.images.filter((_, i) => i !== idx)})} 
-                                                            className="bg-white/90 text-red-500 p-2 rounded-xl backdrop-blur-sm hover:bg-red-500 hover:text-white transition-all shadow-lg"
-                                                            title="Purge Image"
+                                                            className="rounded-full bg-white p-2 text-red-600 shadow-md transition hover:bg-red-600 hover:text-white"
+                                                            title="Remove asset"
+                                                            aria-label={`Remove product asset ${idx + 1}`}
                                                         >
                                                             <HiTrash size={14} />
                                                         </button>
@@ -698,41 +795,75 @@ const AdminDashboard = () => {
                                                                     newImages.unshift(target);
                                                                     setFormData({...formData, images: newImages});
                                                                 }}
-                                                                className="bg-white/90 text-primary p-2 rounded-xl backdrop-blur-sm hover:bg-primary hover:text-white transition-all shadow-lg"
-                                                                title="Set as Primary"
+                                                                className="rounded-full bg-white p-2 text-primary shadow-md transition hover:bg-primary hover:text-white"
+                                                                title="Make primary image"
+                                                                aria-label={`Make product asset ${idx + 1} primary`}
                                                             >
                                                                 <HiCheck size={14} />
                                                             </button>
                                                         )}
                                                     </div>
                                                     {idx === 0 && (
-                                                        <div className="absolute bottom-0 left-0 right-0 bg-accent text-white text-[7px] font-black text-center py-1 uppercase tracking-widest backdrop-blur-sm">Primary Visual</div>
+                                                        <div className="absolute bottom-0 left-0 right-0 bg-accent/95 py-1.5 text-center text-[10px] font-black uppercase tracking-wide text-white">Primary image</div>
                                                     )}
                                                 </div>
                                             ))}
-                                            
-                                            {/* Action Slots */}
-                                            <div className="flex flex-col gap-2 aspect-[3/4]">
+                                                </div>
+                                            )}
+
+                                            {formData.images.length < MAX_PRODUCT_ASSETS && (
+                                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
                                                 <button 
                                                     type="button" 
-                                                    onClick={() => galleryInputRef.current.click()} 
-                                                    className="flex-1 rounded-2xl border-2 border-dashed border-stone-200 flex flex-col items-center justify-center text-stone-300 hover:text-primary hover:border-primary hover:bg-white transition-all group/up"
+                                                    onClick={() => galleryInputRef.current?.click()}
+                                                    disabled={uploading}
+                                                    className="flex min-h-24 items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-stone-300 bg-white px-4 text-left text-stone-700 transition hover:border-primary hover:text-primary disabled:cursor-wait disabled:opacity-60"
                                                 >
-                                                    <HiCloudUpload size={24} className="group-hover/up:scale-110 transition-transform" />
-                                                    <span className="text-[7px] font-black uppercase tracking-widest mt-2">Upload</span>
+                                                    {uploading ? <BiLoaderAlt size={25} className="animate-spin" /> : <HiCloudUpload size={26} />}
+                                                    <span>
+                                                        <span className="block text-sm font-black">{uploading ? 'Optimizing and uploading…' : 'Choose product files'}</span>
+                                                        <span className="mt-1 block text-xs font-medium text-stone-500">Auto mode keeps the best quality and uploads 3 at a time.</span>
+                                                    </span>
                                                 </button>
                                                 <button 
                                                     type="button" 
-                                                    onClick={() => cameraInputRef.current.click()} 
-                                                    className="flex-1 rounded-2xl border-2 border-dashed border-stone-200 flex flex-col items-center justify-center text-stone-300 hover:text-accent hover:border-accent hover:bg-white transition-all group/cam"
+                                                    onClick={() => cameraInputRef.current?.click()}
+                                                    disabled={uploading}
+                                                    className="flex min-h-16 items-center justify-center gap-2 rounded-2xl border border-stone-300 bg-white px-5 text-sm font-black text-stone-700 transition hover:border-accent hover:text-accent disabled:cursor-wait disabled:opacity-60 sm:min-h-24 sm:flex-col"
                                                 >
-                                                    <HiCamera size={24} className="group-hover/cam:scale-110 transition-transform" />
-                                                    <span className="text-[7px] font-black uppercase tracking-widest mt-2">Click</span>
+                                                    <HiCamera size={23} />
+                                                    <span>Use camera</span>
                                                 </button>
-                                            </div>
-                                            
-                                            <input type="file" multiple hidden ref={galleryInputRef} onChange={handleGalleryUpload} accept="image/*" />
-                                            <input type="file" hidden ref={cameraInputRef} onChange={handleGalleryUpload} accept="image/*" capture="environment" />
+                                                </div>
+                                            )}
+
+                                            <input type="file" multiple hidden ref={galleryInputRef} onChange={handleGalleryUpload} accept="image/jpeg,image/png,image/webp,image/gif" />
+                                            <input type="file" hidden ref={cameraInputRef} onChange={handleGalleryUpload} accept="image/jpeg,image/png,image/webp" capture="environment" />
+
+                                            {assetProgress.length > 0 && (
+                                                <div className="mt-4 space-y-2 border-t border-stone-200 pt-4" aria-live="polite">
+                                                    {assetProgress.map(item => (
+                                                        <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-2 text-xs">
+                                                            <span className="min-w-0 flex-1">
+                                                                <span className="block truncate font-bold text-stone-700">{item.name}</span>
+                                                                <span className="block text-[11px] font-medium text-stone-500">
+                                                                    {item.note || 'Preparing file'}
+                                                                    {item.finalSize && item.finalSize !== item.originalSize
+                                                                        ? ` · ${formatAssetSize(item.originalSize)} → ${formatAssetSize(item.finalSize)}`
+                                                                        : ` · ${formatAssetSize(item.originalSize)}`}
+                                                                </span>
+                                                            </span>
+                                                            <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black ${item.status === 'Ready' ? 'bg-emerald-100 text-emerald-800' : item.status === 'Failed' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800'}`}>
+                                                                {item.status}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <p className="mt-3 text-[11px] font-medium leading-5 text-stone-500">
+                                                Large static images are converted only when the smaller version keeps visually identical quality. Animated GIF frames and colours are preserved unchanged. Maximum 20 MB per file.
+                                            </p>
                                         </div>
                                     </div>
 
@@ -788,13 +919,13 @@ const AdminDashboard = () => {
 
                             <button 
                                 type="submit" 
-                                disabled={isSaving}
+                                disabled={isSaving || uploading}
                                 className="w-full mt-12 py-6 bg-primary text-white rounded-[3rem] font-black uppercase tracking-[0.4em] text-sm shadow-2xl shadow-primary/30 hover:bg-accent transition-all transform hover:-translate-y-1 flex items-center justify-center gap-4 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
-                                {isSaving ? (
+                                {isSaving || uploading ? (
                                     <>
                                         <BiLoaderAlt className="animate-spin text-xl" />
-                                        <span>Adding Suit...</span>
+                                        <span>{uploading ? 'Uploading Assets...' : 'Saving Product...'}</span>
                                     </>
                                 ) : (
                                     editingProduct ? 'Finalize Asset Update' : 'Add Suit'
