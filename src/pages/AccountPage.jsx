@@ -1,9 +1,9 @@
 import { useAuth } from '../context/AuthContext';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { HiUser, HiMail, HiCalendar, HiShieldCheck, HiFingerPrint, HiLightningBolt, HiShoppingBag, HiClock, HiBadgeCheck, HiLogout } from 'react-icons/hi';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { HiUser, HiMail, HiShieldCheck, HiShoppingBag, HiClock, HiBadgeCheck, HiLogout, HiClipboardList, HiHeart, HiHome, HiArrowRight } from 'react-icons/hi';
 
 const AccountPage = () => {
-    const { user, loading, logout } = useAuth();
+    const { user, isAdmin, loading, logout } = useAuth();
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -64,7 +64,7 @@ const AccountPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     
                     {/* User Details Section */}
-                    <div className="space-y-6">
+                    <div className="order-2 space-y-6 md:order-1">
                         <h2 className="text-[11px] font-black text-primary/70 uppercase tracking-[0.4em] flex items-center gap-2">
                              <span className="w-6 h-px bg-accent/30" /> Identity Details
                         </h2>
@@ -95,68 +95,35 @@ const AccountPage = () => {
                         </div>
                     </div>
 
-                    {/* Redesigned Dashboard Activity Section */}
-                    <div className="space-y-6">
+                    {/* Account navigation — shown first on mobile */}
+                    <div className="order-1 space-y-6 md:order-2">
                          <h2 className="text-[11px] font-black text-primary/70 uppercase tracking-[0.4em] flex items-center gap-2">
-                             <span className="w-6 h-px bg-accent/30" /> Customer Dashboard
+                             <span className="w-6 h-px bg-accent/30" /> Quick Access
                         </h2>
-                        
-                        <div className="grid grid-cols-1 gap-4">
-                            {/* Performance Card 1 */}
-                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100 flex items-center justify-between group hover:border-accent transition-all">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-stone-50 text-primary flex items-center justify-center text-xl group-hover:bg-primary group-hover:text-white transition-colors">
-                                        <HiShoppingBag />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Active Orders</p>
-                                        <p className="text-xl font-black text-primary">00 Total</p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-black text-stone-300 uppercase italic">Catalog Sync</p>
-                                </div>
-                            </div>
 
-                            {/* Performance Card 2 */}
-                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100 flex items-center justify-between group hover:border-accent transition-all">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-stone-50 text-accent flex items-center justify-center text-xl group-hover:bg-accent group-hover:text-white transition-colors">
-                                        <HiLightningBolt />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Membership Tier</p>
-                                        <p className="text-xl font-black text-primary">Premium Member</p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-black text-accent uppercase">Standard</p>
-                                </div>
-                            </div>
-
-                            {/* Performance Card 3 */}
-                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100 flex items-center justify-between group hover:border-primary transition-all">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-stone-50 text-emerald-500 flex items-center justify-center text-xl group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                        {isAdmin && (
+                            <Link
+                                to="/admin"
+                                className="group flex min-h-24 items-center justify-between gap-4 overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-700 to-emerald-950 p-5 text-white shadow-lg shadow-emerald-900/15 transition active:scale-[0.98] sm:p-6"
+                            >
+                                <span className="flex min-w-0 items-center gap-4">
+                                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-2xl ring-1 ring-white/20">
                                         <HiShieldCheck />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Total Savings</p>
-                                        <p className="text-xl font-black text-primary">₹2,450</p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-black text-stone-300 uppercase italic">Lifetime</p>
-                                </div>
-                            </div>
-                        </div>
+                                    </span>
+                                    <span className="min-w-0">
+                                        <span className="block text-base font-black">Admin Management</span>
+                                        <span className="mt-1 block text-xs font-medium leading-5 text-white/75">Manage products, confirm orders and view reports.</span>
+                                    </span>
+                                </span>
+                                <HiArrowRight size={22} className="shrink-0 transition-transform group-hover:translate-x-1" />
+                            </Link>
+                        )}
 
-                        {/* Quick Action Banner */}
-                        <div className="bg-gradient-to-br from-primary to-stone-800 rounded-3xl p-8 text-white relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-700" />
-                            <h3 className="text-lg font-black uppercase tracking-tighter mb-2 italic">Exclusive Benefits</h3>
-                            <p className="text-white/60 text-xs font-medium leading-relaxed mb-6">Complete your profile and get <span className="text-accent font-bold">Priority Support</span> and early access to silk launches.</p>
-                            <button className="w-full py-3 bg-white text-primary rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-accent hover:text-white transition-all transform hover:-translate-y-1 shadow-lg shadow-black/20">Edit Profile</button>
+                        <div className="grid grid-cols-1 gap-4">
+                            <QuickLink to="/track-order" icon={<HiClipboardList />} title="Track Orders" description="Check order history and current delivery status." tone="accent" />
+                            <QuickLink to="/wishlist" icon={<HiHeart />} title="Saved Pieces" description="Open products saved to your wishlist." tone="rose" />
+                            <QuickLink to="/cart" icon={<HiShoppingBag />} title="Shopping Bag" description="Review items waiting in your cart." tone="gold" />
+                            <QuickLink to="/" icon={<HiHome />} title="Continue Shopping" description="Browse the complete Kamlesh Suits collection." tone="stone" />
                         </div>
                     </div>
                 </div>
@@ -178,6 +145,28 @@ const DetailRow = ({ icon, label, value, verified }) => (
             </div>
         </div>
     </div>
+);
+
+const QUICK_LINK_TONES = {
+    accent: 'bg-amber-50 text-amber-700 group-hover:bg-accent group-hover:text-white',
+    rose: 'bg-rose-50 text-rose-600 group-hover:bg-rose-600 group-hover:text-white',
+    gold: 'bg-yellow-50 text-yellow-700 group-hover:bg-yellow-600 group-hover:text-white',
+    stone: 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
+};
+
+const QuickLink = ({ to, icon, title, description, tone }) => (
+    <Link to={to} className="group flex min-h-20 items-center justify-between gap-3 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm transition hover:border-stone-200 hover:shadow-md active:scale-[0.99] sm:p-5">
+        <span className="flex min-w-0 items-center gap-4">
+            <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-xl transition-colors ${QUICK_LINK_TONES[tone] || QUICK_LINK_TONES.stone}`}>
+                {icon}
+            </span>
+            <span className="min-w-0">
+                <span className="block text-sm font-black text-primary">{title}</span>
+                <span className="mt-1 block text-xs font-medium leading-5 text-stone-500">{description}</span>
+            </span>
+        </span>
+        <HiArrowRight size={19} className="shrink-0 text-stone-300 transition-transform group-hover:translate-x-1 group-hover:text-accent" />
+    </Link>
 );
 
 export default AccountPage;
