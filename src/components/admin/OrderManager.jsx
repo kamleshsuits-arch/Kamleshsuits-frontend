@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { fetchAllOrders, updateOrderStatus } from '../../api/products';
 import { 
     HiTrendingUp, HiUsers, HiCube, HiRefresh, HiSearch, 
     HiChevronDown, HiChevronUp, HiOfficeBuilding, HiTruck,
-    HiClock, HiCheckCircle, HiExclamationCircle, HiPrinter, HiCollection
+    HiClock, HiCheckCircle, HiExclamationCircle, HiPrinter, HiCollection, HiPhone
 } from 'react-icons/hi';
 import { formatPrice } from '../../utils/currency';
 
@@ -25,30 +25,39 @@ const OrderStatusPill = ({ status }) => {
     );
 };
 
-const OrderManager = ({ showToast }) => {
+const OrderManager = ({ showToast, onPendingCountChange }) => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedOrder, setExpandedOrder] = useState(null);
     const [updatingOrder, setUpdatingOrder] = useState(null);
 
-    const loadOrders = async () => {
+    const loadOrders = useCallback(async (showLoader = true) => {
         try {
-            setLoading(true);
+            if (showLoader) setLoading(true);
             const data = await fetchAllOrders();
             // Sort by Date DESC
-            setOrders((data || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+            const sortedOrders = (data || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            setOrders(sortedOrders);
+            onPendingCountChange?.(sortedOrders.filter(order => ['Awaiting Confirmation', 'Pending'].includes(order.status)).length);
         } catch (error) {
             console.error('Failed to load orders:', error);
-            if (showToast) showToast('Failed to load order stream.', null, 'error');
+            if (showLoader && showToast) showToast('Failed to load order stream.', null, 'error');
         } finally {
-            setLoading(false);
+            if (showLoader) setLoading(false);
         }
-    };
+    }, [onPendingCountChange, showToast]);
 
     useEffect(() => {
         loadOrders();
-    }, []);
+        const interval = setInterval(() => loadOrders(false), 15000);
+        const handleFocus = () => loadOrders(false);
+        window.addEventListener('focus', handleFocus);
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, [loadOrders]);
 
     const handleStatusUpdate = async (order, status) => {
         try {
@@ -58,6 +67,9 @@ const OrderManager = ({ showToast }) => {
                 : order.paymentStatus;
             const updated = await updateOrderStatus(order.orderId, status, paymentStatus);
             setOrders(current => current.map(item => item.orderId === order.orderId ? { ...item, ...updated } : item));
+            if (['Awaiting Confirmation', 'Pending'].includes(order.status) && !['Awaiting Confirmation', 'Pending'].includes(status)) {
+                onPendingCountChange?.(Math.max(0, orders.filter(item => ['Awaiting Confirmation', 'Pending'].includes(item.status)).length - 1));
+            }
             if (showToast) showToast(`Order marked ${status}.`, null, 'success');
         } catch (error) {
             console.error('Failed to update order:', error);
@@ -103,6 +115,22 @@ const OrderManager = ({ showToast }) => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
+            {orders.some(order => ['Awaiting Confirmation', 'Pending'].includes(order.status)) && (
+                <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-500 text-white animate-pulse">
+                            <HiPhone size={21} />
+                        </span>
+                        <div>
+                            <p className="text-sm font-black text-amber-900">Customers are waiting for your confirmation call</p>
+                            <p className="text-xs text-amber-700">Call each customer, verify the order, then press “Confirm Order After Call.”</p>
+                        </div>
+                    </div>
+                    <span className="rounded-full bg-amber-200 px-4 py-2 text-xs font-black uppercase tracking-wider text-amber-900">
+                        {orders.filter(order => ['Awaiting Confirmation', 'Pending'].includes(order.status)).length} waiting
+                    </span>
+                </div>
+            )}
             {/* Stats Summary */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <StatCard label="Total Revenue" value={formatPrice(orders.reduce((acc, o) => acc + o.total, 0))} icon={<HiTrendingUp />} color="bg-primary" />
@@ -118,15 +146,24 @@ const OrderManager = ({ showToast }) => {
                     <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Global Transaction Ledger</p>
                 </div>
                 
-                <div className="relative w-full md:w-96">
-                    <HiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
-                    <input 
-                        type="text"
-                        placeholder="Search by ID, Customer, Phone..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3.5 bg-white border border-stone-200 rounded-2xl focus:ring-2 focus:ring-accent outline-none text-xs font-bold transition-all shadow-sm"
-                    />
+                <div className="flex w-full gap-3 md:w-auto">
+                    <div className="relative flex-1 md:w-96">
+                        <HiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by ID, Customer, Phone..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3.5 bg-white border border-stone-200 rounded-2xl focus:ring-2 focus:ring-accent outline-none text-xs font-bold transition-all shadow-sm"
+                        />
+                    </div>
+                    <button
+                        onClick={() => loadOrders(false)}
+                        aria-label="Refresh orders"
+                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-500 hover:text-primary"
+                    >
+                        <HiRefresh size={18} />
+                    </button>
                 </div>
             </div>
 
@@ -147,7 +184,7 @@ const OrderManager = ({ showToast }) => {
                         <tbody className="divide-y divide-stone-50">
                             {filteredOrders.map((order) => (
                                 <React.Fragment key={order.orderId}>
-                                    <tr className={`hover:bg-stone-50/50 transition-colors ${expandedOrder === order.orderId ? 'bg-stone-50/80 shadow-inner' : ''}`}>
+                                    <tr className={`hover:bg-stone-50/50 transition-colors ${['Awaiting Confirmation', 'Pending'].includes(order.status) ? 'bg-amber-50/50' : ''} ${expandedOrder === order.orderId ? 'shadow-inner' : ''}`}>
                                         <td className="px-8 py-5">
                                             <div className="flex flex-col">
                                                 <span className="text-xs font-black text-primary tracking-tight">{order.orderId}</span>
@@ -157,7 +194,7 @@ const OrderManager = ({ showToast }) => {
                                         <td className="px-8 py-5">
                                             <div className="flex flex-col">
                                                 <span className="text-[11px] font-black text-primary uppercase">{order.user_name || "Guest Customer"}</span>
-                                                <span className="text-[9px] text-stone-500 font-bold">{order.user_phone || "No Phone"}</span>
+                                                <a href={`tel:+91${order.user_phone}`} className="text-[10px] text-blue-700 font-black underline underline-offset-2">{order.user_phone || "No Phone"}</a>
                                             </div>
                                         </td>
                                         <td className="px-8 py-5 font-black text-sm text-primary">
@@ -203,6 +240,12 @@ const OrderManager = ({ showToast }) => {
                                                                 <span className="bg-stone-100 text-[8px] font-black text-stone-500 px-3 py-1 rounded-full uppercase tracking-tighter border border-stone-200">TYPE: {order.address?.type || 'Home'}</span>
                                                                 <span className="bg-stone-100 text-[8px] font-black text-stone-500 px-3 py-1 rounded-full uppercase tracking-tighter border border-stone-200">VERIFIED</span>
                                                             </div>
+                                                            <a
+                                                                href={`tel:+91${order.user_phone}`}
+                                                                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg"
+                                                            >
+                                                                <HiPhone size={16} /> Call Customer: {order.user_phone}
+                                                            </a>
                                                         </div>
                                                     </div>
 
@@ -259,7 +302,7 @@ const OrderManager = ({ showToast }) => {
                                                                             onClick={() => handleStatusUpdate(order, 'Confirmed')}
                                                                             className="bg-emerald-600 text-white border border-emerald-600 px-6 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl disabled:opacity-50 flex items-center gap-2"
                                                                         >
-                                                                            <HiCheckCircle size={14} /> Customer Confirmed
+                                                                            <HiCheckCircle size={14} /> Confirm Order After Call
                                                                         </button>
                                                                     ) : (
                                                                         <button

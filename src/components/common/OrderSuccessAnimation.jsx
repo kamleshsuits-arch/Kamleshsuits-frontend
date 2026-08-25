@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react';
 import { gsap } from 'gsap';
-import { HiCheck, HiOutlineShoppingBag, HiPhone } from 'react-icons/hi';
-import { FaWhatsapp } from 'react-icons/fa';
+import { HiCheck, HiClock, HiPhoneIncoming } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
 
-const OrderSuccessAnimation = ({ orderId, name, whatsappUrl, onClose }) => {
+const OrderSuccessAnimation = ({ orderId, name, onClose }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -53,32 +52,31 @@ const OrderSuccessAnimation = ({ orderId, name, whatsappUrl, onClose }) => {
         <div className="success-content space-y-4">
           <h2 className="text-2xl font-serif text-primary">Order Request Received</h2>
           <p className="text-secondary text-sm leading-relaxed">
-            Thank you, {name}. Your order <span className="text-primary font-black tracking-tight">{orderId}</span> is waiting for store confirmation.
+            Thank you, {name}. We received order <span className="text-primary font-black tracking-tight">{orderId}</span>.
           </p>
-          
-          <div className="py-6 scale-90">
-             <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#CFB53B] mb-2">
-                <HiOutlineShoppingBag size={16} />
-                Next step: confirm on WhatsApp or call
-             </div>
-             <div className="w-full h-1 bg-stone-100 rounded-full overflow-hidden">
-                <div className="w-1/3 h-full bg-[#CFB53B] rounded-full animate-pulse" />
-             </div>
+
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-left">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500 text-white">
+                <HiPhoneIncoming size={21} />
+              </div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider text-amber-800">The store will call you</p>
+                <p className="mt-1 text-xs leading-relaxed text-amber-700">Please keep your phone available. Our team will call your saved number to confirm the products, address and payment preference.</p>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-3 pt-6">
-            <a
-              href={whatsappUrl}
-              className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl flex items-center justify-center gap-2"
-            >
-              <FaWhatsapp size={18} /> Confirm on WhatsApp
-            </a>
-            <a
-              href="tel:+919992304505"
-              className="w-full bg-white border-2 border-primary text-primary py-4 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2"
-            >
-              <HiPhone size={18} /> Call the Store
-            </a>
+          <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-stone-500">
+            <HiClock size={16} className="text-amber-500" />
+            Status: Waiting for store confirmation
+          </div>
+
+          <p className="text-xs font-semibold leading-relaxed text-emerald-700">
+            You do not need to call or send a WhatsApp message.
+          </p>
+
+          <div className="space-y-3 pt-3">
             <button 
               onClick={() => {
                 navigate('/');
@@ -87,12 +85,6 @@ const OrderSuccessAnimation = ({ orderId, name, whatsappUrl, onClose }) => {
               className="w-full bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 hover:bg-accent transition-all active:scale-95"
             >
               Continue Shopping
-            </button>
-            <button 
-              onClick={onClose}
-              className="w-full bg-stone-50 text-stone-400 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-stone-100 transition-all"
-            >
-              Dismiss
             </button>
           </div>
         </div>

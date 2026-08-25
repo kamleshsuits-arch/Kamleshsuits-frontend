@@ -2,13 +2,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { fetchProducts, addProduct, updateProduct, deleteProduct, uploadProductImage } from '../api/products';
+import { fetchProducts, addProduct, updateProduct, deleteProduct, uploadProductImage, fetchAllOrders } from '../api/products';
 import { 
     HiPlus, HiPencil, HiTrash, HiPhotograph, HiCurrencyRupee, 
     HiTag, HiCube, HiX, HiCollection, HiCheck,
     HiSearch, HiTrendingUp, HiUsers, HiCubeTransparent, HiChevronDown, HiChevronUp,
     HiCloudUpload, HiScissors, HiPresentationChartLine, HiDatabase, HiRefresh,
-    HiCamera, HiIdentification, HiColorSwatch, HiCursorClick, HiStar, HiTruck
+    HiCamera, HiIdentification, HiColorSwatch, HiCursorClick, HiStar, HiTruck, HiBell
 } from 'react-icons/hi';
 import { BiLoaderAlt } from 'react-icons/bi';
 import AnalyticsTerminal from '../components/admin/AnalyticsTerminal';
@@ -57,6 +57,9 @@ const AdminDashboard = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [activeTab, setActiveTab] = useState('inventory');
+    const [pendingOrderCount, setPendingOrderCount] = useState(0);
+    const knownOrderIdsRef = useRef(new Set());
+    const orderCheckInitializedRef = useRef(false);
     
     // UI Local State
     const [searchTerm, setSearchTerm] = useState('');
@@ -120,6 +123,53 @@ const AdminDashboard = () => {
             clearInterval(pollInterval);
         };
     }, []);
+
+    useEffect(() => {
+        if (!isAdmin) return undefined;
+        let active = true;
+
+        const checkNewOrderRequests = async () => {
+            try {
+                const data = await fetchAllOrders();
+                if (!active) return;
+                const awaiting = (data || []).filter(order => ['Awaiting Confirmation', 'Pending'].includes(order.status));
+                setPendingOrderCount(awaiting.length);
+
+                if (orderCheckInitializedRef.current) {
+                    const newOrders = awaiting.filter(order => !knownOrderIdsRef.current.has(order.orderId));
+                    if (newOrders.length > 0) {
+                        showToast(`${newOrders.length} new order request${newOrders.length > 1 ? 's' : ''}. Please call the customer to confirm.`, null, 'success');
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            new Notification('New Kamlesh Suits order', {
+                                body: `${newOrders.length} customer${newOrders.length > 1 ? 's are' : ' is'} waiting for a confirmation call.`
+                            });
+                        }
+                    }
+                }
+
+                knownOrderIdsRef.current = new Set((data || []).map(order => order.orderId));
+                orderCheckInitializedRef.current = true;
+            } catch (error) {
+                console.error('Order notification check failed:', error);
+            }
+        };
+
+        checkNewOrderRequests();
+        const interval = setInterval(checkNewOrderRequests, 20000);
+        window.addEventListener('focus', checkNewOrderRequests);
+        return () => {
+            active = false;
+            clearInterval(interval);
+            window.removeEventListener('focus', checkNewOrderRequests);
+        };
+    }, [isAdmin, showToast]);
+
+    useEffect(() => {
+        document.title = pendingOrderCount > 0
+            ? `(${pendingOrderCount}) Orders Waiting | Kamlesh Suits`
+            : 'Admin | Kamlesh Suits';
+        return () => { document.title = 'Kamlesh Suits'; };
+    }, [pendingOrderCount]);
 
     const loadProducts = async (showLoader = true) => {
         try {
@@ -353,6 +403,11 @@ const AdminDashboard = () => {
                             className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === 'orders' ? 'bg-primary text-white shadow-xl' : 'text-stone-400 hover:text-stone-600'}`}
                         >
                             <HiCollection size={16} /> Orders
+                            {pendingOrderCount > 0 && (
+                                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] text-white shadow-lg animate-pulse">
+                                    {pendingOrderCount}
+                                </span>
+                            )}
                         </button>
                         <button 
                             onClick={() => setActiveTab('coupons')} 
@@ -374,6 +429,24 @@ const AdminDashboard = () => {
                         </button>
                     </div>
                 </div>
+
+                {pendingOrderCount > 0 && activeTab !== 'orders' && (
+                    <button
+                        onClick={() => setActiveTab('orders')}
+                        className="mb-8 flex w-full items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-left shadow-sm transition hover:bg-amber-100"
+                    >
+                        <span className="flex items-center gap-3">
+                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-500 text-white">
+                                <HiBell size={22} />
+                            </span>
+                            <span>
+                                <span className="block text-sm font-black text-amber-900">{pendingOrderCount} order request{pendingOrderCount > 1 ? 's' : ''} waiting</span>
+                                <span className="block text-xs text-amber-700">Open orders, call the customer, then confirm the order.</span>
+                            </span>
+                        </span>
+                        <span className="shrink-0 text-xs font-black uppercase tracking-wider text-amber-800">Open Orders</span>
+                    </button>
+                )}
 
                 {activeTab === 'inventory' ? (
                     <>
@@ -494,7 +567,7 @@ const AdminDashboard = () => {
                         )}
                     </>
                 ) : activeTab === 'orders' ? (
-                    <OrderManager showToast={showToast} />
+                    <OrderManager showToast={showToast} onPendingCountChange={setPendingOrderCount} />
                 ) : activeTab === 'coupons' ? (
                     <CouponManager showToast={showToast} />
                 ) : activeTab === 'delivery' ? (

@@ -190,21 +190,6 @@ const Cart = () => {
     }
   };
 
-  const buildWhatsAppMessage = (selectedAddr, orderId) => {
-    const itemsText = cartItems.map((item, index) => {
-      const colorText = item.selectedColor ? ` (Color: ${item.selectedColor})` : '';
-      return `${index + 1}. *${item.title}${colorText}* x ${item.quantity || 1} - ${formatPrice(item.price * (item.quantity || 1))}`;
-    }).join('\n');
-    return `*ORDER CONFIRMATION REQUEST - KAMLESH SUITS*\n` +
-      `Order: *${orderId}*\n--------------------------\n` +
-      `*Customer:* ${selectedAddr.name}\n*Phone:* ${selectedAddr.phone}\n` +
-      `*Address:* ${selectedAddr.houseNo}, ${selectedAddr.area}, ${selectedAddr.city}, ${selectedAddr.state} - ${selectedAddr.pincode}\n` +
-      `${selectedAddr.latitude && selectedAddr.longitude ? `*Google Maps:* https://www.google.com/maps/search/?api=1&query=${selectedAddr.latitude}%2C${selectedAddr.longitude}\n` : ''}\n` +
-      `*Items:*\n${itemsText}\n\n*Total:* ${formatPrice(total)}\n` +
-      `*Payment preference:* ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'UPI after store confirmation'}\n\n` +
-      `_Please confirm this order._`;
-  };
-
   const resetLocationState = () => {
     setIsLocating(false);
     setLocationMessage('');
@@ -472,11 +457,9 @@ const Cart = () => {
       });
 
       if (result.orderId) {
-        const whatsappMessage = buildWhatsAppMessage(selectedAddr, result.orderId);
         setOrderConfirmed({
           orderId: result.orderId,
-          name: selectedAddr.name,
-          whatsappUrl: `https://wa.me/919992304505?text=${encodeURIComponent(whatsappMessage)}`
+          name: selectedAddr.name
         });
         clearCart();
         window.scrollTo(0, 0);
@@ -615,7 +598,6 @@ const Cart = () => {
       <OrderSuccessAnimation 
         orderId={orderConfirmed.orderId}
         name={orderConfirmed.name}
-        whatsappUrl={orderConfirmed.whatsappUrl}
         onClose={() => setOrderConfirmed(null)}
       />
     );
@@ -719,7 +701,6 @@ const Cart = () => {
       <OrderSuccessAnimation 
         orderId={orderConfirmed.orderId}
         name={orderConfirmed.name}
-        whatsappUrl={orderConfirmed.whatsappUrl}
         onClose={() => setOrderConfirmed(null)}
       />
     );
@@ -782,7 +763,6 @@ const Cart = () => {
       <OrderSuccessAnimation 
         orderId={orderConfirmed.orderId}
         name={orderConfirmed.name}
-        whatsappUrl={orderConfirmed.whatsappUrl}
         onClose={() => setOrderConfirmed(null)}
       />
     );
