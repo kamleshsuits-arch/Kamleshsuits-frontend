@@ -53,6 +53,10 @@ const Cart = () => {
   const [showDemandModal, setShowDemandModal] = useState(false);
   const [unsupportedPincode, setUnsupportedPincode] = useState('');
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationMessage, setLocationMessage] = useState('');
+  const [locationError, setLocationError] = useState('');
+  const [showManualAddress, setShowManualAddress] = useState(false);
   const [lastAddrCount, setLastAddrCount] = useState(addresses.length);
 
   // Ensure user lands at top of cart page
@@ -190,10 +194,110 @@ const Cart = () => {
     return `*ORDER CONFIRMATION REQUEST - KAMLESH SUITS*\n` +
       `Order: *${orderId}*\n--------------------------\n` +
       `*Customer:* ${selectedAddr.name}\n*Phone:* ${selectedAddr.phone}\n` +
-      `*Address:* ${selectedAddr.houseNo}, ${selectedAddr.area}, ${selectedAddr.city}, ${selectedAddr.state} - ${selectedAddr.pincode}\n\n` +
+      `*Address:* ${selectedAddr.houseNo}, ${selectedAddr.area}, ${selectedAddr.city}, ${selectedAddr.state} - ${selectedAddr.pincode}\n` +
+      `${selectedAddr.latitude && selectedAddr.longitude ? `*Google Maps:* https://www.google.com/maps/search/?api=1&query=${selectedAddr.latitude}%2C${selectedAddr.longitude}\n` : ''}\n` +
       `*Items:*\n${itemsText}\n\n*Total:* ${formatPrice(total)}\n` +
       `*Payment preference:* ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'UPI after store confirmation'}\n\n` +
       `_Please confirm this order._`;
+  };
+
+  const resetLocationState = () => {
+    setIsLocating(false);
+    setLocationMessage('');
+    setLocationError('');
+    setShowManualAddress(false);
+  };
+
+  const fillFromPincode = async (pin, preserveCity = false) => {
+    if (pin.length !== 6) return;
+    setIsFetchingPincode(true);
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+      const data = await res.json();
+      if (data?.[0]?.Status === 'Success') {
+        const postOffice = data[0].PostOffice[0];
+        setAddressForm(prev => ({
+          ...prev,
+          city: preserveCity && prev.city ? prev.city : (postOffice.District || prev.city),
+          state: postOffice.State || prev.state,
+          area: prev.area || postOffice.Name || postOffice.Block || ''
+        }));
+      }
+    } catch (err) {
+      console.error('Pincode fetch error:', err);
+    } finally {
+      setIsFetchingPincode(false);
+    }
+  };
+
+  const handleUseCurrentLocation = () => {
+    setLocationError('');
+    setLocationMessage('');
+
+    if (!navigator.geolocation) {
+      setLocationError('Current location is not supported on this phone. Please enter the address manually.');
+      setShowManualAddress(true);
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+      const latitude = Number(coords.latitude.toFixed(6));
+      const longitude = Number(coords.longitude.toFixed(6));
+
+      try {
+        const url = new URL('https://api.bigdatacloud.net/data/reverse-geocode-client');
+        url.searchParams.set('latitude', latitude);
+        url.searchParams.set('longitude', longitude);
+        url.searchParams.set('localityLanguage', 'en');
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Location lookup failed');
+        const place = await response.json();
+
+        if (place.countryCode && place.countryCode !== 'IN') {
+          throw new Error('Please choose a delivery location in India.');
+        }
+
+        const city = place.city || place.locality || '';
+        const area = place.locality || city;
+        const pincode = String(place.postcode || '').replace(/\D/g, '').slice(0, 6);
+        const state = place.principalSubdivision || getStateFromPin(pincode) || '';
+
+        setAddressForm(prev => ({
+          ...prev,
+          pincode,
+          houseNo: prev.houseNo || `GPS pin near ${area || city}`,
+          area,
+          city,
+          state,
+          latitude,
+          longitude
+        }));
+        setShowManualAddress(false);
+        setLocationMessage('Location found. Please check the map and save your address.');
+        if (pincode.length === 6) await fillFromPincode(pincode, true);
+      } catch (error) {
+        console.error('Reverse geocoding failed:', error);
+        setAddressForm(prev => ({ ...prev, latitude, longitude }));
+        setShowManualAddress(true);
+        setLocationError(error.message || 'We found your map location but could not fill the address. Please enter it below.');
+      } finally {
+        setIsLocating(false);
+      }
+    }, (error) => {
+      const messages = {
+        1: 'Location permission was not allowed. Tap “Enter address manually” below.',
+        2: 'Your location could not be detected. Turn on phone location and try again.',
+        3: 'Location is taking too long. Please try again or enter the address manually.'
+      };
+      setLocationError(messages[error.code] || 'Could not detect your location. Please enter the address manually.');
+      setShowManualAddress(true);
+      setIsLocating(false);
+    }, {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 60000
+    });
   };
 
   const handlePlaceOrder = async () => {
@@ -251,6 +355,7 @@ const Cart = () => {
 
     if (Object.keys(errors).length > 0) {
       setAddressErrors(errors);
+      setShowManualAddress(true);
       return;
     }
 
@@ -264,14 +369,18 @@ const Cart = () => {
     setEditingAddressId(null);
     setAddressForm({
       name: '', phone: '', pincode: '', houseNo: '',
-      area: '', landmark: '', city: '', state: '', type: 'home'
+      area: '', landmark: '', city: '', state: '', type: 'home', latitude: null, longitude: null
     });
     setAddressErrors({});
+    resetLocationState();
   };
 
   const startEditAddress = (addr) => {
     setAddressForm(addr);
     setEditingAddressId(addr.id);
+    setShowManualAddress(true);
+    setLocationMessage(addr.latitude && addr.longitude ? 'Saved map location loaded.' : '');
+    setLocationError('');
     setShowAddressForm(true);
   };
 
@@ -640,10 +749,11 @@ const Cart = () => {
                       onClick={() => {
                         setAddressForm({
                           name: '', phone: '', pincode: '', houseNo: '',
-                          area: '', landmark: '', city: '', state: '', type: 'home'
+                          area: '', landmark: '', city: '', state: '', type: 'home', latitude: null, longitude: null
                         });
                         setEditingAddressId(null);
                         setAddressErrors({});
+                        resetLocationState();
                         setShowAddressForm(true);
                       }}
                       className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest hover:text-accent transition-colors bg-stone-100 px-4 py-2 rounded-full"
@@ -664,6 +774,7 @@ const Cart = () => {
                            setShowAddressForm(false);
                            setEditingAddressId(null);
                            setAddressErrors({});
+                           resetLocationState();
                          }}
                          className="text-stone-400 hover:text-primary text-[10px] uppercase tracking-widest font-black"
                       >
@@ -701,7 +812,80 @@ const Cart = () => {
                         />
                       </div>
 
+                      <div className="sm:col-span-2 rounded-2xl border border-stone-200 bg-white p-4 sm:p-5">
+                        <div className="flex items-start gap-3">
+                          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+                            <HiLocationMarker size={20} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h5 className="font-bold text-primary">Use your current location</h5>
+                            <p className="mt-1 text-xs leading-relaxed text-stone-500">Turn on phone location. We will fill PIN code, town, state and locality for you.</p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleUseCurrentLocation}
+                          disabled={isLocating}
+                          className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-black uppercase tracking-wider text-white transition hover:bg-accent disabled:cursor-wait disabled:opacity-60"
+                        >
+                          <HiLocationMarker size={18} />
+                          {isLocating ? 'Finding your location...' : addressForm.latitude ? 'Detect location again' : 'Use Current Location'}
+                        </button>
+
+                        {locationMessage && (
+                          <p role="status" className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold leading-relaxed text-emerald-700">
+                            ✓ {locationMessage}
+                          </p>
+                        )}
+                        {locationError && (
+                          <p role="alert" className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold leading-relaxed text-amber-700">
+                            {locationError}
+                          </p>
+                        )}
+
+                        {addressForm.latitude && addressForm.longitude && (
+                          <div className="mt-4 overflow-hidden rounded-xl border border-stone-200">
+                            <iframe
+                              title="Your detected delivery location on Google Maps"
+                              src={`https://maps.google.com/maps?q=${addressForm.latitude},${addressForm.longitude}&z=17&output=embed`}
+                              className="h-40 w-full border-0"
+                              loading="lazy"
+                              referrerPolicy="no-referrer-when-downgrade"
+                            />
+                            <div className="bg-stone-50 p-3">
+                              <p className="text-xs font-bold leading-relaxed text-primary">
+                                {[addressForm.area, addressForm.city, addressForm.state, addressForm.pincode].filter(Boolean).join(', ')}
+                              </p>
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${addressForm.latitude}%2C${addressForm.longitude}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="mt-2 inline-flex min-h-11 items-center text-xs font-black text-accent underline underline-offset-4"
+                              >
+                                Check pin in Google Maps
+                              </a>
+                            </div>
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => setShowManualAddress(value => !value)}
+                          className="mt-3 min-h-11 w-full text-xs font-bold text-stone-600 underline underline-offset-4"
+                        >
+                          {showManualAddress ? 'Hide address details' : addressForm.latitude ? 'Edit detected address' : 'Enter address manually'}
+                        </button>
+                      </div>
+
+                      {Object.keys(addressErrors).length > 0 && (
+                        <p role="alert" className="sm:col-span-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">
+                          Please check the highlighted address details below.
+                        </p>
+                      )}
+
                       {/* Pincode & State */}
+                      {showManualAddress && <>
                       <div className="space-y-1">
                         <label htmlFor="delivery-pincode" className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Pincode *</label>
                         <input
@@ -714,7 +898,7 @@ const Cart = () => {
                           maxLength={6}
                           className={`w-full p-3 rounded-xl border-2 bg-white outline-none transition-all ${addressErrors.pincode ? 'border-red-200' : 'border-stone-100 focus:border-primary'} ${isFetchingPincode ? 'opacity-50 cursor-wait' : ''}`}
                           value={addressForm.pincode}
-                          onChange={async (e) => {
+                          onChange={(e) => {
                             const pin = e.target.value.replace(/\D/g, '').slice(0, 6);
                             const localState = getStateFromPin(pin);
                             
@@ -724,25 +908,7 @@ const Cart = () => {
                               state: localState || prev.state
                             }));
                             
-                            if (pin.length === 6) {
-                              setIsFetchingPincode(true);
-                              try {
-                                const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
-                                const data = await res.json();
-                                if (data[0].Status === "Success") {
-                                  const postOffice = data[0].PostOffice[0];
-                                  setAddressForm(prev => ({
-                                    ...prev,
-                                    city: prev.city || postOffice.District,
-                                    state: postOffice.State || prev.state
-                                  }));
-                                }
-                              } catch (err) {
-                                console.error("Pincode fetch error:", err);
-                              } finally {
-                                setIsFetchingPincode(false);
-                              }
-                            }
+                            if (pin.length === 6) fillFromPincode(pin);
                           }}
                         />
                         {/* Live delivery hint */}
@@ -852,6 +1018,7 @@ const Cart = () => {
                           ))}
                         </div>
                       </div>
+                      </>}
 
                       <button 
                         type="submit"
