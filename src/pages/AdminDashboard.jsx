@@ -18,6 +18,7 @@ import OrderManager from '../components/admin/OrderManager';
 import Loader from '../components/common/Loader';
 import { useCart } from '../hooks/useCart';
 import { getColorName, getColorDisplay } from '../utils/colors';
+import './AdminDashboard.css';
 
 const FABRIC_STRUCTURE = {
     "Cotton Family (Most Selling – Daily Wear)": [
@@ -382,21 +383,21 @@ const AdminDashboard = () => {
     );
 
     return (
-        <div className="min-h-screen bg-stone-50 py-10 px-4 sm:px-6 lg:px-8">
+        <div className="admin-dashboard min-h-screen bg-stone-50 py-10 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
                 {/* Global Admin Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
                     <div>
-                        <h1 className="text-3xl font-black text-primary tracking-tight uppercase tracking-[0.05em]">Admin OS</h1>
-                        <p className="text-stone-400 font-bold text-[10px] uppercase tracking-widest mt-1">Strategic Operations & Global Control</p>
+                        <h1 className="text-3xl font-black text-primary tracking-tight">Admin Dashboard</h1>
+                        <p className="text-stone-600 font-medium text-sm mt-1">Manage products, customer orders and delivery requests</p>
                     </div>
 
-                    <div className="flex gap-2 bg-white/50 p-1.5 rounded-2xl border border-stone-200 backdrop-blur-sm">
+                    <div className="admin-tabs flex gap-2 bg-white/50 p-1.5 rounded-2xl border border-stone-200 backdrop-blur-sm">
                         <button 
                             onClick={() => setActiveTab('inventory')} 
                             className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === 'inventory' ? 'bg-primary text-white shadow-xl' : 'text-stone-400 hover:text-stone-600'}`}
                         >
-                            <HiDatabase size={16} /> Inventory Terminal
+                            <HiDatabase size={16} /> Products
                         </button>
                         <button 
                             onClick={() => setActiveTab('orders')} 
@@ -413,19 +414,19 @@ const AdminDashboard = () => {
                             onClick={() => setActiveTab('coupons')} 
                             className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === 'coupons' ? 'bg-primary text-white shadow-xl' : 'text-stone-400 hover:text-stone-600'}`}
                         >
-                            <HiTag size={16} /> Coupon Control
+                            <HiTag size={16} /> Coupons
                         </button>
                         <button 
                             onClick={() => setActiveTab('analytics')} 
                             className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === 'analytics' ? 'bg-primary text-white shadow-xl' : 'text-stone-400 hover:text-stone-600'}`}
                         >
-                            <HiPresentationChartLine size={16} /> Growth Studio
+                            <HiPresentationChartLine size={16} /> Reports
                         </button>
                         <button 
                             onClick={() => setActiveTab('delivery')} 
                             className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === 'delivery' ? 'bg-primary text-white shadow-xl' : 'text-stone-400 hover:text-stone-600'}`}
                         >
-                            <HiTruck size={16} /> Delivery Expansion
+                            <HiTruck size={16} /> Delivery Requests
                         </button>
                     </div>
                 </div>

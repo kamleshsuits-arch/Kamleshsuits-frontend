@@ -1,0 +1,68 @@
+.admin-dashboard {
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  color: #292524;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.admin-dashboard :is(button, input, select, textarea, table) {
+  font-family: inherit;
+}
+
+.admin-dashboard :is(button, input, select, textarea) {
+  line-height: 1.35;
+}
+
+.admin-dashboard [class*="text-[7px]"],
+.admin-dashboard [class*="text-[8px]"],
+.admin-dashboard [class*="text-[9px]"] {
+  font-size: 0.75rem !important;
+  line-height: 1rem !important;
+}
+
+.admin-dashboard [class*="text-[10px]"],
+.admin-dashboard [class*="text-[11px]"] {
+  font-size: 0.8125rem !important;
+  line-height: 1.15rem !important;
+}
+
+.admin-dashboard [class*="tracking-widest"],
+.admin-dashboard [class*="tracking-["] {
+  letter-spacing: 0.04em !important;
+}
+
+.admin-dashboard table th {
+  font-size: 0.75rem !important;
+  line-height: 1rem;
+  color: #57534e;
+}
+
+.admin-dashboard table td {
+  font-size: 0.875rem;
+}
+
+.admin-tabs {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.admin-tabs button {
+  min-height: 44px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 0.78rem !important;
+  letter-spacing: 0.025em !important;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard {
+    padding-top: 1.25rem;
+  }
+
+  .admin-dashboard table th,
+  .admin-dashboard table td {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
