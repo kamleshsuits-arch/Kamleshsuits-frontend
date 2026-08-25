@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { gsap } from 'gsap';
-import { HiCheck, HiClock, HiPhoneIncoming } from 'react-icons/hi';
+import { HiCheck, HiClock, HiPhoneIncoming, HiSearch } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
 
-const OrderSuccessAnimation = ({ orderId, name, onClose }) => {
+const OrderSuccessAnimation = ({ orderId, name, trackingPath = '/track-order', onClose }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -77,12 +77,21 @@ const OrderSuccessAnimation = ({ orderId, name, onClose }) => {
           </p>
 
           <div className="space-y-3 pt-3">
+            <button
+              onClick={() => {
+                navigate(trackingPath);
+                onClose();
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-4 text-xs font-black uppercase tracking-widest text-white shadow-xl active:scale-95"
+            >
+              <HiSearch size={18} /> Track My Order
+            </button>
             <button 
               onClick={() => {
                 navigate('/');
                 onClose();
               }}
-              className="w-full bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 hover:bg-accent transition-all active:scale-95"
+              className="w-full border-2 border-primary bg-white text-primary py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-stone-50 transition-all active:scale-95"
             >
               Continue Shopping
             </button>

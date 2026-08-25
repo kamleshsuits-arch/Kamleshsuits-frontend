@@ -16,6 +16,7 @@ import { HiX } from 'react-icons/hi';
 import OrderSuccessAnimation from '../common/OrderSuccessAnimation';
 import DeliveryLocationMap from './DeliveryLocationMap';
 import { SiPhonepe } from 'react-icons/si';
+import { saveGuestOrderReference } from '../../utils/guestOrders';
 
 
 const Cart = () => {
@@ -457,9 +458,17 @@ const Cart = () => {
       });
 
       if (result.orderId) {
+        if (!user) {
+          saveGuestOrderReference({
+            orderId: result.orderId,
+            trackingToken: result.trackingToken,
+            createdAt: new Date().toISOString()
+          });
+        }
         setOrderConfirmed({
           orderId: result.orderId,
-          name: selectedAddr.name
+          name: selectedAddr.name,
+          trackingPath: user ? '/account' : '/track-order'
         });
         clearCart();
         window.scrollTo(0, 0);
@@ -598,6 +607,7 @@ const Cart = () => {
       <OrderSuccessAnimation 
         orderId={orderConfirmed.orderId}
         name={orderConfirmed.name}
+        trackingPath={orderConfirmed.trackingPath}
         onClose={() => setOrderConfirmed(null)}
       />
     );
@@ -701,6 +711,7 @@ const Cart = () => {
       <OrderSuccessAnimation 
         orderId={orderConfirmed.orderId}
         name={orderConfirmed.name}
+        trackingPath={orderConfirmed.trackingPath}
         onClose={() => setOrderConfirmed(null)}
       />
     );
@@ -763,6 +774,7 @@ const Cart = () => {
       <OrderSuccessAnimation 
         orderId={orderConfirmed.orderId}
         name={orderConfirmed.name}
+        trackingPath={orderConfirmed.trackingPath}
         onClose={() => setOrderConfirmed(null)}
       />
     );

@@ -32,6 +32,7 @@ const Footer = () => {
               <li><Link to="/" className="hover:text-accent transition">All Products</Link></li>
               <li><Link to="/wishlist" className="hover:text-accent transition">My Wishlist</Link></li>
               <li><Link to="/cart" className="hover:text-accent transition">Shopping Bag</Link></li>
+              <li><Link to="/track-order" className="hover:text-accent transition">Track My Order</Link></li>
               <li><Link to="/" className="hover:text-accent transition">New Arrivals</Link></li>
             </ul>
           </div>

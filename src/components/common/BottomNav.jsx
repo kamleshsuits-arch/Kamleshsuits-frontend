@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { HiHome, HiSparkles, HiHeart, HiUser, HiOutlineViewGrid, HiShoppingBag, HiArrowRight, HiTag } from 'react-icons/hi';
+import { HiHome, HiSparkles, HiHeart, HiShoppingBag, HiArrowRight, HiTag } from 'react-icons/hi';
 import { useCart } from '../../hooks/useCart';
 
 const BottomNav = () => {
@@ -13,7 +13,7 @@ const BottomNav = () => {
     { name: 'New',         icon: HiSparkles,         path: '/new-arrivals' },
     { name: 'Sale',        icon: HiTag,              path: '/sale' },
     { name: 'Saved',       icon: HiHeart,            path: '/wishlist', badge: wishlistItems.length },
-    { name: 'Account',     icon: HiUser,             path: '/account' },
+    { name: 'Orders',      icon: HiShoppingBag,      path: '/track-order' },
   ];
 
   const handleNavClick = (item) => {
@@ -24,7 +24,7 @@ const BottomNav = () => {
   const getSafeImg = (img) => {
     if (!img) return null;
     if (Array.isArray(img)) return img[0];
-    if (typeof img === 'string') return img.replace(/[\[\]"]/g, '').split(',')[0];
+    if (typeof img === 'string') return img.replaceAll('[', '').replaceAll(']', '').replaceAll('"', '').split(',')[0];
     return null;
   };
 

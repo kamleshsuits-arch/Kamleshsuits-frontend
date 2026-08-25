@@ -87,6 +87,9 @@ const Navbar = () => {
 
             {/* Desktop right icons */}
             <div className="hidden md:flex items-center gap-6">
+              <Link to="/track-order" className="group relative p-2" title="Track Order" aria-label="Track Order">
+                <HiClipboard size={25} className="text-accent group-hover:text-primary transition" />
+              </Link>
               <Link to="/wishlist" className="group relative p-2" title="Wishlist" aria-label="Wishlist">
                 <div ref={wishlistRef} className="relative">
                   <HiOutlineHeart size={26} className="text-accent group-hover:text-primary transition" />
@@ -138,7 +141,7 @@ const Navbar = () => {
                         <HiShieldCheck size={18} className="text-emerald-400" /> Admin Management
                       </Link>
                     )}
-                    <Link to="/cart" onClick={() => setUserDropdownOpen(false)} className="flex items-center gap-3 px-5 py-3 text-stone-600 hover:text-primary hover:bg-stone-50 transition text-sm font-medium">
+                    <Link to="/track-order" onClick={() => setUserDropdownOpen(false)} className="flex items-center gap-3 px-5 py-3 text-stone-600 hover:text-primary hover:bg-stone-50 transition text-sm font-medium">
                       <HiShoppingBag size={18} className="text-accent/60" /> Track Orders
                     </Link>
                     <Link to="/wishlist" onClick={() => setUserDropdownOpen(false)} className="flex items-center gap-3 px-5 py-3 text-stone-600 hover:text-primary hover:bg-stone-50 transition text-sm font-medium">
@@ -190,6 +193,7 @@ const Navbar = () => {
           <Link to="/" className="block px-6 py-4 text-sm font-black text-primary border-b border-stone-100 uppercase tracking-widest hover:bg-stone-50 transition" onClick={() => setMenuOpen(false)}>Shop All</Link>
           <Link to="/new-arrivals" className="block px-6 py-4 text-sm font-black text-primary border-b border-stone-100 uppercase tracking-widest hover:bg-stone-50 transition" onClick={() => setMenuOpen(false)}>New Arrivals</Link>
           <Link to="/sale" className="block px-6 py-4 text-sm font-black text-emerald-600 border-b border-stone-100 uppercase tracking-widest hover:bg-stone-50 transition" onClick={() => setMenuOpen(false)}>Exclusive Sale</Link>
+          <Link to="/track-order" className="block px-6 py-4 text-sm font-black text-primary border-b border-stone-100 uppercase tracking-widest hover:bg-stone-50 transition" onClick={() => setMenuOpen(false)}>Track My Order</Link>
         </div>
         <div className="p-6 bg-stone-50 mt-auto border-t border-stone-200">
           <p className="text-xs text-center text-stone-400">© {new Date().getFullYear()} Kamlesh Suits.</p>

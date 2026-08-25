@@ -13,6 +13,7 @@ import NewArrivals from './pages/NewArrivals';
 import Sale from './pages/Sale';
 import TermsAndConditions from './pages/TermsAndConditions';
 import NotFound from './pages/NotFound';
+import TrackOrder from './pages/TrackOrder';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import Toast from './components/common/Toast';
@@ -58,6 +59,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/track-order" element={<TrackOrder />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           {/* Placeholder routes for new nav items to prevent 404s if clicked */}
           <Route path="/new-arrivals" element={<NewArrivals />} />

@@ -209,6 +209,11 @@ export const fetchDeliveryDemands = async () => {
   }
 };
 
+export const trackGuestOrder = async ({ orderId, trackingToken, phone }) => {
+  const response = await axios.post(`${API_URL}/orders/track`, { orderId, trackingToken, phone });
+  return response.data;
+};
+
 export const updateOrderStatus = async (orderId, status, paymentStatus) => {
   try {
     const response = await axios.patch(
