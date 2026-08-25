@@ -14,6 +14,7 @@ import { isLikelySupportedPin, SUPPORTED_REGIONS, getStateFromPin } from '../../
 import gsap from 'gsap';
 import { HiX } from 'react-icons/hi';
 import OrderSuccessAnimation from '../common/OrderSuccessAnimation';
+import DeliveryLocationMap from './DeliveryLocationMap';
 import { SiPhonepe } from 'react-icons/si';
 
 
@@ -45,6 +46,9 @@ const Cart = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const summaryRef = useRef(null);
+  const reverseGeocodeCacheRef = useRef(new Map());
+  const lastReverseGeocodeAtRef = useRef(0);
+  const pinRequestIdRef = useRef(0);
   const navigate = useNavigate();
   const { user } = useAuth();
   const [availableCoupons, setAvailableCoupons] = useState([]);
@@ -278,9 +282,85 @@ const Cart = () => {
     await applyDetectedLocation(place, latitude, longitude, isApproximate);
   };
 
+  const reverseGeocodePinnedLocation = async (latitude, longitude) => {
+    const cacheKey = `${latitude.toFixed(5)},${longitude.toFixed(5)}`;
+    if (reverseGeocodeCacheRef.current.has(cacheKey)) {
+      return reverseGeocodeCacheRef.current.get(cacheKey);
+    }
+
+    const elapsed = Date.now() - lastReverseGeocodeAtRef.current;
+    if (elapsed < 1100) {
+      await new Promise(resolve => setTimeout(resolve, 1100 - elapsed));
+    }
+    lastReverseGeocodeAtRef.current = Date.now();
+
+    const endpoint = import.meta.env.VITE_REVERSE_GEOCODER_URL || 'https://nominatim.openstreetmap.org/reverse';
+    const url = new URL(endpoint);
+    url.searchParams.set('format', 'jsonv2');
+    url.searchParams.set('lat', latitude);
+    url.searchParams.set('lon', longitude);
+    url.searchParams.set('zoom', '18');
+    url.searchParams.set('addressdetails', '1');
+    url.searchParams.set('layer', 'address');
+    url.searchParams.set('accept-language', 'en');
+
+    const response = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!response.ok) throw new Error('Could not read the address at this pin.');
+    const result = await response.json();
+    const address = result.address || {};
+    if (address.country_code && address.country_code.toLowerCase() !== 'in') {
+      throw new Error('Please place the delivery pin inside India.');
+    }
+
+    const road = address.road || address.pedestrian || address.residential || '';
+    const area = address.neighbourhood || address.suburb || address.village || address.hamlet || road || address.county || '';
+    const city = address.city || address.town || address.municipality || address.village || address.county || '';
+    const place = {
+      countryCode: address.country_code?.toUpperCase(),
+      postcode: address.postcode || '',
+      city,
+      locality: area,
+      principalSubdivision: address.state || '',
+      pinnedHouse: [address.house_number, road].filter(Boolean).join(', '),
+      displayName: result.display_name || ''
+    };
+    reverseGeocodeCacheRef.current.set(cacheKey, place);
+    return place;
+  };
+
+  const handlePinChange = async (rawLatitude, rawLongitude) => {
+    const latitude = Number(rawLatitude.toFixed(6));
+    const longitude = Number(rawLongitude.toFixed(6));
+    const requestId = ++pinRequestIdRef.current;
+
+    setAddressForm(prev => ({ ...prev, latitude, longitude }));
+    setLocationError('');
+    setLocationMessage('Updating address and PIN code from the selected map pin...');
+    setIsLocating(true);
+
+    try {
+      const place = await reverseGeocodePinnedLocation(latitude, longitude);
+      if (requestId !== pinRequestIdRef.current) return;
+      await applyDetectedLocation(place, latitude, longitude);
+      if (place.pinnedHouse) {
+        setAddressForm(prev => ({ ...prev, houseNo: place.pinnedHouse }));
+      }
+      setLocationMessage('Delivery pin updated. Check the address below, then save it.');
+    } catch (error) {
+      if (requestId !== pinRequestIdRef.current) return;
+      console.error('Pinned location lookup failed:', error);
+      setLocationMessage('The exact map pin is saved. Please check the address details below.');
+      setLocationError(error.message || 'Could not auto-fill the address at this pin.');
+      setShowManualAddress(true);
+    } finally {
+      if (requestId === pinRequestIdRef.current) setIsLocating(false);
+    }
+  };
+
   const handleUseCurrentLocation = () => {
     setLocationError('');
     setLocationMessage('');
+    const gpsRequestId = ++pinRequestIdRef.current;
 
     if (!navigator.geolocation) {
       setLocationError('Current location is not supported on this phone. Please enter the address manually.');
@@ -294,14 +374,45 @@ const Cart = () => {
       const longitude = Number(coords.longitude.toFixed(6));
 
       try {
-        await reverseGeocodeLocation(latitude, longitude);
+        const place = await reverseGeocodePinnedLocation(latitude, longitude);
+        if (gpsRequestId !== pinRequestIdRef.current) return;
+        await applyDetectedLocation(place, latitude, longitude);
+        if (place.pinnedHouse) {
+          setAddressForm(prev => ({ ...prev, houseNo: place.pinnedHouse }));
+        }
+        setLocationMessage('Location found. Drag the map pin to your exact house if needed.');
+
+        // A fast network-assisted result is shown first. This second pass quietly
+        // improves it when the phone can obtain a more accurate GPS reading.
+        navigator.geolocation.getCurrentPosition(async ({ coords: preciseCoords }) => {
+          if (gpsRequestId !== pinRequestIdRef.current || preciseCoords.accuracy >= coords.accuracy) return;
+          const preciseLatitude = Number(preciseCoords.latitude.toFixed(6));
+          const preciseLongitude = Number(preciseCoords.longitude.toFixed(6));
+          try {
+            const precisePlace = await reverseGeocodePinnedLocation(preciseLatitude, preciseLongitude);
+            if (gpsRequestId !== pinRequestIdRef.current) return;
+            await applyDetectedLocation(precisePlace, preciseLatitude, preciseLongitude);
+            if (precisePlace.pinnedHouse) {
+              setAddressForm(prev => ({ ...prev, houseNo: precisePlace.pinnedHouse }));
+            }
+            setLocationMessage('Precise GPS location found. Drag the pin if you want to adjust the exact gate or house.');
+          } catch (preciseError) {
+            console.warn('High-accuracy location lookup skipped:', preciseError);
+          }
+        }, () => {
+          // The fast location and draggable pin remain available if precise GPS is slow.
+        }, {
+          enableHighAccuracy: true,
+          timeout: 25000,
+          maximumAge: 0
+        });
       } catch (error) {
         console.error('Reverse geocoding failed:', error);
         setAddressForm(prev => ({ ...prev, latitude, longitude }));
         setShowManualAddress(true);
         setLocationError(error.message || 'We found your map location but could not fill the address. Please enter it below.');
       } finally {
-        setIsLocating(false);
+        if (gpsRequestId === pinRequestIdRef.current) setIsLocating(false);
       }
     }, async (error) => {
       const messages = {
@@ -882,16 +993,17 @@ const Cart = () => {
 
                         {addressForm.latitude && addressForm.longitude && (
                           <div className="mt-4 overflow-hidden rounded-xl border border-stone-200">
-                            <iframe
-                              title="Your detected delivery location on Google Maps"
-                              src={`https://maps.google.com/maps?q=${addressForm.latitude},${addressForm.longitude}&z=17&output=embed`}
-                              className="h-40 w-full border-0"
-                              loading="lazy"
-                              referrerPolicy="no-referrer-when-downgrade"
+                            <DeliveryLocationMap
+                              latitude={addressForm.latitude}
+                              longitude={addressForm.longitude}
+                              onPinChange={handlePinChange}
                             />
                             <div className="bg-stone-50 p-3">
                               <p className="text-xs font-bold leading-relaxed text-primary">
                                 {[addressForm.area, addressForm.city, addressForm.state, addressForm.pincode].filter(Boolean).join(', ')}
+                              </p>
+                              <p className="mt-1 text-[11px] leading-relaxed text-stone-500">
+                                Move the pin to your exact gate or house. Address and PIN code update after you release it.
                               </p>
                               <a
                                 href={`https://www.google.com/maps/search/?api=1&query=${addressForm.latitude}%2C${addressForm.longitude}`}
