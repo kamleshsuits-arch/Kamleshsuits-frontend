@@ -20,6 +20,20 @@ const cleanBannerText = value => {
   return ['null', 'undefined'].includes(text.toLowerCase()) ? '' : text;
 };
 
+const rgbaFromHex = (hex = '#000000', alpha = 1) => {
+  const value = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : '000000';
+  const red = parseInt(value.slice(0, 2), 16);
+  const green = parseInt(value.slice(2, 4), 16);
+  const blue = parseInt(value.slice(4, 6), 16);
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+};
+
+const getBannerOverlay = banner => {
+  const opacity = Math.min(95, Math.max(20, Number(banner.overlay_opacity) || 78)) / 100;
+  const color = banner.overlay_color || '#000000';
+  return `linear-gradient(to top, ${rgbaFromHex(color, opacity)} 0%, ${rgbaFromHex(color, opacity * 0.48)} 48%, ${rgbaFromHex(color, 0.04)} 100%)`;
+};
+
 const Hero = () => {
   const { user } = useAuth();
   const heroRef = useRef(null);
@@ -299,12 +313,12 @@ const Hero = () => {
 };
 
 const BannerOverlay = ({ banner, actionLabel, bannerLink, compact = false }) => (
-  <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/80 via-black/25 to-black/5 md:items-center md:bg-gradient-to-r md:from-black/70 md:via-black/20 md:to-transparent">
+  <div className="absolute inset-0 flex items-end md:items-center" style={{ background: getBannerOverlay(banner) }}>
     <div className={`mx-auto w-full max-w-7xl px-5 text-white sm:px-8 lg:px-12 ${compact ? 'pb-14' : 'pb-10 md:pb-0'}`}>
       <div className="max-w-xl">
         <span className="inline-flex rounded-full border border-white/30 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-sm">{cleanBannerText(banner.banner_kind || 'featured').replace('-', ' ')}</span>
         {(cleanBannerText(banner.headline) || cleanBannerText(banner.headline_suffix) || (Array.isArray(banner.animated_words) && banner.animated_words.some(cleanBannerText))) && <RotatingBannerHeadline key={banner.suitId} banner={banner} compact={compact} />}
-        {cleanBannerText(banner.subheading) && <p className={`mt-3 max-w-lg font-medium text-white/90 drop-shadow ${compact ? 'text-sm' : 'text-lg'}`}>{cleanBannerText(banner.subheading)}</p>}
+        {cleanBannerText(banner.subheading) && <p style={{ color: banner.subheading_color || '#FFFFFF' }} className={`mt-3 max-w-lg font-medium drop-shadow ${compact ? 'text-sm' : 'text-lg'}`}>{cleanBannerText(banner.subheading)}</p>}
         {actionLabel && bannerLink && <BannerAction to={bannerLink} label={actionLabel} backgroundColor={banner.cta_background_color} textColor={banner.cta_text_color} />}
       </div>
     </div>

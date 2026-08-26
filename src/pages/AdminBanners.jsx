@@ -23,8 +23,8 @@ const AdminBanners = () => {
               <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary text-xl text-white"><HiPhotograph /></span>
               <div>
                 <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-emerald-700"><HiShieldCheck /> Admin only</div>
-                <h1 className="mt-1 text-3xl font-black tracking-tight text-primary">Banner Management</h1>
-                <p className="mt-1 text-sm text-stone-500">Manage responsive campaign artwork shown on the home page.</p>
+                <h1 className="mt-1 text-3xl font-black tracking-tight text-primary">Homepage Hero Studio</h1>
+                <p className="mt-1 text-sm text-stone-500">Update home images, product messaging, colors and responsive presentation.</p>
               </div>
             </div>
             <nav className="flex flex-wrap gap-2">

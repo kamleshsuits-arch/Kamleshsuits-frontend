@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  HiCalendar, HiCheck, HiExternalLink, HiEye, HiPhotograph,
+  HiCalendar, HiCheck, HiColorSwatch, HiExternalLink, HiEye, HiPhotograph,
   HiPencil, HiPlus, HiRefresh, HiTrash, HiUpload, HiX,
 } from 'react-icons/hi';
 import { deleteBanner, fetchAdminBanners, saveBanner } from '../../api/banners';
@@ -10,7 +10,8 @@ const EMPTY_BANNER = {
   bannerId: '', title: '', banner_kind: 'festival', desktop_image: '', mobile_image: '',
   alt_text: '', headline: '', animated_words: '', headline_suffix: '',
   headline_color: '#FFFFFF', animated_word_color: '#FCD34D', headline_suffix_color: '#FFFFFF',
-  subheading: '', cta_label: '', cta_background_color: '#FFFFFF', cta_text_color: '#1C1917', link_url: '', active: true,
+  subheading: '', subheading_color: '#FFFFFF', overlay_color: '#000000', overlay_opacity: 78,
+  cta_label: '', cta_background_color: '#FFFFFF', cta_text_color: '#1C1917', link_url: '', active: true,
   starts_at: '', ends_at: '', sort_order: 0,
 };
 
@@ -18,6 +19,8 @@ const BANNER_KINDS = [
   ['festival', 'Festival'], ['offer', 'Offer'], ['sale', 'Sale'],
   ['discount', 'Discount'], ['new-products', 'New products'], ['general', 'General'],
 ];
+
+const COLOR_PRESETS = ['#FFFFFF', '#FFF7ED', '#FCD34D', '#FDBA74', '#FDA4AF', '#C4B5FD', '#86EFAC', '#1C1917', '#7F1D1D', '#3B0764'];
 
 const toLocalDateTimeInput = value => {
   if (!value) return '';
@@ -151,7 +154,7 @@ const BannerManager = ({ showToast }) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="admin-section-header">
-        <div><h2 className="text-2xl font-black text-primary">Home banners</h2><p className="mt-1 text-sm text-stone-500">Publish festival, offer, sale, discount and new-product campaigns.</p></div>
+        <div><h2 className="text-2xl font-black text-primary">Current homepage heroes</h2><p className="mt-1 text-sm text-stone-500">Every saved desktop and mobile image is shown below. Edit any card to update what customers see.</p></div>
         <div className="flex gap-2">
           <button onClick={loadBanners} className="admin-secondary-button"><HiRefresh /> Refresh</button>
           <button onClick={showForm ? () => setShowForm(false) : openCreate} className="admin-primary-button">{showForm ? <HiX /> : <HiPlus />} {showForm ? 'Close' : 'New banner'}</button>
@@ -159,7 +162,7 @@ const BannerManager = ({ showToast }) => {
       </div>
 
       <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
-        <strong>Responsive artwork:</strong> upload a wide desktop image (recommended 1920×720, 8:3) and a portrait mobile image (recommended 1080×1350, 4:5). If mobile artwork is omitted, the desktop image is cropped automatically.
+        <strong>Responsive artwork:</strong> upload a wide desktop image (recommended 1920×720, 8:3) and a portrait mobile image (recommended 1080×1350, 4:5). Add the product name and description below, then use the color controls while watching the live previews.
       </div>
 
       {showForm && (
@@ -179,12 +182,12 @@ const BannerManager = ({ showToast }) => {
               </div>
 
               <div className="rounded-2xl border border-violet-100 bg-violet-50/60 p-4 sm:p-5">
-                <h3 className="font-black text-primary">Animated banner heading</h3>
-                <p className="mt-1 text-xs text-stone-500">The middle word changes automatically every 3 seconds. Separate rotating words with commas.</p>
+                <h3 className="font-black text-primary">Product title shown over the image</h3>
+                <p className="mt-1 text-xs text-stone-500">Build a fixed or animated headline. The middle word changes every 3 seconds when multiple comma-separated values are supplied.</p>
                 <div className="mt-4 grid gap-4 md:grid-cols-3">
-                  <Field label="Text before" value={formData.headline} onChange={value => setFormData(current => ({ ...current, headline: value }))} placeholder="This Rakshabandhan gift" />
-                  <Field label="Rotating words" value={formData.animated_words} onChange={value => setFormData(current => ({ ...current, animated_words: value }))} placeholder="Cotton, Silk, Organza" />
-                  <Field label="Text after" value={formData.headline_suffix} onChange={value => setFormData(current => ({ ...current, headline_suffix: value }))} placeholder="suits" />
+                  <Field label="Product title / text before" value={formData.headline} onChange={value => setFormData(current => ({ ...current, headline: value }))} placeholder="Celebrate in" />
+                  <Field label="Highlight words (optional)" value={formData.animated_words} onChange={value => setFormData(current => ({ ...current, animated_words: value }))} placeholder="Cotton, Silk, Organza" />
+                  <Field label="Text after (optional)" value={formData.headline_suffix} onChange={value => setFormData(current => ({ ...current, headline_suffix: value }))} placeholder="suits" />
                 </div>
                 <div className="mt-4 grid gap-3 md:grid-cols-3">
                   <ColorField label="Text before color" value={formData.headline_color} onChange={value => setFormData(current => ({ ...current, headline_color: value }))} />
@@ -192,12 +195,26 @@ const BannerManager = ({ showToast }) => {
                   <ColorField label="Text after color" value={formData.headline_suffix_color} onChange={value => setFormData(current => ({ ...current, headline_suffix_color: value }))} />
                 </div>
               </div>
+              <div className="rounded-2xl border border-amber-100 bg-amber-50/50 p-4 sm:p-5">
+                <div className="flex items-center gap-2"><HiColorSwatch className="text-amber-700" /><h3 className="font-black text-primary">Description and image overlay</h3></div>
+                <p className="mt-1 text-xs text-stone-500">This description appears over the image below the main heading.</p>
+                <div className="mt-4">
+                  <TextareaField label="Product description" value={formData.subheading} onChange={value => setFormData(current => ({ ...current, subheading: value }))} placeholder="Describe the highlighted fabric, occasion, craftsmanship or offer." maxLength={280} />
+                </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <ColorField label="Description text color" value={formData.subheading_color} onChange={value => setFormData(current => ({ ...current, subheading_color: value }))} />
+                  <ColorField label="Image overlay color" value={formData.overlay_color} onChange={value => setFormData(current => ({ ...current, overlay_color: value }))} />
+                </div>
+                <div className="mt-4">
+                  <RangeField label="Overlay darkness" value={formData.overlay_opacity} onChange={value => setFormData(current => ({ ...current, overlay_opacity: value }))} />
+                </div>
+              </div>
+
               <div className="grid gap-4 md:grid-cols-3">
                 <Field label="Button label (optional)" value={formData.cta_label} onChange={value => setFormData(current => ({ ...current, cta_label: value }))} placeholder="Shop now" />
                 <ColorField label="Button background color" value={formData.cta_background_color} onChange={value => setFormData(current => ({ ...current, cta_background_color: value }))} />
                 <ColorField label="Button text color" value={formData.cta_text_color} onChange={value => setFormData(current => ({ ...current, cta_text_color: value }))} />
               </div>
-              <Field label="Supporting text (optional)" value={formData.subheading} onChange={value => setFormData(current => ({ ...current, subheading: value }))} placeholder="Celebrate with special prices across our new collection." />
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Click destination" value={formData.link_url} onChange={value => setFormData(current => ({ ...current, link_url: value }))} placeholder="/sale or https://…" icon={<HiExternalLink />} />
                 <Field label="Image alt text" value={formData.alt_text} onChange={value => setFormData(current => ({ ...current, alt_text: value }))} placeholder="Festival collection banner" />
@@ -232,9 +249,19 @@ const BannerManager = ({ showToast }) => {
           const [status, statusClass] = getStatus(banner);
           return (
             <article key={banner.suitId} className="admin-panel overflow-hidden">
-              <picture><source media="(max-width: 640px)" srcSet={banner.mobile_image || banner.desktop_image} /><img src={banner.desktop_image} alt={banner.alt_text || banner.title} className="aspect-[8/3] w-full bg-stone-100 object-cover" /></picture>
+              <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2 bg-stone-100 p-2">
+                <div className="overflow-hidden rounded-xl bg-stone-200">
+                  <div className="border-b border-white/60 bg-white px-2 py-1 text-[9px] font-black uppercase tracking-wider text-stone-500">Desktop image</div>
+                  <div className="relative aspect-[8/3] bg-cover bg-center" style={{ backgroundImage: `url(${banner.desktop_image})` }}><PreviewOverlay data={banner} /></div>
+                </div>
+                <div className="overflow-hidden rounded-xl bg-stone-200">
+                  <div className="border-b border-white/60 bg-white px-2 py-1 text-center text-[9px] font-black uppercase tracking-wider text-stone-500">Mobile</div>
+                  <div className="relative aspect-[4/5] bg-cover bg-center" style={{ backgroundImage: `url(${banner.mobile_image || banner.desktop_image})` }}><PreviewOverlay data={banner} compact /></div>
+                </div>
+              </div>
               <div className="p-5">
                 <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase text-stone-400">{banner.banner_kind}</p><h3 className="mt-1 font-black text-primary">{banner.title}</h3></div><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusClass}`}>{status}</span></div>
+                {(banner.headline || banner.subheading) && <div className="mt-3 rounded-xl border border-stone-100 bg-stone-50 p-3"><p className="text-xs font-black text-primary">{[banner.headline, Array.isArray(banner.animated_words) ? banner.animated_words[0] : '', banner.headline_suffix].filter(Boolean).join(' ')}</p>{banner.subheading && <p className="mt-1 line-clamp-2 text-xs text-stone-500">{banner.subheading}</p>}</div>}
                 <p className="mt-3 text-xs text-stone-500">Order {banner.sort_order || 0}{banner.starts_at ? ` · Starts ${new Date(banner.starts_at).toLocaleDateString('en-IN')}` : ''}</p>
                 <div className="mt-4 flex gap-2">
                   <button onClick={() => openEdit(banner)} className="admin-secondary-button flex-1"><HiPencil /> Edit</button>
@@ -253,15 +280,27 @@ const BannerManager = ({ showToast }) => {
 
 const Field = ({ label, value, onChange, type = 'text', placeholder = '', required = false, icon }) => <label className="block"><span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-stone-600">{label}</span><span className="relative block">{icon && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">{icon}</span>}<input required={required} type={type} value={value} onChange={event => onChange(event.target.value)} placeholder={placeholder} className={`asset-control ${icon ? 'asset-control-with-icon' : ''}`} /></span></label>;
 
+const TextareaField = ({ label, value, onChange, placeholder, maxLength }) => <label className="block"><span className="mb-1.5 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-wide text-stone-600"><span>{label}</span><small className="font-medium normal-case text-stone-400">{String(value || '').length}/{maxLength}</small></span><textarea value={value} onChange={event => onChange(event.target.value)} placeholder={placeholder} maxLength={maxLength} rows={4} className="asset-control min-h-28 resize-y leading-relaxed" /></label>;
+
 const SelectField = ({ label, value, onChange, options }) => <label className="block"><span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-stone-600">{label}</span><select value={value} onChange={event => onChange(event.target.value)} className="asset-control">{options.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>;
 
-const ColorField = ({ label, value, onChange }) => <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-stone-200 bg-white p-3"><input type="color" value={value || '#FFFFFF'} onChange={event => onChange(event.target.value.toUpperCase())} className="h-10 w-12 cursor-pointer rounded-lg border-0 bg-transparent p-0" /><span><strong className="block text-xs text-stone-700">{label}</strong><small className="font-mono text-[10px] text-stone-400">{value}</small></span></label>;
+const ColorField = ({ label, value, onChange }) => <div className="rounded-xl border border-stone-200 bg-white p-3"><div className="flex items-center gap-3"><input aria-label={`${label} picker`} type="color" value={value || '#FFFFFF'} onChange={event => onChange(event.target.value.toUpperCase())} className="h-10 w-12 cursor-pointer rounded-lg border-0 bg-transparent p-0" /><span className="min-w-0 flex-1"><strong className="block text-xs text-stone-700">{label}</strong><small className="mt-0.5 block font-mono text-[10px] uppercase text-stone-500">{value || '#FFFFFF'}</small></span></div><div className="mt-3 flex flex-wrap gap-1.5" aria-label={`${label} presets`}>{COLOR_PRESETS.map(color => <button key={color} type="button" title={color} aria-label={`Use ${color}`} onClick={() => onChange(color)} className={`h-6 w-6 rounded-full border-2 shadow-sm transition hover:scale-110 ${String(value).toUpperCase() === color ? 'border-primary ring-2 ring-primary/15' : 'border-white'}`} style={{ backgroundColor: color }} />)}</div></div>;
+
+const RangeField = ({ label, value, onChange }) => <label className="block rounded-xl border border-stone-200 bg-white p-3"><span className="flex items-center justify-between text-xs font-black text-stone-700"><span>{label}</span><span className="rounded-full bg-stone-100 px-2 py-1 font-mono text-[10px]">{value}%</span></span><input type="range" min="20" max="95" step="1" value={value} onChange={event => onChange(Number(event.target.value))} className="mt-3 w-full accent-primary" /><span className="mt-1 flex justify-between text-[9px] font-bold uppercase tracking-wide text-stone-400"><span>Light</span><span>Dark</span></span></label>;
 
 const ImageUploader = ({ title, detail, image, uploading, onChoose, onClear }) => <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4"><div className="mb-3 flex items-center justify-between"><div><p className="text-sm font-black text-primary">{title}</p><p className="text-xs text-stone-400">{detail}</p></div>{image && <button type="button" onClick={onClear} className="text-red-500"><HiX /></button>}</div>{image ? <img src={image} alt="" className="mb-3 aspect-[8/3] w-full rounded-xl object-cover" /> : <div className="mb-3 grid aspect-[8/3] place-items-center rounded-xl border border-dashed border-stone-300 bg-white text-3xl text-stone-300"><HiPhotograph /></div>}<button type="button" onClick={onChoose} disabled={uploading} className="admin-secondary-button w-full"><HiUpload /> {uploading ? 'Uploading…' : image ? 'Replace image' : 'Upload image'}</button></div>;
 
 const PreviewOverlay = ({ data, compact = false }) => {
   const firstWord = String(data.animated_words || '').split(',').map(word => word.trim()).filter(Boolean)[0];
-  return <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/75 via-black/20 to-transparent p-3 text-white"><div><p className={`${compact ? 'text-[9px]' : 'text-xs'} font-serif font-bold leading-tight`}><span style={{ color: data.headline_color || '#FFFFFF' }}>{data.headline}</span>{firstWord && <> <span style={{ color: data.animated_word_color || '#FCD34D' }}>{firstWord}</span></>} {data.headline_suffix && <span style={{ color: data.headline_suffix_color || '#FFFFFF' }}>{data.headline_suffix}</span>}</p>{data.subheading && <p className="mt-1 line-clamp-2 text-[7px] text-white/85">{data.subheading}</p>}{data.cta_label && <span className="mt-2 inline-block rounded-full px-2 py-1 text-[7px] font-black" style={{ backgroundColor: data.cta_background_color || '#FFFFFF', color: data.cta_text_color || '#1C1917' }}>{data.cta_label}</span>}</div></div>;
+  const opacity = Math.min(95, Math.max(20, Number(data.overlay_opacity) || 78)) / 100;
+  const overlay = colorWithAlpha(data.overlay_color || '#000000', opacity);
+  const middle = colorWithAlpha(data.overlay_color || '#000000', opacity * 0.4);
+  return <div className="absolute inset-0 flex items-end p-3 text-white" style={{ background: `linear-gradient(to top, ${overlay}, ${middle} 48%, transparent)` }}><div><p className={`${compact ? 'text-[9px]' : 'text-xs'} font-serif font-bold leading-tight`}><span style={{ color: data.headline_color || '#FFFFFF' }}>{data.headline}</span>{firstWord && <> <span style={{ color: data.animated_word_color || '#FCD34D' }}>{firstWord}</span></>} {data.headline_suffix && <span style={{ color: data.headline_suffix_color || '#FFFFFF' }}>{data.headline_suffix}</span>}</p>{data.subheading && <p className="mt-1 line-clamp-2 text-[7px]" style={{ color: data.subheading_color || '#FFFFFF' }}>{data.subheading}</p>}{data.cta_label && <span className="mt-2 inline-block rounded-full px-2 py-1 text-[7px] font-black" style={{ backgroundColor: data.cta_background_color || '#FFFFFF', color: data.cta_text_color || '#1C1917' }}>{data.cta_label}</span>}</div></div>;
+};
+
+const colorWithAlpha = (hex, alpha) => {
+  const value = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : '000000';
+  return `rgba(${parseInt(value.slice(0, 2), 16)}, ${parseInt(value.slice(2, 4), 16)}, ${parseInt(value.slice(4, 6), 16)}, ${alpha})`;
 };
 
 export default BannerManager;
