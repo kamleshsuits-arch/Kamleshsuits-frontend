@@ -5,6 +5,11 @@ import {
 } from 'react-icons/hi';
 import { deleteBanner, fetchAdminBanners, saveBanner } from '../../api/banners';
 import { uploadProductImage } from '../../api/products';
+import hero1 from '../../assets/hero1.webp';
+import hero2 from '../../assets/hero2.jpg';
+import rustic from '../../assets/Rustic.jpeg';
+import naviBlue from '../../assets/Navi_blue.jpeg';
+import brown from '../../assets/Brown.jpeg';
 
 const EMPTY_BANNER = {
   bannerId: '', title: '', banner_kind: 'festival', desktop_image: '', mobile_image: '',
@@ -21,6 +26,14 @@ const BANNER_KINDS = [
 ];
 
 const COLOR_PRESETS = ['#FFFFFF', '#FFF7ED', '#FCD34D', '#FDBA74', '#FDA4AF', '#C4B5FD', '#86EFAC', '#1C1917', '#7F1D1D', '#3B0764'];
+
+const DEFAULT_HERO_IMAGES = [
+  { src: rustic, title: 'Rustic Suit' },
+  { src: naviBlue, title: 'Navi Blue Suit' },
+  { src: brown, title: 'Brown Suit' },
+  { src: hero1, title: 'Elegant Suit' },
+  { src: hero2, title: 'Cotton Suit' },
+];
 
 const toLocalDateTimeInput = value => {
   if (!value) return '';
@@ -53,6 +66,18 @@ const BannerManager = ({ showToast }) => {
   const openCreate = () => {
     setFormData({ ...EMPTY_BANNER, sort_order: banners.length });
     setShowForm(true);
+  };
+
+  const openReplacement = image => {
+    setFormData({
+      ...EMPTY_BANNER,
+      title: `Replace ${image.title}`,
+      headline: image.title,
+      alt_text: image.title,
+      sort_order: banners.length,
+    });
+    setShowForm(true);
+    setTimeout(() => document.getElementById('banner-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
   };
 
   const openEdit = banner => {
@@ -165,8 +190,25 @@ const BannerManager = ({ showToast }) => {
         <strong>Responsive artwork:</strong> upload a wide desktop image (recommended 1920×720, 8:3) and a portrait mobile image (recommended 1080×1350, 4:5). Add the product name and description below, then use the color controls while watching the live previews.
       </div>
 
+      {!banners.length && (
+        <section className="admin-panel p-4 sm:p-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div><div className="flex items-center gap-2"><HiPhotograph className="text-accent" /><h3 className="font-black text-primary">Images currently shown on the homepage</h3></div><p className="mt-1 text-xs text-stone-500">These built-in images rotate until the first published hero is created. Choose Replace to open a prefilled editor, then upload the new desktop and mobile artwork.</p></div>
+            <span className="w-fit rounded-full bg-amber-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber-700">Fallback gallery · Live</span>
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {DEFAULT_HERO_IMAGES.map((image, index) => (
+              <article key={image.title} className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+                <div className="relative aspect-[3/4] overflow-hidden bg-stone-100"><img src={image.src} alt={image.title} className="h-full w-full object-cover" /><span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[8px] font-black uppercase tracking-wider text-white backdrop-blur-sm">0{index + 1}</span></div>
+                <div className="p-3"><p className="truncate text-xs font-black text-primary">{image.title}</p><button type="button" onClick={() => openReplacement(image)} className="admin-secondary-button mt-2 w-full"><HiPencil /> Replace</button></div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
       {showForm && (
-        <form onSubmit={handleSave} className="admin-panel p-5 sm:p-7">
+        <form id="banner-editor" onSubmit={handleSave} className="admin-panel scroll-mt-24 p-5 sm:p-7">
           <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_420px]">
             <div className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
@@ -272,7 +314,6 @@ const BannerManager = ({ showToast }) => {
             </article>
           );
         })}
-        {!banners.length && <div className="admin-panel col-span-full grid min-h-64 place-items-center p-8 text-center"><div><HiPhotograph className="mx-auto text-5xl text-stone-200" /><p className="mt-3 font-bold text-stone-500">No banners yet. Publish your first home campaign.</p></div></div>}
       </div>
     </div>
   );
