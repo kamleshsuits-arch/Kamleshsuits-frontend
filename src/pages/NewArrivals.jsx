@@ -47,7 +47,7 @@ const NewArrivals = () => {
       />
       {/* Premium Header - Coral Theme with Waves */}
       <div 
-        className="relative pt-20 pb-20 px-6 text-center text-primary overflow-hidden md:pt-12 md:pb-24"
+        className="relative pt-20 pb-20 px-3 sm:px-6 text-center text-primary overflow-hidden md:pt-12 md:pb-24"
         style={{ backgroundColor: 'var(--theme-coral)' }}
       >
         {/* Animated Light Layers */}
@@ -86,11 +86,11 @@ const NewArrivals = () => {
                 <HiSparkles className="text-[#fa709a] animate-pulse" size={32} />
              </div>
           </div>
-          <h2 className="text-4xl font-serif text-white tracking-tight uppercase tracking-[0.3em] mb-4">
+          <h2 className="text-2xl min-[380px]:text-3xl sm:text-4xl font-serif text-white tracking-tight uppercase tracking-[0.14em] sm:tracking-[0.3em] mb-4">
             The New Edit
           </h2>
           <div className="inline-block px-4 py-1.5 bg-white/20 border border-white/40 rounded-full shadow-sm">
-            <p className="text-white text-[9px] font-black uppercase tracking-[0.4em]">
+            <p className="text-white text-[9px] font-black uppercase tracking-[0.16em] sm:tracking-[0.4em]">
               Exquisitely Crafted • Season {new Date().getFullYear()}
             </p>
           </div>
@@ -119,8 +119,8 @@ const NewArrivals = () => {
       </div>
 
 
-      <div className="max-w-7xl mx-auto px-4 -mt-8 relative z-20">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 -mt-8 relative z-20">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 min-[380px]:gap-3 sm:gap-6">
           {products.slice(0, 20).map((product) => (
             <ProductCard 
               key={product.suitId} 

@@ -27,7 +27,7 @@ const WishlistPage = () => {
       
       {/* Premium Header - Teal Theme */}
       <div 
-        className="relative pt-20 pb-20 px-6 text-center text-white overflow-hidden animate-bg-pulse"
+        className="relative pt-20 pb-20 px-3 sm:px-6 text-center text-white overflow-hidden animate-bg-pulse"
         style={{ backgroundColor: 'var(--theme-cherry)' }}
       >
         <div className="relative z-10">
@@ -36,11 +36,11 @@ const WishlistPage = () => {
                 <HiOutlineHeart className="text-white animate-pulse" size={32} />
              </div>
           </div>
-          <h1 className="text-4xl font-serif text-white tracking-tight uppercase tracking-[0.3em] mb-4">
+          <h1 className="text-2xl min-[380px]:text-3xl sm:text-4xl font-serif text-white tracking-tight uppercase tracking-[0.14em] sm:tracking-[0.3em] mb-4">
             My Wishlist
           </h1>
           <div className="inline-block px-4 py-1.5 bg-white/20 border border-white/40 rounded-full shadow-sm">
-            <p className="text-white text-[9px] font-black uppercase tracking-[0.4em]">
+            <p className="text-white text-[9px] font-black uppercase tracking-[0.16em] sm:tracking-[0.4em]">
               Curated Selection • {wishlistItems.length} {wishlistItems.length === 1 ? 'Item' : 'Items'}
             </p>
           </div>
@@ -52,7 +52,7 @@ const WishlistPage = () => {
         <LocationBar className="!border-none" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 mt-8 md:-mt-10 relative z-20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 mt-8 md:-mt-10 relative z-20">
         {wishlistItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white border border-stone-100 rounded-[2rem] shadow-xl">
             <div className="bg-stone-50 p-6 rounded-full mb-6 text-teal-600/30">
@@ -70,7 +70,7 @@ const WishlistPage = () => {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 min-[380px]:gap-3 sm:gap-6">
             {wishlistItems.map((product) => (
               <ProductCard
                 key={product.suitId}

@@ -42,20 +42,20 @@ const TermsAndConditions = () => {
     return (
         <div className="min-h-screen bg-stone-50 pb-20">
             {/* Header */}
-            <div className="bg-primary text-white py-24 px-6 text-center">
-                <h1 className="text-4xl md:text-6xl font-serif mb-6 tracking-tight">Terms & Conditions</h1>
-                <p className="text-white/60 font-light max-w-2xl mx-auto uppercase tracking-[0.3em] text-xs">
+            <div className="bg-primary text-white py-16 sm:py-24 px-4 sm:px-6 text-center">
+                <h1 className="text-3xl sm:text-4xl md:text-6xl font-serif mb-5 sm:mb-6 tracking-tight">Terms & Conditions</h1>
+                <p className="text-white/60 font-light max-w-2xl mx-auto uppercase tracking-[0.12em] sm:tracking-[0.3em] text-[10px] sm:text-xs">
                     Last Updated: March 2026 • Legal Framework for Kamlesh Suits
                 </p>
             </div>
 
             {/* Content Cards */}
-            <div className="max-w-4xl mx-auto px-6 -mt-12">
+            <div className="max-w-4xl mx-auto px-3 sm:px-6 -mt-10 sm:-mt-12">
                 <div className="grid gap-6">
                     {sections.map((section, idx) => (
-                        <div key={idx} className="bg-white p-8 md:p-10 rounded-[2rem] shadow-xl border border-stone-100 transition-all hover:shadow-2xl">
-                            <div className="flex items-start gap-6">
-                                <div className="p-4 bg-stone-50 rounded-2xl">
+                        <div key={idx} className="bg-white p-4 sm:p-6 md:p-10 rounded-2xl sm:rounded-[2rem] shadow-xl border border-stone-100 transition-all hover:shadow-2xl">
+                            <div className="flex flex-col min-[380px]:flex-row items-start gap-4 sm:gap-6">
+                                <div className="p-3 sm:p-4 bg-stone-50 rounded-2xl">
                                     {section.icon}
                                 </div>
                                 <div className="flex-1">
@@ -70,10 +70,10 @@ const TermsAndConditions = () => {
                 </div>
 
                 {/* Closing Note */}
-                <div className="mt-16 text-center p-10 bg-white rounded-[2rem] border border-stone-200">
+                <div className="mt-10 sm:mt-16 text-center p-5 sm:p-10 bg-white rounded-2xl sm:rounded-[2rem] border border-stone-200">
                     <p className="text-stone-400 text-sm italic font-light">
                         For any questions regarding these terms, please contact our support team at <br className="hidden md:block" />
-                        <span className="text-primary font-bold mt-2 inline-block">support@kamleshsuits.com</span>
+                        <span className="break-all text-primary font-bold mt-2 inline-block">support@kamleshsuits.com</span>
                     </p>
                 </div>
             </div>

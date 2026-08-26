@@ -172,7 +172,7 @@ export default function ProductDetail({ product, onBack, allProducts = [], onPro
       </div>
 
       {/* --- Main Layout --- */}
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 mt-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-7 sm:gap-10 lg:gap-12 mt-5 sm:mt-8">
         
         {/* LEFT: Image Gallery */}
         <div className="flex flex-col gap-6">
@@ -199,7 +199,7 @@ export default function ProductDetail({ product, onBack, allProducts = [], onPro
           </div>
 
           {/* Thumbnails Grid (3 Boxes) */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
             {galleryItems.slice(0, 3).map((item, index) => {
               const isLast = index === 2 && galleryItems.length > 3;
               return (
@@ -350,7 +350,7 @@ export default function ProductDetail({ product, onBack, allProducts = [], onPro
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-6 text-sm border-t border-stone-100 pt-6">
+              <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-4 sm:gap-6 text-sm border-t border-stone-100 pt-6">
                 <div>
                   <span className="block text-stone-600 text-xs uppercase tracking-widest mb-1">Material</span>
                   <span className="font-medium text-primary">{product.material || "Silk Blend"}</span>

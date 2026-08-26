@@ -65,7 +65,7 @@ const Navbar = () => {
   return (
     <>
       <nav className={`z-[100] transition-all duration-700 ${isScrolled || !isSpecialPage ? 'fixed top-0 left-0 right-0 max-md:animate-in max-md:slide-in-from-top-2 max-md:bg-accent shadow-lg md:bg-white' : `absolute top-0 left-0 right-0 max-md:animate-in max-md:slide-in-from-top-2 max-md:bg-transparent md:bg-white border-none`} md:sticky md:top-0 md:bg-white md:border-b md:border-stone-100 md:shadow-sm`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-2 min-[360px]:px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 md:h-20">
 
             {/* Desktop only: hamburger */}
@@ -162,22 +162,22 @@ const Navbar = () => {
             </div>
 
             {/* Mobile right icons — wishlist + account ONLY (cart is floating FAB) */}
-            <div className="flex items-center md:hidden gap-1">
-              {isAdmin && <Link to="/admin/banners" className="relative p-3 min-w-11 min-h-11" aria-label="Banner Management"><HiPhotograph size={22} className="text-white/90" /></Link>}
-              <Link to="/wishlist" className="relative p-3 min-w-11 min-h-11" aria-label="Wishlist">
+            <div className="flex items-center md:hidden gap-0 min-[360px]:gap-1">
+              {isAdmin && <Link to="/admin/banners" className="relative p-2 min-w-10 min-h-11 min-[360px]:p-3 min-[360px]:min-w-11" aria-label="Banner Management"><HiPhotograph size={22} className="text-white/90" /></Link>}
+              <Link to="/wishlist" className="relative p-2 min-w-10 min-h-11 min-[360px]:p-3 min-[360px]:min-w-11" aria-label="Wishlist">
                 <HiOutlineHeart size={22} className="text-white/90" />
                 {wishlistItems.length > 0 && (
                   <span className="absolute top-0.5 right-0.5 bg-white text-accent text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">{wishlistItems.length}</span>
                 )}
               </Link>
               {user ? (
-                <Link to="/account" className="relative p-3 min-w-11 min-h-11" aria-label="My account">
+                <Link to="/account" className="relative p-2 min-w-10 min-h-11 min-[360px]:p-3 min-[360px]:min-w-11" aria-label="My account">
                   <div className="w-7 h-7 rounded-full bg-white/20 border border-white/40 text-white flex items-center justify-center text-xs font-black">
                     {(user.name?.[0] || user.email?.[0] || 'U').toUpperCase()}
                   </div>
                 </Link>
               ) : (
-                <Link to="/login" className="relative p-3 min-w-11 min-h-11" aria-label="Sign in">
+                <Link to="/login" className="relative p-2 min-w-10 min-h-11 min-[360px]:p-3 min-[360px]:min-w-11" aria-label="Sign in">
                   <HiOutlineUser size={22} className="text-white/90" />
                 </Link>
               )}

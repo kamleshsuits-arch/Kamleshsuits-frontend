@@ -186,7 +186,7 @@ const ProductDetails = () => {
 
       {/* Main Content - transform-gpu to help with rendering crispness */}
       <div ref={containerRef} className="container mx-auto px-4 py-6 md:py-12 transform-gpu filter-none">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12">
           {/* Left Column: Gallery */}
           <div className="flex flex-col gap-6">
             {/* Main View Container */}
@@ -207,7 +207,7 @@ const ProductDetails = () => {
             </div>
 
             {/* Thumbnails Grid (3 Boxes) */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
               {galleryItems.slice(0, 3).map((item, index) => {
                 const isLast = index === 2 && galleryItems.length > 3;
                 return (

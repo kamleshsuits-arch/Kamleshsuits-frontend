@@ -28,8 +28,8 @@ export default function AuthTest() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-50 p-8">
-      <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-xl p-8 border border-stone-100">
+    <div className="min-h-screen bg-stone-50 p-3 sm:p-8">
+      <div className="max-w-2xl mx-auto bg-white rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-8 border border-stone-100">
         <h1 className="text-3xl font-black text-primary mb-2">AWS Auth Diagnostic</h1>
         <p className="text-secondary mb-8">Test Cognito configuration and state</p>
 

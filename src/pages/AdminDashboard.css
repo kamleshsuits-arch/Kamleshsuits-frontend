@@ -213,6 +213,19 @@ select.asset-control {
 @media (max-width: 640px) {
   .admin-dashboard {
     padding-top: 1.25rem;
+    overflow-x: clip;
+  }
+
+  .admin-dashboard :is(h1, h2, h3, h4, p, span, label) {
+    overflow-wrap: anywhere;
+  }
+
+  .admin-dashboard table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .admin-dashboard table th,
@@ -224,6 +237,36 @@ select.asset-control {
   .asset-section-card {
     border-radius: 1.25rem;
     padding: 1rem;
+  }
+
+  .admin-panel {
+    max-width: 100%;
+    border-radius: 1.25rem;
+  }
+
+  .admin-primary-button,
+  .admin-secondary-button {
+    white-space: normal;
+    text-align: center;
+  }
+
+  .admin-filter-select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 359px) {
+  .admin-dashboard {
+    padding-left: .75rem;
+    padding-right: .75rem;
+  }
+
+  .admin-kpi-card {
+    padding: 1rem;
+  }
+
+  .asset-section-card {
+    padding: .875rem;
   }
 }
 

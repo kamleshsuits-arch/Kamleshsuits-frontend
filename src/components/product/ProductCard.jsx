@@ -109,14 +109,14 @@ export default function ProductCard({ product, onView }) {
       </div>
 
       {/* Product Details */}
-      <div className="p-3 bg-white">
+      <div className="p-2.5 sm:p-3 bg-white">
         <h3 className="text-sm sm:text-base font-serif text-primary line-clamp-2 leading-tight overflow-hidden h-[2.5rem] mb-1">
           {product.title}
         </h3>
 
 
         {/* Price row */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap">
           <span className="text-sm font-black text-primary">
             {formatPrice(product.price)}
           </span>

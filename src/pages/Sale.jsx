@@ -54,7 +54,7 @@ const Sale = () => {
       />
       {/* Premium Header - Orange Theme with Waves */}
       <div 
-        className="relative pt-20 pb-20 px-6 text-center text-white overflow-hidden md:pt-12 md:pb-24"
+        className="relative pt-20 pb-20 px-3 sm:px-6 text-center text-white overflow-hidden md:pt-12 md:pb-24"
         style={{ backgroundColor: 'var(--theme-orange)' }}
       >
         {/* Layered Decorative Elements */}
@@ -90,13 +90,13 @@ const Sale = () => {
           
           <div className="mb-2 relative">
              <div className="absolute -top-6 -right-10 bg-yellow-400 text-primary text-[10px] font-black px-3 py-1.5 rounded-bl-xl shadow-lg animate-bounce">UP TO</div>
-            <span className="text-7xl md:text-9xl font-black tracking-tighter inline-block text-shadow-xl drop-shadow-2xl">
+            <span className="text-6xl min-[380px]:text-7xl md:text-9xl font-black tracking-tighter inline-block text-shadow-xl drop-shadow-2xl">
               {maxDiscount}%
             </span>
             <span className="text-3xl md:text-4xl font-serif italic ml-2 opacity-90">OFF</span>
           </div>
           
-          <h1 className="text-sm md:text-xl uppercase tracking-[0.5em] font-medium opacity-90 mt-6 pt-2 border-t border-white/10 w-fit mx-auto">
+          <h1 className="text-xs sm:text-sm md:text-xl uppercase tracking-[0.2em] sm:tracking-[0.5em] font-medium opacity-90 mt-6 pt-2 border-t border-white/10 w-fit mx-auto">
             Luxury Silk Clearance
           </h1>
         </div>
@@ -124,8 +124,8 @@ const Sale = () => {
       </div>
 
 
-      <div className="max-w-7xl mx-auto px-4 -mt-10 relative z-20">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 -mt-10 relative z-20">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 min-[380px]:gap-3 sm:gap-6">
           {products.map((product) => (
             <div key={product.suitId} className="relative group/sale">
               {/* Extra discount badge for sale page */}

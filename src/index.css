@@ -15,11 +15,60 @@
 }
 
 @layer base {
+  html {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     @apply bg-background text-secondary font-sans antialiased;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin: 0;
+    overflow-x: clip;
   }
+
+  #root {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  img, video, canvas, svg {
+    max-width: 100%;
+  }
+
+  input, select, textarea, button {
+    max-width: 100%;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif text-primary;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 480px) {
+  input, select, textarea {
+    font-size: 16px;
+  }
+
+  .leaflet-control-container {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 359px) {
+  .mobile-compact-hide {
+    display: none !important;
   }
 }
 

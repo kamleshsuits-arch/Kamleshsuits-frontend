@@ -5,7 +5,7 @@ import logo from '../assets/K_suit.png';
 
 const NotFound = () => {
     return (
-        <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-6">
+        <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-4 py-12 sm:px-6">
             <div className="max-w-md w-full text-center">
                 {/* Decorative Element */}
                 <div className="mb-8 relative inline-block">
@@ -17,12 +17,12 @@ const NotFound = () => {
                     />
                 </div>
 
-                <h1 className="text-[12rem] font-black text-stone-200 leading-none select-none tracking-tighter">
+                <h1 className="text-[7rem] min-[380px]:text-[9rem] sm:text-[12rem] font-black text-stone-200 leading-none select-none tracking-tighter">
                     404
                 </h1>
                 
-                <div className="relative -mt-16 z-10">
-                    <h2 className="text-3xl font-serif text-primary mb-4 tracking-tight">Piece Not Found</h2>
+                <div className="relative -mt-10 min-[380px]:-mt-12 sm:-mt-16 z-10">
+                    <h2 className="text-2xl sm:text-3xl font-serif text-primary mb-4 tracking-tight">Piece Not Found</h2>
                     <p className="text-secondary font-light mb-10 leading-relaxed">
                         The collection you are looking for has been moved or no longer exists. 
                         Let's get you back to our latest designs.
@@ -37,7 +37,7 @@ const NotFound = () => {
                     </Link>
                 </div>
 
-                <div className="mt-20 border-t border-stone-200 pt-8 flex justify-center gap-8">
+                <div className="mt-14 border-t border-stone-200 pt-6 flex flex-wrap justify-center gap-x-8 gap-y-3 sm:mt-20 sm:pt-8">
                     <Link to="/new-arrivals" className="text-[10px] font-black uppercase tracking-widest text-stone-400 hover:text-primary transition">New Arrival</Link>
                     <Link to="/sale" className="text-[10px] font-black uppercase tracking-widest text-stone-400 hover:text-primary transition">On Sale</Link>
                 </div>

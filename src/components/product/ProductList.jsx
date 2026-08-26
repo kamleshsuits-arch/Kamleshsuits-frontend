@@ -260,7 +260,7 @@ const ProductList = () => {
         </div>
       </div>
 
-      <div className="px-4 py-8 lg:py-12 max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-4 gap-12">
+      <div className="px-3 sm:px-4 py-6 sm:py-8 lg:py-12 max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
         {/* Sidebar - Desktop Only */}
         <div className="hidden lg:block lg:col-span-1">
           <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
@@ -289,7 +289,7 @@ const ProductList = () => {
           ) : (
             <>
               {/* Product Grid - 2 Columns on Mobile */}
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8 lg:gap-x-6 lg:gap-y-12">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-2 min-[380px]:gap-x-3 sm:gap-x-4 gap-y-6 sm:gap-y-8 lg:gap-x-6 lg:gap-y-12">
                 {displayed.map((product) => (
                   <ProductCard key={product.suitId} product={product} onView={(p) => {
                     // Navigate to dedicated product page

@@ -27,24 +27,24 @@ const AccountPage = () => {
     const name = user.name || user.email?.split('@')[0];
 
     return (
-        <div className="min-h-screen bg-stone-50 pt-10 pb-20">
+        <div className="min-h-screen bg-stone-50 pt-5 pb-20 sm:pt-10">
             <div className="max-w-4xl mx-auto px-4 sm:px-6">
                 
                 {/* Header Profile Card */}
                 <div className="bg-white rounded-3xl shadow-xl shadow-stone-200/50 overflow-hidden mb-8 border border-white">
                     <div className="h-32 relative" style={{ background: 'linear-gradient(to right, #434343 0%, black 100%)' }}>
-                        <div className="absolute -bottom-12 left-8">
+                        <div className="absolute -bottom-12 left-4 sm:left-8">
                                 <div className="w-24 h-24 rounded-2xl border-4 border-white shadow-lg bg-accent text-white flex items-center justify-center text-4xl font-black">
                                     {(name[0]).toUpperCase()}
                                 </div>
                         </div>
                     </div>
-                    <div className="pt-16 pb-8 px-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="pt-16 pb-6 px-4 sm:px-8 sm:pb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl font-black text-primary tracking-tight">
+                            <h1 className="break-words text-2xl sm:text-3xl font-black text-primary tracking-tight">
                                 {name}
                             </h1>
-                            <p className="text-stone-400 font-medium">{user.email}</p>
+                            <p className="break-all text-sm sm:text-base text-stone-400 font-medium">{user.email}</p>
                         </div>
                         <div className="flex flex-wrap items-center gap-3">
                             <span className="px-4 py-2 bg-accent/10 text-accent rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-accent/20">
@@ -61,7 +61,7 @@ const AccountPage = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                     
                     {/* User Details Section */}
                     <div className="order-2 space-y-6 md:order-1">
@@ -69,7 +69,7 @@ const AccountPage = () => {
                              <span className="w-6 h-px bg-accent/30" /> Identity Details
                         </h2>
                         
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 space-y-5">
+                        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-stone-100 space-y-5">
                             <DetailRow icon={<HiUser />} label="Full Name" value={name || 'Not Provided'} />
                             <DetailRow icon={<HiMail />} label="Email ID" value={user.email} verified={true} />
                             <DetailRow icon={<HiBadgeCheck />} label="Account ID" value={user.id?.substring(0, 12).toUpperCase()} />
@@ -79,7 +79,7 @@ const AccountPage = () => {
                         <h2 className="text-[11px] font-black text-primary/70 uppercase tracking-[0.4em] flex items-center gap-2">
                              <span className="w-6 h-px bg-accent/30" /> Account Security
                         </h2>
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 space-y-4">
+                        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-stone-100 space-y-4">
                              <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl shrink-0">

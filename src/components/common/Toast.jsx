@@ -36,7 +36,7 @@ const Toast = ({ message, image, show, onClose, type = 'success' }) => {
   return (
     <div 
       id="toast-notification"
-      className="fixed top-24 right-4 z-50 flex items-center gap-4 bg-white/90 backdrop-blur-md border border-stone-200 shadow-xl p-4 rounded-lg min-w-[300px] max-w-md"
+      className="fixed left-3 right-3 top-20 z-[120] flex min-w-0 items-center gap-3 rounded-xl border border-stone-200 bg-white/95 p-3 shadow-xl backdrop-blur-md sm:left-auto sm:right-4 sm:top-24 sm:min-w-[300px] sm:max-w-md sm:gap-4 sm:p-4"
     >
       {/* Image */}
       {image && (
@@ -46,12 +46,12 @@ const Toast = ({ message, image, show, onClose, type = 'success' }) => {
       )}
 
       {/* Content */}
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <h4 className={`text-sm font-bold ${type === 'error' ? 'text-red-500' : 'text-green-600'} flex items-center gap-1`}>
           {type === 'error' ? <HiXCircle /> : <HiCheckCircle />}
           {type === 'error' ? 'Removed' : 'Success'}
         </h4>
-        <p className="text-sm text-secondary mt-0.5">{message}</p>
+        <p className="mt-0.5 break-words text-sm text-secondary">{message}</p>
       </div>
 
       {/* Close Button */}

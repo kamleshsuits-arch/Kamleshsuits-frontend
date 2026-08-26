@@ -258,7 +258,7 @@ const Signup = () => {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8 relative overflow-hidden">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-background px-3 py-20 sm:px-4 sm:py-8 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/5 rounded-full blur-[100px]" />
@@ -277,7 +277,7 @@ const Signup = () => {
       </Link>
 
       <div className="max-w-md w-full relative z-10">
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-stone-200/50 p-8 relative overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-stone-200/50 p-5 min-[380px]:p-6 sm:p-8 relative overflow-hidden">
           
           {/* Logo & Header */}
           <div className="text-center mb-6">
