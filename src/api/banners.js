@@ -30,3 +30,23 @@ export const deleteBanner = async bannerId => {
   const response = await axios.delete(`${API_URL}/admin/banners/${encodeURIComponent(bannerId)}`, { headers: getAuthHeader() });
   return response.data;
 };
+
+export const fetchPublicHeroImages = async () => {
+  const response = await axios.get(`${API_URL}/hero-images`);
+  return response.data;
+};
+
+export const fetchAdminHeroImages = async () => {
+  const response = await axios.get(`${API_URL}/admin/hero-images`, { headers: getAuthHeader() });
+  return response.data;
+};
+
+export const saveHeroImage = async heroImage => {
+  const response = await axios.post(`${API_URL}/admin/hero-images`, heroImage, { headers: getAuthHeader() });
+  return response.data;
+};
+
+export const deleteHeroImage = async heroImageId => {
+  const response = await axios.delete(`${API_URL}/admin/hero-images/${encodeURIComponent(heroImageId)}`, { headers: getAuthHeader() });
+  return response.data;
+};

@@ -11,7 +11,7 @@ import hero2 from "../../assets/hero2.jpg";
 import rustic from "../../assets/Rustic.jpeg";
 import naviBlue from "../../assets/Navi_blue.jpeg";
 import brown from "../../assets/Brown.jpeg";
-import { fetchPublicBanners } from "../../api/banners";
+import { fetchPublicBanners, fetchPublicHeroImages } from "../../api/banners";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -34,6 +34,14 @@ const getBannerOverlay = banner => {
   return `linear-gradient(to top, ${rgbaFromHex(color, opacity)} 0%, ${rgbaFromHex(color, opacity * 0.48)} 48%, ${rgbaFromHex(color, 0.04)} 100%)`;
 };
 
+const DEFAULT_HERO_IMAGES = [
+  { src: rustic, alt: "Rustic Suit", lineOne: "Featured piece", lineTwo: "Rustic Suit", lineOneColor: "#FDE68A", lineTwoColor: "#FFFFFF" },
+  { src: naviBlue, alt: "Navi Blue Suit", lineOne: "Featured piece", lineTwo: "Navi Blue Suit", lineOneColor: "#FDE68A", lineTwoColor: "#FFFFFF" },
+  { src: brown, alt: "Brown Suit", lineOne: "Featured piece", lineTwo: "Brown Suit", lineOneColor: "#FDE68A", lineTwoColor: "#FFFFFF" },
+  { src: hero1, alt: "Elegant Suit", lineOne: "Featured piece", lineTwo: "Elegant Suit", lineOneColor: "#FDE68A", lineTwoColor: "#FFFFFF" },
+  { src: hero2, alt: "Cotton Suit", lineOne: "Featured piece", lineTwo: "Cotton Suit", lineOneColor: "#FDE68A", lineTwoColor: "#FFFFFF" },
+];
+
 const Hero = () => {
   const { user } = useAuth();
   const heroRef = useRef(null);
@@ -44,14 +52,7 @@ const Hero = () => {
   const [prevIdx, setPrevIdx] = useState(0);
   const [liveBanners, setLiveBanners] = useState([]);
   const [bannerIdx, setBannerIdx] = useState(0);
-
-  const images = [
-    { src: rustic, alt: "Rustic Suit" },
-    { src: naviBlue, alt: "Navi Blue Suit" },
-    { src: brown, alt: "Brown Suit" },
-    { src: hero1, alt: "Elegant Suit" },
-    { src: hero2, alt: "Cotton Suit" }
-  ];
+  const [images, setImages] = useState(DEFAULT_HERO_IMAGES);
 
   useEffect(() => {
     let active = true;
@@ -68,6 +69,33 @@ const Hero = () => {
     };
     loadBanners();
     const refresh = setInterval(loadBanners, 60000);
+    return () => { active = false; clearInterval(refresh); };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const loadHeroImages = async () => {
+      try {
+        const data = await fetchPublicHeroImages();
+        if (!active || !Array.isArray(data)) return;
+        const uploaded = data.map(item => ({
+          src: item.image,
+          alt: cleanBannerText(item.alt_text) || cleanBannerText(item.line_two) || 'Featured suit',
+          lineOne: cleanBannerText(item.line_one),
+          lineTwo: cleanBannerText(item.line_two),
+          lineOneColor: item.line_one_color || '#FDE68A',
+          lineTwoColor: item.line_two_color || '#FFFFFF',
+        })).filter(item => item.src);
+        const nextImages = [...DEFAULT_HERO_IMAGES, ...uploaded];
+        setImages(nextImages);
+        setCurrentIdx(current => current % nextImages.length);
+        setPrevIdx(current => current % nextImages.length);
+      } catch (error) {
+        console.error('Custom hero images unavailable; using the built-in carousel.', error);
+      }
+    };
+    loadHeroImages();
+    const refresh = setInterval(loadHeroImages, 60000);
     return () => { active = false; clearInterval(refresh); };
   }, []);
 
@@ -192,8 +220,8 @@ const Hero = () => {
               <img src={images[prevIdx].src} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
               <img src={images[currentIdx].src} alt={images[currentIdx].alt} className="image-overlay absolute inset-0 h-full w-full object-cover opacity-0" />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent px-4 pb-4 pt-14 text-white">
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-200">Featured piece</p>
-                <p className="mt-0.5 font-serif text-base font-bold">{images[currentIdx].alt}</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: images[currentIdx].lineOneColor }}>{images[currentIdx].lineOne}</p>
+                <p className="mt-0.5 font-serif text-base font-bold" style={{ color: images[currentIdx].lineTwoColor }}>{images[currentIdx].lineTwo}</p>
               </div>
               <div className="absolute right-3 top-3 rounded-full border border-white/30 bg-black/25 px-2 py-1 text-[8px] font-black uppercase tracking-wider text-white backdrop-blur-md">
                 0{currentIdx + 1} / 0{images.length}
