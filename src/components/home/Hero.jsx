@@ -14,6 +14,11 @@ import { fetchPublicBanners } from "../../api/banners";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const cleanBannerText = value => {
+  const text = String(value ?? '').trim();
+  return ['null', 'undefined'].includes(text.toLowerCase()) ? '' : text;
+};
+
 const Hero = () => {
   const { user } = useAuth();
   const heroRef = useRef(null);
@@ -103,18 +108,19 @@ const Hero = () => {
 
   if (liveBanners.length > 0) {
     const banner = liveBanners[bannerIdx] || liveBanners[0];
-    const actionLabel = banner.cta_label || (banner.link_url ? 'Explore collection' : '');
+    const bannerLink = cleanBannerText(banner.link_url);
+    const actionLabel = cleanBannerText(banner.cta_label) || (bannerLink ? 'Explore collection' : '');
     return (
       <section className="relative overflow-hidden bg-stone-900">
         <div className="relative md:hidden">
           <div role="img" aria-label={banner.alt_text || banner.title} className="aspect-[4/5] max-h-[680px] w-full bg-cover bg-center" style={{ backgroundImage: `url(${banner.mobile_image || banner.desktop_image})` }} />
-          <BannerOverlay banner={banner} actionLabel={actionLabel} compact />
+          <BannerOverlay banner={banner} actionLabel={actionLabel} bannerLink={bannerLink} compact />
           <BannerDots banners={liveBanners} current={bannerIdx} onSelect={setBannerIdx} />
           <div className="bg-white rounded-t-[2.5rem] -mt-5 relative z-20 overflow-hidden"><div className="pt-4 pb-1"><LocationBar className="!border-none" /></div></div>
         </div>
         <div className="relative hidden md:block">
           <div role="img" aria-label={banner.alt_text || banner.title} className="aspect-[8/3] min-h-[430px] max-h-[680px] w-full bg-cover bg-center" style={{ backgroundImage: `url(${banner.desktop_image})` }} />
-          <BannerOverlay banner={banner} actionLabel={actionLabel} />
+          <BannerOverlay banner={banner} actionLabel={actionLabel} bannerLink={bannerLink} />
           <BannerDots banners={liveBanners} current={bannerIdx} onSelect={setBannerIdx} />
         </div>
       </section>
@@ -294,21 +300,21 @@ const Hero = () => {
   );
 };
 
-const BannerOverlay = ({ banner, actionLabel, compact = false }) => (
+const BannerOverlay = ({ banner, actionLabel, bannerLink, compact = false }) => (
   <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/80 via-black/25 to-black/5 md:items-center md:bg-gradient-to-r md:from-black/70 md:via-black/20 md:to-transparent">
     <div className={`mx-auto w-full max-w-7xl px-5 text-white sm:px-8 lg:px-12 ${compact ? 'pb-14' : 'pb-10 md:pb-0'}`}>
       <div className="max-w-xl">
-        <span className="inline-flex rounded-full border border-white/30 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-sm">{String(banner.banner_kind || 'featured').replace('-', ' ')}</span>
-        {(banner.headline || banner.headline_suffix || banner.animated_words?.length) && <RotatingBannerHeadline key={banner.suitId} banner={banner} compact={compact} />}
-        {banner.subheading && <p className={`mt-3 max-w-lg font-medium text-white/90 drop-shadow ${compact ? 'text-sm' : 'text-lg'}`}>{banner.subheading}</p>}
-        {actionLabel && banner.link_url && <BannerAction to={banner.link_url} label={actionLabel} />}
+        <span className="inline-flex rounded-full border border-white/30 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-sm">{cleanBannerText(banner.banner_kind || 'featured').replace('-', ' ')}</span>
+        {(cleanBannerText(banner.headline) || cleanBannerText(banner.headline_suffix) || (Array.isArray(banner.animated_words) && banner.animated_words.some(cleanBannerText))) && <RotatingBannerHeadline key={banner.suitId} banner={banner} compact={compact} />}
+        {cleanBannerText(banner.subheading) && <p className={`mt-3 max-w-lg font-medium text-white/90 drop-shadow ${compact ? 'text-sm' : 'text-lg'}`}>{cleanBannerText(banner.subheading)}</p>}
+        {actionLabel && bannerLink && <BannerAction to={bannerLink} label={actionLabel} backgroundColor={banner.cta_background_color} textColor={banner.cta_text_color} />}
       </div>
     </div>
   </div>
 );
 
 const RotatingBannerHeadline = ({ banner, compact }) => {
-  const words = Array.isArray(banner.animated_words) ? banner.animated_words.filter(Boolean) : [];
+  const words = Array.isArray(banner.animated_words) ? banner.animated_words.map(cleanBannerText).filter(Boolean) : [];
   const [wordIndex, setWordIndex] = useState(0);
 
   useEffect(() => {
@@ -319,16 +325,17 @@ const RotatingBannerHeadline = ({ banner, compact }) => {
 
   return (
     <h1 className={`mt-3 max-w-3xl font-serif font-bold leading-tight drop-shadow-[0_3px_12px_rgba(0,0,0,0.8)] ${compact ? 'text-3xl' : 'text-5xl lg:text-6xl'}`}>
-      {banner.headline && <span style={{ color: banner.headline_color || '#FFFFFF' }}>{banner.headline} </span>}
+      {cleanBannerText(banner.headline) && <span style={{ color: banner.headline_color || '#FFFFFF' }}>{cleanBannerText(banner.headline)} </span>}
       {words.length > 0 && <span key={`${banner.suitId}-${wordIndex}`} aria-live="polite" style={{ color: banner.animated_word_color || '#FCD34D' }} className="inline-block animate-in fade-in slide-in-from-bottom-2 duration-500">{words[wordIndex]}</span>}
-      {banner.headline_suffix && <span style={{ color: banner.headline_suffix_color || '#FFFFFF' }}> {banner.headline_suffix}</span>}
+      {cleanBannerText(banner.headline_suffix) && <span style={{ color: banner.headline_suffix_color || '#FFFFFF' }}> {cleanBannerText(banner.headline_suffix)}</span>}
     </h1>
   );
 };
 
-const BannerAction = ({ to, label }) => {
-  const classes = "mt-5 inline-flex min-h-11 items-center rounded-full bg-white px-6 py-3 text-sm font-black text-stone-900 shadow-xl transition hover:bg-accent hover:text-white";
-  return to.startsWith('/') ? <Link to={to} className={classes}>{label}</Link> : <a href={to} className={classes}>{label}</a>;
+const BannerAction = ({ to, label, backgroundColor, textColor }) => {
+  const classes = "mt-5 mb-8 inline-flex min-h-11 items-center rounded-full px-6 py-3 text-sm font-black shadow-xl transition hover:-translate-y-0.5 hover:brightness-95 md:mb-4";
+  const style = { backgroundColor: backgroundColor || '#FFFFFF', color: textColor || '#1C1917' };
+  return to.startsWith('/') ? <Link to={to} style={style} className={classes}>{label}</Link> : <a href={to} style={style} className={classes}>{label}</a>;
 };
 
 const BannerDots = ({ banners, current, onSelect }) => banners.length > 1 && (

@@ -735,7 +735,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 pt-1 sm:pt-2 pb-8 relative overflow-x-hidden">
+    <div className="container mx-auto w-full max-w-full px-3 pt-1 pb-8 sm:px-4 sm:pt-2 relative overflow-x-hidden">
       <div id="confetti-container" className="fixed inset-0 pointer-events-none z-50"></div>
       
       {/* Breadcrumb */}
@@ -798,11 +798,11 @@ const Cart = () => {
   }
 
   return (
-                  <div key={item.suitId} className="group flex flex-row gap-4 sm:gap-6 py-6 sm:py-8 border-b border-stone-100 last:border-0 hover:bg-stone-50/30 transition-colors p-2 sm:p-4 rounded-xl">
+                  <div key={item.suitId} className="group flex flex-row gap-3 sm:gap-6 py-5 sm:py-8 border-b border-stone-100 last:border-0 hover:bg-stone-50/30 transition-colors p-1.5 sm:p-4 rounded-xl min-w-0">
                       {/* Image */}
                       <div 
                         onClick={() => handleViewProduct(item)}
-                        className="w-24 h-32 sm:w-40 sm:h-52 shrink-0 bg-stone-100 overflow-hidden relative rounded-xl shadow-sm cursor-pointer"
+                        className="w-20 h-28 sm:w-40 sm:h-52 shrink-0 bg-stone-100 overflow-hidden relative rounded-xl shadow-sm cursor-pointer"
                       >
                         <img 
                           src={itemImage || "https://via.placeholder.com/150"} 
@@ -816,7 +816,7 @@ const Cart = () => {
                       <div className="flex-1 flex flex-col justify-between min-w-0 py-1">
                         
                         <div className="space-y-3">
-                          <div className="flex justify-between items-start gap-4">
+                          <div className="flex justify-between items-start gap-2">
                             <div className="space-y-1 min-w-0">
                                <h3 
                                  onClick={() => handleViewProduct(item)}
@@ -824,7 +824,7 @@ const Cart = () => {
                                >
                                  {item.title.replace(/suit/gi, '').trim()}
                                </h3>
-                               <p className="text-[10px] sm:text-xs text-primary uppercase tracking-[0.2em] font-black">
+                               <p className="line-clamp-2 break-words text-[9px] sm:text-xs text-primary uppercase tracking-[0.08em] sm:tracking-[0.2em] font-black">
                                  {item.brand || "Kamlesh Collection"} • {item.material || "Premium Fabric"}
                                </p>
                             </div>
@@ -856,7 +856,7 @@ const Cart = () => {
                         </div>
 
                         {/* Pricing & Control Row */}
-                        <div className="flex justify-between items-end">
+                        <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:justify-between sm:items-end">
                            <div className="space-y-1">
                               <p className="text-[10px] text-stone-600 uppercase tracking-widest">Price per unit</p>
                               <div className="flex items-center gap-3">
@@ -867,7 +867,7 @@ const Cart = () => {
                               </div>
                            </div>
 
-                           <div className="flex items-center border-2 border-stone-100 rounded-full h-10 px-1 hover:border-stone-200 transition-colors">
+                           <div className="flex max-w-full items-center border-2 border-stone-100 rounded-full h-10 px-1 hover:border-stone-200 transition-colors">
                               <button 
                                 onClick={() => updateQuantity(item.suitId, (item.quantity || 1) - 1)}
                                 disabled={(item.quantity || 1) <= 1}
@@ -895,7 +895,7 @@ const Cart = () => {
 
               {/* Address Section */}
               <div className="mt-8 space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="font-serif text-2xl text-primary">Delivery Address</h2>
                     <p className="text-secondary text-xs uppercase tracking-widest mt-1">Where should we send your order?</p>
@@ -920,7 +920,7 @@ const Cart = () => {
                 </div>
 
                 {showAddressForm ? (
-                  <div className="bg-stone-50 p-6 sm:p-8 rounded-3xl border border-stone-200 animate-in slide-in-from-bottom-4 duration-500">
+                  <div className="bg-stone-50 p-4 sm:p-8 rounded-3xl border border-stone-200 animate-in slide-in-from-bottom-4 duration-500">
                     <div className="flex justify-between items-center mb-6">
                       <h4 className="font-bold text-primary uppercase tracking-widest text-sm">
                         {editingAddressId ? 'Edit Address' : 'New Delivery Address'}
@@ -1197,19 +1197,19 @@ const Cart = () => {
                         <div 
                           key={addr.id}
                           onClick={() => setSelectedAddressId(addr.id)}
-                          className={`relative group p-5 sm:p-6 rounded-3xl border-2 transition-all cursor-pointer ${
+                          className={`relative group p-4 sm:p-6 rounded-3xl border-2 transition-all cursor-pointer ${
                             selectedAddressId === addr.id ? 'border-primary bg-stone-50 shadow-md' : 'border-stone-100 hover:border-stone-200 bg-white'
                           }`}
                         >
-                          <div className="flex justify-between items-start gap-4">
-                            <div className="flex gap-4">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start sm:gap-4">
+                            <div className="flex min-w-0 gap-3 sm:gap-4">
                               <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                                 selectedAddressId === addr.id ? 'bg-primary text-white' : 'bg-stone-100 text-stone-400'
                               }`}>
                                 {addr.type === 'home' ? <HiHome size={20} /> : addr.type === 'office' ? <HiOfficeBuilding size={20} /> : <HiLocationMarker size={20} />}
                               </div>
-                              <div>
-                                <div className="flex items-center gap-3 mb-1">
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1">
                                   <h4 className="font-bold text-primary">{addr.name}</h4>
                                   <span className="px-2 py-0.5 bg-stone-100 text-[9px] font-black uppercase tracking-widest rounded-full text-stone-500 border border-stone-200">
                                     {addr.type}
@@ -1222,7 +1222,7 @@ const Cart = () => {
                               </div>
                             </div>
                             
-                            <div className="flex flex-col gap-2">
+                            <div className="flex gap-1 self-end sm:flex-col sm:gap-2 sm:self-auto">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); startEditAddress(addr); }}
                                 aria-label={`Edit address for ${addr.name}`}
@@ -1274,26 +1274,26 @@ const Cart = () => {
             <div className="lg:col-span-4 space-y-6">
               
               {/* Price Details & Coupons (Order Summary) */}
-              <div ref={summaryRef} className="bg-white p-6 sm:p-8 border border-stone-100 shadow-sm rounded-2xl">
+              <div ref={summaryRef} className="bg-white p-4 sm:p-8 border border-stone-100 shadow-sm rounded-2xl">
                 <h3 className="font-serif text-xl font-bold text-primary mb-6">Order Summary</h3>
                 <div className="space-y-4 text-sm text-secondary">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-3">
                     <span className="text-stone-600">Total MRP</span>
                     <span className="text-primary font-bold">{formatPrice(mrpTotal)}</span>
                   </div>
-                  <div className="flex justify-between text-emerald-600 font-bold">
+                  <div className="flex justify-between gap-3 text-emerald-600 font-bold">
                     <span>Discount on MRP</span>
                     <span>-{formatPrice(discountOnMrp)}</span>
                   </div>
-                  <div className="flex justify-between font-bold text-primary">
+                  <div className="flex justify-between gap-3 font-bold text-primary">
                     <span>Subtotal</span>
                     <span>{formatPrice(subtotal)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-3">
                     <span className="text-stone-600">GST (5%)</span>
                     <span className="text-primary font-bold">{formatPrice(gst)}</span>
                   </div>
-                  <div className="flex justify-between items-center border-b border-stone-50 pb-4 mb-4">
+                  <div className="flex justify-between items-center gap-3 border-b border-stone-50 pb-4 mb-4">
                     <span className="text-stone-600">
                       Shipping
                       {selectedAddressId && deliveryDetails.estimatedFee && ' (estimated)'}
@@ -1316,7 +1316,7 @@ const Cart = () => {
                   
                   {/* Coupon Discount Row */}
                   {isCouponApplied && appliedCoupon && (
-                    <div className="flex justify-between text-emerald-600 font-black animate-pulse bg-emerald-50/50 p-2 rounded-lg border border-emerald-100/50">
+                    <div className="flex flex-col gap-1 text-emerald-600 font-black animate-pulse bg-emerald-50/50 p-2 rounded-lg border border-emerald-100/50 min-[400px]:flex-row min-[400px]:justify-between">
                       <span className="uppercase text-[10px] tracking-widest">{appliedCoupon.description || 'Voucher Discount'}</span>
                       <span>
                         -{formatPrice(appliedCoupon.discount_type === 'percent' ? ((appliedCoupon.eligible_subtotal ?? subtotal) * (appliedCoupon.discount / 100)) : Math.min(appliedCoupon.discount, appliedCoupon.eligible_subtotal ?? subtotal))}
@@ -1324,7 +1324,7 @@ const Cart = () => {
                     </div>
                   )}
 
-                  <div className="pt-2 flex justify-between font-sans font-black text-2xl text-primary">
+                  <div className="pt-2 flex justify-between gap-3 font-sans font-black text-xl sm:text-2xl text-primary">
                     <span className="uppercase text-xs tracking-[0.2em] self-center">{isTotalEstimated ? 'Estimated Total' : 'Grand Total'}</span>
                     <span>{formatPrice(total)}</span>
                   </div>
@@ -1337,7 +1337,7 @@ const Cart = () => {
                     <h4 className="text-xs font-black text-primary uppercase tracking-[0.15em]">Payment Preference</h4>
                   </div>
                   
-                    <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="grid grid-cols-1 gap-3 mb-6 min-[400px]:grid-cols-2">
                       <label className={`flex flex-col items-center justify-center p-3 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'upi_after_confirmation' ? 'border-[#5f259f] bg-[#5f259f]/5 shadow-sm' : 'border-stone-100 bg-white hover:border-stone-200'}`}>
                         <input 
                           type="radio" 

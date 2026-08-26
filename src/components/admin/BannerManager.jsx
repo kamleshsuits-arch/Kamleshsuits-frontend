@@ -10,7 +10,7 @@ const EMPTY_BANNER = {
   bannerId: '', title: '', banner_kind: 'festival', desktop_image: '', mobile_image: '',
   alt_text: '', headline: '', animated_words: '', headline_suffix: '',
   headline_color: '#FFFFFF', animated_word_color: '#FCD34D', headline_suffix_color: '#FFFFFF',
-  subheading: '', cta_label: '', link_url: '', active: true,
+  subheading: '', cta_label: '', cta_background_color: '#FFFFFF', cta_text_color: '#1C1917', link_url: '', active: true,
   starts_at: '', ends_at: '', sort_order: 0,
 };
 
@@ -53,10 +53,17 @@ const BannerManager = ({ showToast }) => {
   };
 
   const openEdit = banner => {
+    const optionalText = value => (value == null || ['null', 'undefined'].includes(String(value).toLowerCase())) ? '' : value;
     setFormData({
       ...EMPTY_BANNER,
       ...banner,
       bannerId: banner.suitId,
+      headline: optionalText(banner.headline),
+      headline_suffix: optionalText(banner.headline_suffix),
+      subheading: optionalText(banner.subheading),
+      cta_label: optionalText(banner.cta_label),
+      link_url: optionalText(banner.link_url),
+      alt_text: optionalText(banner.alt_text),
       animated_words: Array.isArray(banner.animated_words) ? banner.animated_words.join(', ') : (banner.animated_words || ''),
       starts_at: toLocalDateTimeInput(banner.starts_at),
       ends_at: toLocalDateTimeInput(banner.ends_at),
@@ -185,10 +192,12 @@ const BannerManager = ({ showToast }) => {
                   <ColorField label="Text after color" value={formData.headline_suffix_color} onChange={value => setFormData(current => ({ ...current, headline_suffix_color: value }))} />
                 </div>
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 <Field label="Button label (optional)" value={formData.cta_label} onChange={value => setFormData(current => ({ ...current, cta_label: value }))} placeholder="Shop now" />
-                <Field label="Supporting text (optional)" value={formData.subheading} onChange={value => setFormData(current => ({ ...current, subheading: value }))} placeholder="Celebrate with special prices across our new collection." />
+                <ColorField label="Button background color" value={formData.cta_background_color} onChange={value => setFormData(current => ({ ...current, cta_background_color: value }))} />
+                <ColorField label="Button text color" value={formData.cta_text_color} onChange={value => setFormData(current => ({ ...current, cta_text_color: value }))} />
               </div>
+              <Field label="Supporting text (optional)" value={formData.subheading} onChange={value => setFormData(current => ({ ...current, subheading: value }))} placeholder="Celebrate with special prices across our new collection." />
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Click destination" value={formData.link_url} onChange={value => setFormData(current => ({ ...current, link_url: value }))} placeholder="/sale or https://…" icon={<HiExternalLink />} />
                 <Field label="Image alt text" value={formData.alt_text} onChange={value => setFormData(current => ({ ...current, alt_text: value }))} placeholder="Festival collection banner" />
@@ -252,7 +261,7 @@ const ImageUploader = ({ title, detail, image, uploading, onChoose, onClear }) =
 
 const PreviewOverlay = ({ data, compact = false }) => {
   const firstWord = String(data.animated_words || '').split(',').map(word => word.trim()).filter(Boolean)[0];
-  return <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/75 via-black/20 to-transparent p-3 text-white"><div><p className={`${compact ? 'text-[9px]' : 'text-xs'} font-serif font-bold leading-tight`}><span style={{ color: data.headline_color || '#FFFFFF' }}>{data.headline}</span>{firstWord && <> <span style={{ color: data.animated_word_color || '#FCD34D' }}>{firstWord}</span></>} {data.headline_suffix && <span style={{ color: data.headline_suffix_color || '#FFFFFF' }}>{data.headline_suffix}</span>}</p>{data.subheading && <p className="mt-1 line-clamp-2 text-[7px] text-white/85">{data.subheading}</p>}</div></div>;
+  return <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/75 via-black/20 to-transparent p-3 text-white"><div><p className={`${compact ? 'text-[9px]' : 'text-xs'} font-serif font-bold leading-tight`}><span style={{ color: data.headline_color || '#FFFFFF' }}>{data.headline}</span>{firstWord && <> <span style={{ color: data.animated_word_color || '#FCD34D' }}>{firstWord}</span></>} {data.headline_suffix && <span style={{ color: data.headline_suffix_color || '#FFFFFF' }}>{data.headline_suffix}</span>}</p>{data.subheading && <p className="mt-1 line-clamp-2 text-[7px] text-white/85">{data.subheading}</p>}{data.cta_label && <span className="mt-2 inline-block rounded-full px-2 py-1 text-[7px] font-black" style={{ backgroundColor: data.cta_background_color || '#FFFFFF', color: data.cta_text_color || '#1C1917' }}>{data.cta_label}</span>}</div></div>;
 };
 
 export default BannerManager;
