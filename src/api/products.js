@@ -238,11 +238,16 @@ export const trackGuestOrder = async ({ orderId, trackingToken, phone }) => {
   return response.data;
 };
 
-export const updateOrderStatus = async (orderId, status, paymentStatus) => {
+export const fetchOrdersByPhone = async phone => {
+  const response = await axios.post(`${API_URL}/orders/lookup-by-phone`, { phone });
+  return response.data;
+};
+
+export const updateOrderStatus = async (orderId, status, paymentStatus, paymentMethod) => {
   try {
     const response = await axios.patch(
       `${API_URL}/admin/orders/${encodeURIComponent(orderId)}/status`,
-      { status, paymentStatus },
+      { status, paymentStatus, paymentMethod },
       { headers: getAuthHeader() }
     );
     return response.data;

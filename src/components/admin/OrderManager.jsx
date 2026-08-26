@@ -25,6 +25,26 @@ const OrderStatusPill = ({ status }) => {
     );
 };
 
+const normalizePaymentStatus = status => {
+    if (!status || ['Not Requested', 'Cash on Delivery'].includes(status)) return 'Unpaid';
+    return ['Unpaid', 'Pending', 'Paid', 'Refunded'].includes(status) ? status : 'Unpaid';
+};
+
+const normalizePaymentMethod = method => {
+    if (method === 'upi_after_confirmation') return 'upi';
+    return ['cod', 'cash', 'upi', 'phonepe', 'bank_transfer', 'card', 'other'].includes(method) ? method : 'cod';
+};
+
+const paymentMethodLabel = method => ({
+    cod: 'Cash on Delivery',
+    cash: 'Cash',
+    upi: 'UPI',
+    phonepe: 'PhonePe',
+    bank_transfer: 'Bank Transfer',
+    card: 'Card',
+    other: 'Other',
+}[normalizePaymentMethod(method)]);
+
 const OrderManager = ({ showToast, onPendingCountChange, taxonomy = [] }) => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -33,6 +53,7 @@ const OrderManager = ({ showToast, onPendingCountChange, taxonomy = [] }) => {
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [expandedOrder, setExpandedOrder] = useState(null);
     const [updatingOrder, setUpdatingOrder] = useState(null);
+    const [paymentDrafts, setPaymentDrafts] = useState({});
 
     const loadOrders = useCallback(async (showLoader = true) => {
         try {
@@ -41,6 +62,18 @@ const OrderManager = ({ showToast, onPendingCountChange, taxonomy = [] }) => {
             // Sort by Date DESC
             const sortedOrders = (data || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             setOrders(sortedOrders);
+            setPaymentDrafts(current => {
+                const next = { ...current };
+                sortedOrders.forEach(order => {
+                    if (!next[order.orderId]) {
+                        next[order.orderId] = {
+                            status: normalizePaymentStatus(order.paymentStatus),
+                            method: normalizePaymentMethod(order.paymentMethod),
+                        };
+                    }
+                });
+                return next;
+            });
             onPendingCountChange?.(sortedOrders.filter(order => ['Awaiting Confirmation', 'Pending'].includes(order.status)).length);
         } catch (error) {
             console.error('Failed to load orders:', error);
@@ -67,10 +100,9 @@ const OrderManager = ({ showToast, onPendingCountChange, taxonomy = [] }) => {
 
         try {
             setUpdatingOrder(order.orderId);
-            const paymentStatus = status === 'Confirmed'
-                ? (order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Pending')
-                : order.paymentStatus;
-            const updated = await updateOrderStatus(order.orderId, status, paymentStatus);
+            const paymentStatus = normalizePaymentStatus(order.paymentStatus);
+            const paymentMethod = normalizePaymentMethod(order.paymentMethod);
+            const updated = await updateOrderStatus(order.orderId, status, paymentStatus, paymentMethod);
             setOrders(current => current.map(item => item.orderId === order.orderId ? { ...item, ...updated } : item));
             if (['Awaiting Confirmation', 'Pending'].includes(order.status) && !['Awaiting Confirmation', 'Pending'].includes(status)) {
                 onPendingCountChange?.(Math.max(0, orders.filter(item => ['Awaiting Confirmation', 'Pending'].includes(item.status)).length - 1));
@@ -79,6 +111,28 @@ const OrderManager = ({ showToast, onPendingCountChange, taxonomy = [] }) => {
         } catch (error) {
             console.error('Failed to update order:', error);
             if (showToast) showToast('Could not update order. Please try again.', null, 'error');
+        } finally {
+            setUpdatingOrder(null);
+        }
+    };
+
+    const handlePaymentUpdate = async order => {
+        const draft = paymentDrafts[order.orderId] || {
+            status: normalizePaymentStatus(order.paymentStatus),
+            method: normalizePaymentMethod(order.paymentMethod),
+        };
+        try {
+            setUpdatingOrder(order.orderId);
+            const updated = await updateOrderStatus(order.orderId, order.status, draft.status, draft.method);
+            setOrders(current => current.map(item => item.orderId === order.orderId ? { ...item, ...updated } : item));
+            setPaymentDrafts(current => ({
+                ...current,
+                [order.orderId]: { status: draft.status, method: draft.method },
+            }));
+            if (showToast) showToast(`Payment marked ${draft.status} via ${paymentMethodLabel(draft.method)}.`, null, 'success');
+        } catch (error) {
+            console.error('Failed to update payment:', error);
+            if (showToast) showToast('Could not update payment. Please try again.', null, 'error');
         } finally {
             setUpdatingOrder(null);
         }
@@ -95,7 +149,7 @@ const OrderManager = ({ showToast, onPendingCountChange, taxonomy = [] }) => {
             ...(order.items || []).map(item => `${item.title} | Qty ${item.quantity || 1} | ${formatPrice(Number(item.price || 0) * Number(item.quantity || 1))}`),
             '',
             `Total: ${formatPrice(order.total)}`,
-            `Payment: ${order.paymentMethod || 'cod'} (${order.paymentStatus || 'Not Requested'})`,
+            `Payment: ${paymentMethodLabel(order.paymentMethod)} (${normalizePaymentStatus(order.paymentStatus)})`,
             `Status: ${order.status}`,
         ];
         const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' }));
@@ -241,9 +295,9 @@ const OrderManager = ({ showToast, onPendingCountChange, taxonomy = [] }) => {
                                         <td className="px-8 py-5">
                                             <div className="flex items-center gap-2">
                                                 <div className={`w-2 h-2 rounded-full ${order.paymentMethod === 'cod' ? 'bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.5)]' : 'bg-[#5f259f] shadow-[0_0_8px_rgba(95,37,159,0.5)]'}`} />
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-stone-500">{order.paymentMethod}</span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-stone-500">{paymentMethodLabel(order.paymentMethod)}</span>
                                             </div>
-                                            <p className="text-[9px] text-stone-400 mt-1">{order.paymentStatus || 'Not Requested'}</p>
+                                            <p className="text-[9px] text-stone-400 mt-1">{normalizePaymentStatus(order.paymentStatus)}</p>
                                         </td>
                                         <td className="px-8 py-5">
                                             <OrderStatusPill status={order.status} />
@@ -323,6 +377,53 @@ const OrderManager = ({ showToast, onPendingCountChange, taxonomy = [] }) => {
                                                                         <p className="text-xs font-black text-primary">{formatPrice(item.price * item.quantity)}</p>
                                                                     </div>
                                                                 ))}
+                                                            </div>
+                                                            <div className="border-t border-stone-100 bg-white p-5">
+                                                                <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                                                    <div>
+                                                                        <p className="text-sm font-black text-primary">Payment Management</p>
+                                                                        <p className="text-[11px] text-stone-500">Admin can record payment independently from order confirmation.</p>
+                                                                    </div>
+                                                                    {order.paid_at && <p className="text-[10px] font-bold text-emerald-700">Paid {new Date(order.paid_at).toLocaleString('en-IN')}</p>}
+                                                                </div>
+                                                                <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                                                                    <label className="text-[10px] font-black uppercase tracking-wider text-stone-500">
+                                                                        Payment status
+                                                                        <select
+                                                                            value={paymentDrafts[order.orderId]?.status || normalizePaymentStatus(order.paymentStatus)}
+                                                                            onChange={event => setPaymentDrafts(current => ({ ...current, [order.orderId]: { ...(current[order.orderId] || {}), status: event.target.value, method: current[order.orderId]?.method || normalizePaymentMethod(order.paymentMethod) } }))}
+                                                                            className="mt-2 min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 text-xs font-bold normal-case tracking-normal text-primary outline-none focus:border-accent"
+                                                                        >
+                                                                            <option value="Unpaid">Unpaid</option>
+                                                                            <option value="Pending">Pending</option>
+                                                                            <option value="Paid">Paid</option>
+                                                                            <option value="Refunded">Refunded</option>
+                                                                        </select>
+                                                                    </label>
+                                                                    <label className="text-[10px] font-black uppercase tracking-wider text-stone-500">
+                                                                        Paid via / method
+                                                                        <select
+                                                                            value={paymentDrafts[order.orderId]?.method || normalizePaymentMethod(order.paymentMethod)}
+                                                                            onChange={event => setPaymentDrafts(current => ({ ...current, [order.orderId]: { ...(current[order.orderId] || {}), method: event.target.value, status: current[order.orderId]?.status || normalizePaymentStatus(order.paymentStatus) } }))}
+                                                                            className="mt-2 min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 text-xs font-bold normal-case tracking-normal text-primary outline-none focus:border-accent"
+                                                                        >
+                                                                            <option value="cod">Cash on Delivery</option>
+                                                                            <option value="cash">Cash</option>
+                                                                            <option value="upi">UPI</option>
+                                                                            <option value="phonepe">PhonePe</option>
+                                                                            <option value="bank_transfer">Bank Transfer</option>
+                                                                            <option value="card">Card</option>
+                                                                            <option value="other">Other</option>
+                                                                        </select>
+                                                                    </label>
+                                                                    <button
+                                                                        disabled={updatingOrder === order.orderId}
+                                                                        onClick={() => handlePaymentUpdate(order)}
+                                                                        className="min-h-11 self-end rounded-xl bg-accent px-5 text-xs font-black text-white shadow-lg disabled:opacity-50"
+                                                                    >
+                                                                        Save Payment
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                             <div className="bg-stone-50/50 p-6 flex justify-between items-center border-t border-stone-100">
                                                                 <div>
