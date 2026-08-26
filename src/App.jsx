@@ -22,13 +22,25 @@ import { useCart } from './hooks/useCart';
 
 import BottomNav from './components/common/BottomNav';
 import LaunchScreen from './components/common/LaunchScreen';
+import LocationModal from './components/common/LocationModal';
 
 function App() {
-  const { toast, hideToast } = useCart();
+  const { toast, hideToast, deliveryLocation } = useCart();
   const location = useLocation();
   const [showLaunch, setShowLaunch] = React.useState(() => {
     return !sessionStorage.getItem('hasSeenLaunch');
   });
+  const [showLocationWelcome, setShowLocationWelcome] = React.useState(false);
+
+  React.useEffect(() => {
+    const isPublicPage = !location.pathname.startsWith('/admin') && !['/login', '/signup', '/auth-test'].includes(location.pathname);
+    if (showLaunch || deliveryLocation || !isPublicPage || sessionStorage.getItem('kamlesh_location_prompt_seen')) return;
+    const timer = window.setTimeout(() => {
+      sessionStorage.setItem('kamlesh_location_prompt_seen', 'true');
+      setShowLocationWelcome(true);
+    }, 450);
+    return () => window.clearTimeout(timer);
+  }, [showLaunch, deliveryLocation, location.pathname]);
 
   const handleLaunchComplete = () => {
     sessionStorage.setItem('hasSeenLaunch', 'true');
@@ -43,6 +55,7 @@ function App() {
   return (
     <div className={`flex flex-col min-h-screen ${!isAuthPage ? 'pb-16 md:pb-0' : ''}`}>
       {showLaunch && <LaunchScreen onComplete={handleLaunchComplete} />}
+      <LocationModal isOpen={showLocationWelcome} onClose={() => setShowLocationWelcome(false)} welcome />
       {!isAuthPage && <Navbar />}
       <Toast 
         show={toast.show} 

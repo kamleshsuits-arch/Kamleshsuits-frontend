@@ -22,7 +22,8 @@ import { saveGuestOrderReference } from '../../utils/guestOrders';
 const Cart = () => {
   const { 
     cartItems, removeFromCart, updateQuantity, subtotal,
-    addresses, addAddress, removeAddress, updateAddress, clearCart
+    addresses, addAddress, removeAddress, updateAddress, clearCart,
+    setDeliveryLocation
   } = useCart();
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderConfirmed, setOrderConfirmed] = useState(null); // stores order details
@@ -62,6 +63,7 @@ const Cart = () => {
   const [locationMessage, setLocationMessage] = useState('');
   const [locationError, setLocationError] = useState('');
   const [showManualAddress, setShowManualAddress] = useState(false);
+  const [addressChoice, setAddressChoice] = useState(null);
   const [lastAddrCount, setLastAddrCount] = useState(addresses.length);
 
   const getCouponEligibleSubtotal = (coupon) => {
@@ -213,6 +215,7 @@ const Cart = () => {
     setLocationMessage('');
     setLocationError('');
     setShowManualAddress(false);
+    setAddressChoice(null);
   };
 
   const fillFromPincode = async (pin, preserveCity = false) => {
@@ -264,12 +267,31 @@ const Cart = () => {
       longitude
     }));
 
-    const hasCompleteAddress = pincode.length === 6 && city && state && area;
-    setShowManualAddress(!hasCompleteAddress);
+    setShowManualAddress(true);
     setLocationMessage(isApproximate
       ? 'Approximate location found using your internet connection. Check the map and edit it if needed.'
       : 'Location found. Please check the map and save your address.');
-    if (pincode.length === 6) await fillFromPincode(pincode, true);
+    if (pincode.length === 6) {
+      await fillFromPincode(pincode, true);
+      let deliveryResult = { isAllowed: isLikelySupportedPin(pincode) };
+      try {
+        const checked = await validateDelivery(pincode);
+        if (checked?.isAllowed !== null && checked?.isAllowed !== undefined) deliveryResult = checked;
+      } catch {
+        // The local delivery prefix check keeps the location useful if the API is briefly unavailable.
+      }
+      setDeliveryLocation({
+        city,
+        area,
+        state,
+        pincode,
+        latitude,
+        longitude,
+        source: isApproximate ? 'network' : 'gps',
+        isAllowed: deliveryResult.isAllowed === true,
+        deliveryChecked: true,
+      });
+    }
   };
 
   const reverseGeocodeLocation = async (latitude, longitude, isApproximate = false) => {
@@ -361,6 +383,7 @@ const Cart = () => {
   };
 
   const handleUseCurrentLocation = () => {
+    setAddressChoice('current');
     setLocationError('');
     setLocationMessage('');
     const gpsRequestId = ++pinRequestIdRef.current;
@@ -537,6 +560,7 @@ const Cart = () => {
     setShowManualAddress(true);
     setLocationMessage(addr.latitude && addr.longitude ? 'Saved map location loaded.' : '');
     setLocationError('');
+    setAddressChoice(addr.latitude && addr.longitude ? 'current' : 'manual');
     setShowAddressForm(true);
   };
 
@@ -969,6 +993,34 @@ const Cart = () => {
                       </div>
 
                       <div className="sm:col-span-2 rounded-2xl border border-stone-200 bg-white p-4 sm:p-5">
+                        <p className="text-sm font-black text-primary">Is your delivery address the same as your current location?</p>
+                        <p className="mt-1 text-xs leading-relaxed text-stone-500">Choose Yes to fetch the address from your phone, or No to enter it manually.</p>
+                        <div className="mt-4 grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={handleUseCurrentLocation}
+                            disabled={isLocating}
+                            className={`min-h-12 rounded-xl border-2 px-4 text-xs font-black uppercase tracking-wider transition ${addressChoice === 'current' ? 'border-primary bg-primary text-white' : 'border-stone-200 bg-white text-primary'}`}
+                          >
+                            Yes, use current
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAddressChoice('manual');
+                              setShowManualAddress(true);
+                              setLocationMessage('');
+                              setLocationError('');
+                              setAddressForm(prev => ({ ...prev, pincode: '', houseNo: '', area: '', landmark: '', city: '', state: '', latitude: null, longitude: null }));
+                            }}
+                            className={`min-h-12 rounded-xl border-2 px-4 text-xs font-black uppercase tracking-wider transition ${addressChoice === 'manual' ? 'border-primary bg-primary text-white' : 'border-stone-200 bg-white text-primary'}`}
+                          >
+                            No, enter manually
+                          </button>
+                        </div>
+                      </div>
+
+                      {addressChoice === 'current' && <div className="sm:col-span-2 rounded-2xl border border-stone-200 bg-white p-4 sm:p-5">
                         <div className="flex items-start gap-3">
                           <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-white">
                             <HiLocationMarker size={20} />
@@ -1033,7 +1085,7 @@ const Cart = () => {
                         >
                           {showManualAddress ? 'Hide address details' : addressForm.latitude ? 'Edit detected address' : 'Enter address manually'}
                         </button>
-                      </div>
+                      </div>}
 
                       {Object.keys(addressErrors).length > 0 && (
                         <p role="alert" className="sm:col-span-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">

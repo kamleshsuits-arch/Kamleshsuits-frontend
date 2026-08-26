@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import { HiLocationMarker, HiChevronRight } from 'react-icons/hi';
 import { useCart } from '../../hooks/useCart';
 import LocationModal from './LocationModal';
@@ -19,9 +18,10 @@ const LocationBar = ({ className = "" }) => {
             <HiLocationMarker className="text-[#3b82f6]" size={16} />
             
             {deliveryLocation ? (
-              <p className="text-[13px] text-stone-600 font-medium">
-                Delivering to <span className="text-stone-900 font-bold">{deliveryLocation.city} - {deliveryLocation.pincode}</span>
-              </p>
+              <div>
+                <p className="text-[13px] text-stone-600 font-medium">Delivering to <span className="text-stone-900 font-bold">{deliveryLocation.area || deliveryLocation.city}{deliveryLocation.pincode ? ` - ${deliveryLocation.pincode}` : ''}</span></p>
+                {deliveryLocation.deliveryChecked && <p className={`text-[10px] font-bold ${deliveryLocation.isAllowed ? 'text-emerald-600' : 'text-amber-600'}`}>{deliveryLocation.isAllowed ? 'Delivery available' : 'Delivery unavailable'}</p>}
+              </div>
             ) : (
               <p className="text-[13px] text-stone-500 font-medium">
                 Select your location for better insights
