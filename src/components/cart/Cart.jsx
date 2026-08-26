@@ -442,13 +442,13 @@ const Cart = () => {
       }
     }, async (error) => {
       const messages = {
-        1: 'Location permission was not allowed. Tap “Enter address manually” below.',
+        1: 'Exact GPS could not be used by this browser.',
         2: 'Your precise location could not be detected.',
         3: 'Precise GPS is taking too long.'
       };
 
-      if (error.code === 2 || error.code === 3) {
-        setLocationMessage('GPS is slow. Finding your approximate location from the internet...');
+      if ([1, 2, 3].includes(error.code)) {
+        setLocationMessage('Exact GPS is unavailable. Finding your approximate location from the internet...');
         try {
           await reverseGeocodeLocation(undefined, undefined, true);
           setLocationError('');

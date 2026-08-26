@@ -7,8 +7,10 @@ import { getStateFromPin, isLikelySupportedPin } from '../../utils/deliveryUtils
 
 const reverseGeocode = async (latitude, longitude) => {
   const url = new URL('https://api.bigdatacloud.net/data/reverse-geocode-client');
-  url.searchParams.set('latitude', latitude);
-  url.searchParams.set('longitude', longitude);
+  if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+    url.searchParams.set('latitude', latitude);
+    url.searchParams.set('longitude', longitude);
+  }
   url.searchParams.set('localityLanguage', 'en');
   const response = await fetch(url);
   if (!response.ok) throw new Error('Could not read your location.');
@@ -74,29 +76,61 @@ const LocationModal = ({ isOpen, onClose, welcome = false }) => {
       return;
     }
     setIsLocating(true);
+    const saveDetectedPlace = async (place, coords = null, source = 'gps') => {
+      const pin = String(place.postcode || '').replace(/\D/g, '').slice(0, 6);
+      return saveLocation({
+        city: place.city || place.locality || place.principalSubdivision || 'Current location',
+        area: place.locality || place.city || '',
+        state: place.principalSubdivision || getStateFromPin(pin),
+        pincode: pin,
+        latitude: coords ? Number(coords.latitude.toFixed(6)) : null,
+        longitude: coords ? Number(coords.longitude.toFixed(6)) : null,
+        source,
+      });
+    };
+
+    const getApproximateLocation = async () => {
+      const place = await reverseGeocode();
+      await saveDetectedPlace(place, null, 'network');
+    };
+
     navigator.geolocation.getCurrentPosition(async ({ coords }) => {
       try {
         const place = await reverseGeocode(coords.latitude, coords.longitude);
-        const pin = String(place.postcode || '').replace(/\D/g, '').slice(0, 6);
-        await saveLocation({
-          city: place.city || place.locality || place.principalSubdivision || 'Current location',
-          area: place.locality || place.city || '',
-          state: place.principalSubdivision || getStateFromPin(pin),
-          pincode: pin,
-          latitude: Number(coords.latitude.toFixed(6)),
-          longitude: Number(coords.longitude.toFixed(6)),
-          source: 'gps',
-        });
+        await saveDetectedPlace(place, coords);
       } catch (locationError) {
         setError(locationError.message || 'Could not detect your address. Enter your PIN code instead.');
       } finally {
         setIsLocating(false);
       }
-    }, locationError => {
-      setIsLocating(false);
-      setError(locationError.code === 1
-        ? 'Location access was not allowed. You can still enter your PIN code manually.'
-        : 'Your location could not be detected. Check phone location settings or enter your PIN code.');
+    }, async locationError => {
+      let permissionState = 'unknown';
+      try {
+        permissionState = (await navigator.permissions?.query({ name: 'geolocation' }))?.state || 'unknown';
+      } catch {
+        // Permissions API is not available in some iOS and in-app browsers.
+      }
+
+      if (locationError.code === 1 && permissionState === 'denied') {
+        setError('Location is blocked in this browser’s site settings. Enable Location for Kamlesh Suits, then tap the button again.');
+        setIsLocating(false);
+        return;
+      }
+
+      try {
+        // Some mobile and in-app browsers return PERMISSION_DENIED even after the
+        // user taps Allow. An IP-based locality keeps the experience working.
+        await getApproximateLocation();
+        setError('');
+      } catch (fallbackError) {
+        if (!window.isSecureContext) {
+          setError('Location requires a secure HTTPS connection. Please reopen Kamlesh Suits in your main browser or enter your PIN code.');
+        } else {
+          setError(fallbackError.message || 'Exact GPS is unavailable in this browser. Please enter your PIN code.');
+        }
+      } finally {
+        setIsLocating(false);
+      }
     }, { enableHighAccuracy: true, timeout: 18000, maximumAge: 300000 });
   };
 
@@ -146,6 +180,7 @@ const LocationModal = ({ isOpen, onClose, welcome = false }) => {
 
           {result && <div className={`rounded-2xl border p-4 ${result.isAllowed ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}>
             <div className="flex items-start gap-3">{result.isAllowed ? <HiCheckCircle className="mt-0.5 shrink-0 text-emerald-600" size={22} /> : <HiXCircle className="mt-0.5 shrink-0 text-amber-600" size={22} />}<div><p className={`text-sm font-black ${result.isAllowed ? 'text-emerald-800' : 'text-amber-800'}`}>{result.isAllowed ? 'Delivery is available in your area' : 'Delivery is not available in this area yet'}</p><p className="mt-1 text-xs font-semibold text-stone-600">{[result.area, result.city, result.state, result.pincode].filter(Boolean).join(', ')}</p></div></div>
+            {result.source === 'network' && <p className="mt-3 text-[10px] font-semibold text-stone-500">Approximate location used because exact GPS was unavailable. You can correct the PIN code above.</p>}
             <button onClick={onClose} className="mt-4 min-h-11 w-full rounded-xl border border-current text-xs font-black uppercase tracking-wider">Continue shopping</button>
           </div>}
           {error && <p role="alert" className="rounded-xl bg-amber-50 p-3 text-xs font-semibold leading-relaxed text-amber-800">{error}</p>}
