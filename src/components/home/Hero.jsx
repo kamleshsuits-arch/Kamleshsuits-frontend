@@ -4,6 +4,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
+import { HiArrowRight, HiSparkles, HiTag, HiTruck } from "react-icons/hi";
 import LocationBar from "../common/LocationBar";
 import hero1 from "../../assets/hero1.webp";
 import hero2 from "../../assets/hero2.jpg";
@@ -130,93 +131,90 @@ const Hero = () => {
   return (
     <section ref={heroRef} className="relative overflow-hidden">
 
-      {/* ===== MOBILE HERO — Animated Theme Gradient ===== */}
+      {/* ===== MOBILE HERO — Product-first premium edit ===== */}
       <div className="md:hidden relative overflow-hidden theme-animated-gradient">
-        {/* Animated Background Layers */}
-        <div className="theme-blob-1 absolute top-[-60px] right-[-40px] w-64 h-64 rounded-full bg-white/20 blur-3xl pointer-events-none" />
-        <div className="theme-blob-2 absolute bottom-[-30px] left-[-40px] w-48 h-48 rounded-full bg-black/20 blur-3xl pointer-events-none" />
-        
-        {/* Dot pattern overlay for texture */}
+        <div className="theme-blob-1 absolute -right-24 top-4 h-72 w-72 rounded-full bg-amber-300/20 blur-3xl pointer-events-none" />
+        <div className="theme-blob-2 absolute -left-28 bottom-16 h-64 w-64 rounded-full bg-rose-300/20 blur-3xl pointer-events-none" />
         <div className="absolute inset-0 opacity-[0.08] pointer-events-none" style={{
           backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
-          backgroundSize: '24px 24px'
+          backgroundSize: '22px 22px'
         }} />
+        <div className="absolute inset-x-0 top-14 h-px bg-gradient-to-r from-transparent via-amber-200/40 to-transparent" />
 
-        <div ref={mobileHeroRef} className="relative z-10 px-5 pt-16 pb-4">
-          <div className="flex items-center justify-between">
-            {/* Text Side (Left) */}
-            <div className="w-[55%] flex flex-col justify-center">
+        <div ref={mobileHeroRef} className="relative z-10 px-4 pt-[4.5rem] pb-5 min-[380px]:px-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200/25 bg-white/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-amber-100 backdrop-blur-md">
+                <HiSparkles size={13} /> New season edit
+              </div>
               {user && (
-                <p className="text-yellow-100 text-[10px] font-bold uppercase tracking-widest mb-1.5">
+                <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-rose-100/80">
                   Namaste, {user.name?.split(' ')[0] || user.email?.split('@')[0]}
                 </p>
               )}
-
-              <h1 className="text-white font-serif text-2xl leading-snug mb-1 drop-shadow-sm">
-                Shop Premium<br />
-                <span className="text-white italic font-serif text-[22px]">Ladies Suits</span>
+              <h1 className="font-serif text-[1.75rem] leading-[1.05] text-white drop-shadow-sm min-[380px]:text-[2rem]">
+                Your statement look,
+                <span className="mt-1 block italic text-amber-200">beautifully curated.</span>
               </h1>
-              <p className="text-yellow-100/80 text-[9px] font-semibold mb-3 tracking-widest uppercase">
-                Festive &bull; Wedding
-              </p>
+            </div>
+            <span className="shrink-0 rounded-full border border-white/15 bg-black/15 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-white/75 backdrop-blur-sm">
+              Premium suits
+            </span>
+          </div>
 
-              <div className="flex flex-col gap-2 mb-2">
-                <Link
-                  to="/new-arrivals"
-                  className="flex items-center justify-center gap-1.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-inner hover:bg-white/30 transition text-center w-full max-w-[120px]"
-                >
-                  ✨ New Arrivals
-                </Link>
-                <Link
-                  to="/sale"
-                  className="flex items-center justify-center gap-1.5 bg-white text-amber-700 text-[10px] font-black px-3 py-1.5 rounded-full shadow-md hover:shadow-lg transition text-center w-full max-w-[120px]"
-                >
-                  🏷️ Sale On Now
-                </Link>
+          {/* Product gallery: the active item is the main hero highlight. */}
+          <div className="relative mt-4 h-[278px] min-[380px]:h-[300px]" aria-roledescription="carousel" aria-label="Featured suit collection">
+            <div className="absolute left-0 top-6 h-[176px] w-[31%] -rotate-6 overflow-hidden rounded-[1.4rem] border border-white/35 bg-white/10 shadow-2xl">
+              <img src={images[(currentIdx + images.length - 1) % images.length].src} alt={images[(currentIdx + images.length - 1) % images.length].alt} className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#260914]/45 to-transparent" />
+            </div>
+
+            <div className="absolute right-0 top-10 h-[166px] w-[29%] rotate-6 overflow-hidden rounded-[1.4rem] border border-white/35 bg-white/10 shadow-2xl">
+              <img src={images[(currentIdx + 1) % images.length].src} alt={images[(currentIdx + 1) % images.length].alt} className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#260914]/45 to-transparent" />
+            </div>
+
+            <div className="absolute left-1/2 top-0 z-10 h-[252px] w-[61%] max-w-[230px] -translate-x-1/2 overflow-hidden rounded-[2rem] border-[3px] border-white/70 bg-stone-100 shadow-[0_24px_55px_rgba(12,3,8,0.55)] min-[380px]:h-[274px]">
+              <img src={images[prevIdx].src} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
+              <img src={images[currentIdx].src} alt={images[currentIdx].alt} className="image-overlay absolute inset-0 h-full w-full object-cover opacity-0" />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent px-4 pb-4 pt-14 text-white">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-200">Featured piece</p>
+                <p className="mt-0.5 font-serif text-base font-bold">{images[currentIdx].alt}</p>
+              </div>
+              <div className="absolute right-3 top-3 rounded-full border border-white/30 bg-black/25 px-2 py-1 text-[8px] font-black uppercase tracking-wider text-white backdrop-blur-md">
+                0{currentIdx + 1} / 0{images.length}
               </div>
             </div>
 
-            {/* Model Images Block (Right) — Smooth Dual Transition */}
-            <div className="w-[45%] h-[230px] relative pointer-events-none mt-4">
-              {/* Slot 1: Rotating Image stack */}
-              <div className="absolute top-0 right-8 w-[115px] h-[155px] overflow-hidden rounded-xl shadow-xl z-10 border-[3px] border-white/80 rotate-[4deg] bg-amber-50">
-                <img 
-                  src={images[prevIdx].src} 
-                  alt={images[prevIdx].alt} 
-                  className="absolute inset-0 w-full h-full object-cover"
+            <div className="absolute inset-x-0 bottom-0 z-20 flex justify-center gap-1.5">
+              {images.map((image, idx) => (
+                <button
+                  key={image.alt}
+                  type="button"
+                  onClick={() => { setPrevIdx(currentIdx); setCurrentIdx(idx); }}
+                  aria-label={`Show ${image.alt}`}
+                  className={`h-1.5 rounded-full transition-all ${idx === currentIdx ? 'w-7 bg-amber-200' : 'w-1.5 bg-white/35'}`}
                 />
-                <img 
-                  src={images[currentIdx].src} 
-                  alt={images[currentIdx].alt} 
-                  className="absolute inset-0 w-full h-full object-cover image-overlay opacity-0"
-                />
-              </div>
-              {/* Slot 2: Sequential Image stack */}
-              <div className="absolute top-[90px] right-[-10px] w-[100px] h-[135px] overflow-hidden rounded-lg shadow-2xl z-20 border-[2px] border-white/60 -rotate-[6deg] bg-amber-50">
-                <img 
-                  src={images[(prevIdx + 1) % images.length].src} 
-                  alt={images[(prevIdx + 1) % images.length].alt} 
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                <img 
-                  src={images[(currentIdx + 1) % images.length].src} 
-                  alt={images[(currentIdx + 1) % images.length].alt} 
-                  className="absolute inset-0 w-full h-full object-cover image-overlay opacity-0"
-                />
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Free shipping strip */}
-          <div className="bg-white/15 backdrop-blur-sm rounded-2xl px-4 py-2 border border-white/25 flex items-center gap-3 mt-4 w-fit shadow-[0_8px_16px_rgba(0,0,0,0.1)]">
-            <div className="text-xl drop-shadow-md">👗</div>
-            <div className="flex-1 pr-2">
-              <p className="text-white text-[10px] font-black uppercase tracking-wide">Free Shipping</p>
-              <p className="text-yellow-100/90 text-[9px]">On orders of ₹5,000 or more</p>
+          <div className="mt-4 grid grid-cols-2 gap-2.5">
+            <Link to="/new-arrivals" className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-white px-3 text-[10px] font-black uppercase tracking-wide text-[#681f3b] shadow-xl transition active:scale-[0.98]">
+              Explore new <HiArrowRight size={15} />
+            </Link>
+            <Link to="/sale" className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-amber-200/35 bg-amber-200/15 px-3 text-[10px] font-black uppercase tracking-wide text-amber-100 backdrop-blur-md transition active:scale-[0.98]">
+              <HiTag size={15} /> Shop offers
+            </Link>
+          </div>
+
+          <div className="mt-3 flex items-center gap-3 rounded-2xl border border-white/15 bg-black/10 px-3 py-2.5 text-white/90 backdrop-blur-sm">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-amber-200/15 text-amber-200"><HiTruck size={18} /></span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-black uppercase tracking-wide">Complimentary shipping</p>
+              <p className="text-[9px] text-rose-100/75">Automatically applied on orders above ₹5,000</p>
             </div>
-            <div className="bg-white/20 text-white text-[8px] font-black px-2 py-0.5 rounded border border-white/30 uppercase tracking-widest shadow-inner">
-              Auto
-            </div>
+            <span className="rounded-full bg-white/10 px-2 py-1 text-[8px] font-black uppercase tracking-wider">Auto</span>
           </div>
         </div>
 

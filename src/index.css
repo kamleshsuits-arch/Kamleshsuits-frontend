@@ -181,7 +181,11 @@
   }
 
   .theme-animated-gradient {
-    background-color: var(--theme-gold);
+    background:
+      radial-gradient(circle at 82% 18%, rgba(251, 191, 36, 0.2), transparent 32%),
+      radial-gradient(circle at 8% 76%, rgba(251, 113, 133, 0.17), transparent 38%),
+      linear-gradient(145deg, #210811 0%, #4b1028 46%, #762746 72%, #3b0b20 100%);
+    color: #fff;
   }
 
   /* Slide-in from bottom (for cart FAB) */
