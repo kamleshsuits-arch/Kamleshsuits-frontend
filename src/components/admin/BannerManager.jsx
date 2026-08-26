@@ -8,7 +8,7 @@ import { uploadProductImage } from '../../api/products';
 
 const EMPTY_BANNER = {
   bannerId: '', title: '', banner_kind: 'festival', desktop_image: '', mobile_image: '',
-  alt_text: '', headline: '', subheading: '', cta_label: '', link_url: '', active: true,
+  alt_text: '', headline: '', animated_words: '', headline_suffix: '', subheading: '', cta_label: '', link_url: '', active: true,
   starts_at: '', ends_at: '', sort_order: 0,
 };
 
@@ -55,6 +55,7 @@ const BannerManager = ({ showToast }) => {
       ...EMPTY_BANNER,
       ...banner,
       bannerId: banner.suitId,
+      animated_words: Array.isArray(banner.animated_words) ? banner.animated_words.join(', ') : (banner.animated_words || ''),
       starts_at: toLocalDateTimeInput(banner.starts_at),
       ends_at: toLocalDateTimeInput(banner.ends_at),
     });
@@ -93,6 +94,7 @@ const BannerManager = ({ showToast }) => {
       setSaving(true);
       await saveBanner({
         ...formData,
+        animated_words: String(formData.animated_words || '').split(',').map(word => word.trim()).filter(Boolean),
         starts_at: formData.starts_at ? new Date(formData.starts_at).toISOString() : null,
         ends_at: formData.ends_at ? new Date(formData.ends_at).toISOString() : null,
       });
@@ -167,11 +169,19 @@ const BannerManager = ({ showToast }) => {
                 <input ref={mobileInputRef} type="file" accept="image/*" hidden onChange={event => uploadImage(event.target.files?.[0], 'mobile_image')} />
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Banner headline (optional)" value={formData.headline} onChange={value => setFormData(current => ({ ...current, headline: value }))} placeholder="The Festive Edit" />
-                <Field label="Button label (optional)" value={formData.cta_label} onChange={value => setFormData(current => ({ ...current, cta_label: value }))} placeholder="Shop now" />
+              <div className="rounded-2xl border border-violet-100 bg-violet-50/60 p-4 sm:p-5">
+                <h3 className="font-black text-primary">Animated banner heading</h3>
+                <p className="mt-1 text-xs text-stone-500">The middle word changes automatically every 3 seconds. Separate rotating words with commas.</p>
+                <div className="mt-4 grid gap-4 md:grid-cols-3">
+                  <Field label="Text before" value={formData.headline} onChange={value => setFormData(current => ({ ...current, headline: value }))} placeholder="This Rakshabandhan gift" />
+                  <Field label="Rotating words" value={formData.animated_words} onChange={value => setFormData(current => ({ ...current, animated_words: value }))} placeholder="Cotton, Silk, Organza" />
+                  <Field label="Text after" value={formData.headline_suffix} onChange={value => setFormData(current => ({ ...current, headline_suffix: value }))} placeholder="suits" />
+                </div>
               </div>
-              <Field label="Supporting text (optional)" value={formData.subheading} onChange={value => setFormData(current => ({ ...current, subheading: value }))} placeholder="Celebrate with special prices across our new collection." />
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="Button label (optional)" value={formData.cta_label} onChange={value => setFormData(current => ({ ...current, cta_label: value }))} placeholder="Shop now" />
+                <Field label="Supporting text (optional)" value={formData.subheading} onChange={value => setFormData(current => ({ ...current, subheading: value }))} placeholder="Celebrate with special prices across our new collection." />
+              </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Click destination" value={formData.link_url} onChange={value => setFormData(current => ({ ...current, link_url: value }))} placeholder="/sale or https://…" icon={<HiExternalLink />} />
                 <Field label="Image alt text" value={formData.alt_text} onChange={value => setFormData(current => ({ ...current, alt_text: value }))} placeholder="Festival collection banner" />
@@ -191,10 +201,10 @@ const BannerManager = ({ showToast }) => {
             <div className="space-y-4">
               <h3 className="flex items-center gap-2 font-black text-primary"><HiEye /> Responsive preview</h3>
               <div className="overflow-hidden rounded-2xl border border-stone-200 bg-stone-100">
-                {formData.desktop_image ? <picture><source media="(max-width: 767px)" srcSet={formData.mobile_image || formData.desktop_image} /><img src={formData.desktop_image} alt="" className="aspect-[8/3] w-full object-cover" /></picture> : <div className="grid aspect-[8/3] place-items-center text-sm text-stone-400">Desktop preview</div>}
+                {formData.desktop_image ? <div className="relative aspect-[8/3] w-full bg-cover bg-center" style={{ backgroundImage: `url(${formData.desktop_image})` }}><PreviewOverlay data={formData} /></div> : <div className="grid aspect-[8/3] place-items-center text-sm text-stone-400">Desktop preview</div>}
               </div>
               <div className="mx-auto w-48 overflow-hidden rounded-[1.5rem] border-4 border-stone-800 bg-stone-100 shadow-xl">
-                {(formData.mobile_image || formData.desktop_image) ? <img src={formData.mobile_image || formData.desktop_image} alt="" className="aspect-[4/5] w-full object-cover" /> : <div className="grid aspect-[4/5] place-items-center text-xs text-stone-400">Mobile preview</div>}
+                {(formData.mobile_image || formData.desktop_image) ? <div className="relative aspect-[4/5] w-full bg-cover bg-center" style={{ backgroundImage: `url(${formData.mobile_image || formData.desktop_image})` }}><PreviewOverlay data={formData} compact /></div> : <div className="grid aspect-[4/5] place-items-center text-xs text-stone-400">Mobile preview</div>}
               </div>
             </div>
           </div>
@@ -230,5 +240,10 @@ const Field = ({ label, value, onChange, type = 'text', placeholder = '', requir
 const SelectField = ({ label, value, onChange, options }) => <label className="block"><span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-stone-600">{label}</span><select value={value} onChange={event => onChange(event.target.value)} className="asset-control">{options.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>;
 
 const ImageUploader = ({ title, detail, image, uploading, onChoose, onClear }) => <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4"><div className="mb-3 flex items-center justify-between"><div><p className="text-sm font-black text-primary">{title}</p><p className="text-xs text-stone-400">{detail}</p></div>{image && <button type="button" onClick={onClear} className="text-red-500"><HiX /></button>}</div>{image ? <img src={image} alt="" className="mb-3 aspect-[8/3] w-full rounded-xl object-cover" /> : <div className="mb-3 grid aspect-[8/3] place-items-center rounded-xl border border-dashed border-stone-300 bg-white text-3xl text-stone-300"><HiPhotograph /></div>}<button type="button" onClick={onChoose} disabled={uploading} className="admin-secondary-button w-full"><HiUpload /> {uploading ? 'Uploading…' : image ? 'Replace image' : 'Upload image'}</button></div>;
+
+const PreviewOverlay = ({ data, compact = false }) => {
+  const firstWord = String(data.animated_words || '').split(',').map(word => word.trim()).filter(Boolean)[0];
+  return <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/75 via-black/20 to-transparent p-3 text-white"><div><p className={`${compact ? 'text-[9px]' : 'text-xs'} font-serif font-bold leading-tight`}>{data.headline} {firstWord && <span className="text-amber-300">{firstWord}</span>} {data.headline_suffix}</p>{data.subheading && <p className="mt-1 line-clamp-2 text-[7px] text-white/85">{data.subheading}</p>}</div></div>;
+};
 
 export default BannerManager;

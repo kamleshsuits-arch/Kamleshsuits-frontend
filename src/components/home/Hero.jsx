@@ -107,13 +107,13 @@ const Hero = () => {
     return (
       <section className="relative overflow-hidden bg-stone-900">
         <div className="relative md:hidden">
-          <img src={banner.mobile_image || banner.desktop_image} alt={banner.alt_text || banner.title} className="aspect-[4/5] max-h-[680px] w-full object-cover" />
+          <div role="img" aria-label={banner.alt_text || banner.title} className="aspect-[4/5] max-h-[680px] w-full bg-cover bg-center" style={{ backgroundImage: `url(${banner.mobile_image || banner.desktop_image})` }} />
           <BannerOverlay banner={banner} actionLabel={actionLabel} compact />
           <BannerDots banners={liveBanners} current={bannerIdx} onSelect={setBannerIdx} />
           <div className="bg-white rounded-t-[2.5rem] -mt-5 relative z-20 overflow-hidden"><div className="pt-4 pb-1"><LocationBar className="!border-none" /></div></div>
         </div>
         <div className="relative hidden md:block">
-          <img src={banner.desktop_image} alt={banner.alt_text || banner.title} className="aspect-[8/3] min-h-[430px] max-h-[680px] w-full object-cover" />
+          <div role="img" aria-label={banner.alt_text || banner.title} className="aspect-[8/3] min-h-[430px] max-h-[680px] w-full bg-cover bg-center" style={{ backgroundImage: `url(${banner.desktop_image})` }} />
           <BannerOverlay banner={banner} actionLabel={actionLabel} />
           <BannerDots banners={liveBanners} current={bannerIdx} onSelect={setBannerIdx} />
         </div>
@@ -295,17 +295,36 @@ const Hero = () => {
 };
 
 const BannerOverlay = ({ banner, actionLabel, compact = false }) => (
-  <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-black/10 to-transparent md:items-center">
+  <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/80 via-black/25 to-black/5 md:items-center md:bg-gradient-to-r md:from-black/70 md:via-black/20 md:to-transparent">
     <div className={`mx-auto w-full max-w-7xl px-5 text-white sm:px-8 lg:px-12 ${compact ? 'pb-14' : 'pb-10 md:pb-0'}`}>
       <div className="max-w-xl">
         <span className="inline-flex rounded-full border border-white/30 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-sm">{String(banner.banner_kind || 'featured').replace('-', ' ')}</span>
-        {banner.headline && <h1 className={`mt-3 font-serif font-bold leading-tight drop-shadow-lg ${compact ? 'text-3xl' : 'text-5xl lg:text-6xl'}`}>{banner.headline}</h1>}
+        {(banner.headline || banner.headline_suffix || banner.animated_words?.length) && <RotatingBannerHeadline key={banner.suitId} banner={banner} compact={compact} />}
         {banner.subheading && <p className={`mt-3 max-w-lg font-medium text-white/90 drop-shadow ${compact ? 'text-sm' : 'text-lg'}`}>{banner.subheading}</p>}
         {actionLabel && banner.link_url && <BannerAction to={banner.link_url} label={actionLabel} />}
       </div>
     </div>
   </div>
 );
+
+const RotatingBannerHeadline = ({ banner, compact }) => {
+  const words = Array.isArray(banner.animated_words) ? banner.animated_words.filter(Boolean) : [];
+  const [wordIndex, setWordIndex] = useState(0);
+
+  useEffect(() => {
+    if (words.length < 2) return undefined;
+    const timer = setInterval(() => setWordIndex(current => (current + 1) % words.length), 3000);
+    return () => clearInterval(timer);
+  }, [words.length]);
+
+  return (
+    <h1 className={`mt-3 max-w-3xl font-serif font-bold leading-tight drop-shadow-[0_3px_12px_rgba(0,0,0,0.8)] ${compact ? 'text-3xl' : 'text-5xl lg:text-6xl'}`}>
+      {banner.headline && <span>{banner.headline} </span>}
+      {words.length > 0 && <span key={`${banner.suitId}-${wordIndex}`} aria-live="polite" className="inline-block text-amber-300 animate-in fade-in slide-in-from-bottom-2 duration-500">{words[wordIndex]}</span>}
+      {banner.headline_suffix && <span> {banner.headline_suffix}</span>}
+    </h1>
+  );
+};
 
 const BannerAction = ({ to, label }) => {
   const classes = "mt-5 inline-flex min-h-11 items-center rounded-full bg-white px-6 py-3 text-sm font-black text-stone-900 shadow-xl transition hover:bg-accent hover:text-white";
