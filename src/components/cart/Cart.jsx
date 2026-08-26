@@ -64,6 +64,16 @@ const Cart = () => {
   const [showManualAddress, setShowManualAddress] = useState(false);
   const [lastAddrCount, setLastAddrCount] = useState(addresses.length);
 
+  const getCouponEligibleSubtotal = (coupon) => {
+    const categoryIds = Array.isArray(coupon?.category_ids) ? coupon.category_ids : [];
+    if (categoryIds.length === 0) return subtotal;
+    return cartItems.reduce((sum, item) => (
+      categoryIds.includes(item.product_category || 'suits')
+        ? sum + (Number(item.price || 0) * Number(item.quantity || 1))
+        : sum
+    ), 0);
+  };
+
   // Ensure user lands at top of cart page
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -90,10 +100,11 @@ const Cart = () => {
   // Total Payable
   let total = subtotal + gst + shippingFee;
   if (isCouponApplied && appliedCoupon) {
+    const couponSubtotal = Number(appliedCoupon.eligible_subtotal ?? getCouponEligibleSubtotal(appliedCoupon));
     if (appliedCoupon.discount_type === 'percent') {
-        total -= (subtotal * (appliedCoupon.discount / 100));
+        total -= (couponSubtotal * (appliedCoupon.discount / 100));
     } else {
-        total -= appliedCoupon.discount;
+        total -= Math.min(appliedCoupon.discount, couponSubtotal);
     }
   }
 
@@ -138,7 +149,8 @@ const Cart = () => {
   }, []);
 
   const handleSelectCoupon = async (coupon) => {
-    if (subtotal < coupon.min_purchase) return;
+    const eligibleSubtotal = getCouponEligibleSubtotal(coupon);
+    if (eligibleSubtotal < coupon.min_purchase || eligibleSubtotal <= 0) return;
     
     // If already applied, remove it first
     if (isCouponApplied) {
@@ -147,7 +159,12 @@ const Cart = () => {
     }
 
     try {
-      const validated = await validateCoupon(coupon.code, subtotal);
+      const validated = await validateCoupon(coupon.code, subtotal, cartItems.map(item => ({
+        suitId: item.suitId,
+        product_category: item.product_category || 'suits',
+        price: item.price,
+        quantity: item.quantity || 1,
+      })));
       setIsCouponApplied(true);
       setAppliedCoupon(validated);
       setCouponError('');
@@ -1302,7 +1319,7 @@ const Cart = () => {
                     <div className="flex justify-between text-emerald-600 font-black animate-pulse bg-emerald-50/50 p-2 rounded-lg border border-emerald-100/50">
                       <span className="uppercase text-[10px] tracking-widest">{appliedCoupon.description || 'Voucher Discount'}</span>
                       <span>
-                        -{formatPrice(appliedCoupon.discount_type === 'percent' ? (subtotal * (appliedCoupon.discount / 100)) : appliedCoupon.discount)}
+                        -{formatPrice(appliedCoupon.discount_type === 'percent' ? ((appliedCoupon.eligible_subtotal ?? subtotal) * (appliedCoupon.discount / 100)) : Math.min(appliedCoupon.discount, appliedCoupon.eligible_subtotal ?? subtotal))}
                       </span>
                     </div>
                   )}
@@ -1398,7 +1415,8 @@ const Cart = () => {
                             <div className="coupon-scroll-wrap">
                             <div className="flex gap-3 overflow-x-auto pb-3 coupon-scroll snap-x">
                               {availableCoupons.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).map((coupon) => {
-                                const isEligible = subtotal >= coupon.min_purchase;
+                                const couponSubtotal = getCouponEligibleSubtotal(coupon);
+                                const isEligible = couponSubtotal > 0 && couponSubtotal >= coupon.min_purchase;
                                 return (
                                   <div 
                                     key={coupon.code}
@@ -1442,12 +1460,12 @@ const Cart = () => {
                                           <div className="pt-2 border-t border-stone-100 border-dashed space-y-1.5">
                                             <div className="flex justify-between items-center">
                                               <span className="text-[8px] font-bold text-stone-500 uppercase tracking-widest">Add more to unlock</span>
-                                              <span className="text-[9px] font-black text-accent">₹{(coupon.min_purchase - subtotal).toLocaleString()}</span>
+                                              <span className="text-[9px] font-black text-accent">₹{Math.max(0, coupon.min_purchase - couponSubtotal).toLocaleString()}</span>
                                             </div>
                                             <div className="relative h-1.5 bg-stone-100 rounded-full overflow-hidden">
                                               <div
                                                 className="h-full bg-gradient-to-r from-accent to-highlight rounded-full transition-all duration-500"
-                                                style={{ width: `${Math.min((subtotal / coupon.min_purchase) * 100, 100)}%` }}
+                                                style={{ width: `${coupon.min_purchase ? Math.min((couponSubtotal / coupon.min_purchase) * 100, 100) : 100}%` }}
                                               />
                                             </div>
                                             <p className="text-[9px] text-stone-600 font-bold text-right">

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { fetchProducts, addProduct, updateProduct, deleteProduct, uploadProductImage, fetchAllOrders } from '../api/products';
 import { 
     HiPlus, HiPencil, HiTrash, HiPhotograph, HiCurrencyRupee, 
@@ -72,6 +72,7 @@ const AdminDashboard = () => {
     
     // UI Local State
     const [searchTerm, setSearchTerm] = useState('');
+    const [inventoryCategory, setInventoryCategory] = useState('all');
     const [sortConfig, setSortConfig] = useState({ key: 'title', direction: 'asc' });
     const coverInputRef = useRef(null);
     const galleryInputRef = useRef(null);
@@ -239,7 +240,8 @@ const AdminDashboard = () => {
         .filter(p => {
             const search = searchTerm.toLowerCase();
             const categoriesStr = Array.isArray(p.categories) ? p.categories.join(" ") : (p.categories || "");
-            return (
+            const matchesCategory = inventoryCategory === 'all' || (p.product_category || defaultCategory) === inventoryCategory;
+            return matchesCategory && (
                 p.title?.toLowerCase().includes(search) || 
                 (p.session || "").toLowerCase().includes(search) ||
                 categoriesStr.toLowerCase().includes(search) ||
@@ -253,6 +255,9 @@ const AdminDashboard = () => {
         .sort((a, b) => {
             const aVal = a[sortConfig.key] || '';
             const bVal = b[sortConfig.key] || '';
+            if (['price', 'discount', 'stock'].includes(sortConfig.key)) {
+                return sortConfig.direction === 'asc' ? Number(aVal) - Number(bVal) : Number(bVal) - Number(aVal);
+            }
             if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
             if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
             return 0;
@@ -374,7 +379,7 @@ const AdminDashboard = () => {
             } else {
                 const created = await addProduct(dataToSave);
                 setProducts(prev => [created, ...prev]);
-                showToast(`Asset Published: ${formData.title} - New suit is now live on the storefront.`, null, 'success');
+                showToast(`Product Published: ${formData.title} is now live on the storefront.`, null, 'success');
             }
             setIsModalOpen(false);
             // Re-fetch to ensure all fields are perfectly in sync with DB
@@ -524,8 +529,10 @@ const AdminDashboard = () => {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
                     <div>
                         <h1 className="text-3xl font-black text-primary tracking-tight">Admin Dashboard</h1>
-                        <p className="text-stone-600 font-medium text-sm mt-1">Manage products, customer orders and delivery requests</p>
+                        <p className="text-stone-600 font-medium text-sm mt-1">Manage products, orders, promotions, reports and delivery requests</p>
                     </div>
+
+                    <Link to="/admin/banners" className="admin-primary-button shrink-0"><HiPhotograph size={17} /> Banner Management</Link>
 
                     <div className="admin-tabs flex gap-2 bg-white/50 p-1.5 rounded-2xl border border-stone-200 backdrop-blur-sm">
                         <button 
@@ -586,6 +593,12 @@ const AdminDashboard = () => {
 
                 {activeTab === 'inventory' ? (
                     <>
+                        <div className="admin-kpi-grid mb-8">
+                            <AdminKpi label="Total products" value={products.length} detail={`${productTaxonomy.length} catalogue categories`} tone="blue" />
+                            <AdminKpi label="Units in stock" value={products.reduce((sum, product) => sum + Number(product.stock || 0), 0)} detail="Across all products" tone="emerald" />
+                            <AdminKpi label="Low stock" value={products.filter(product => Number(product.stock || 0) < 10).length} detail="Fewer than 10 units" tone="amber" />
+                            <AdminKpi label="Out of stock" value={products.filter(product => Number(product.stock || 0) === 0).length} detail="Needs attention" tone="rose" />
+                        </div>
                         {/* Tab Content Header */}
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 animate-in fade-in duration-700">
                             <div className="flex items-center gap-4">
@@ -601,7 +614,11 @@ const AdminDashboard = () => {
                                  </div>
                             </div>
                             
-                            <div className="flex gap-4 w-full md:w-auto">
+                            <div className="flex flex-wrap gap-3 w-full md:w-auto">
+                                <select value={inventoryCategory} onChange={event => setInventoryCategory(event.target.value)} className="admin-filter-select min-w-44">
+                                    <option value="all">All categories</option>
+                                    {productTaxonomy.map(category => <option key={category.id} value={category.id}>{category.label}</option>)}
+                                </select>
                                 <div className="relative flex-1 md:w-72">
                                     <HiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
                                     <input 
@@ -689,7 +706,7 @@ const AdminDashboard = () => {
                                                         </div>
                                                     </td>
                                                     <td className="px-8 py-5 text-right">
-                                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <div className="flex justify-end gap-2">
                                                             <button onClick={() => handleOpenModal(product)} className="p-3 text-stone-400 hover:text-primary hover:bg-white rounded-xl shadow-sm border border-stone-100 hover:border-stone-200 transition-all"><HiPencil size={18} /></button>
                                                             <button onClick={() => handleDelete(product.suitId)} className="p-3 text-stone-400 hover:text-red-500 hover:bg-white rounded-xl shadow-sm border border-stone-100 hover:border-red-100 transition-all"><HiTrash size={18} /></button>
                                                         </div>
@@ -703,13 +720,13 @@ const AdminDashboard = () => {
                         )}
                     </>
                 ) : activeTab === 'orders' ? (
-                    <OrderManager showToast={showToast} onPendingCountChange={setPendingOrderCount} />
+                    <OrderManager showToast={showToast} onPendingCountChange={setPendingOrderCount} taxonomy={productTaxonomy} />
                 ) : activeTab === 'coupons' ? (
-                    <CouponManager showToast={showToast} />
+                    <CouponManager showToast={showToast} taxonomy={productTaxonomy} />
                 ) : activeTab === 'delivery' ? (
-                    <DeliveryDemandInsights />
+                    <DeliveryDemandInsights showToast={showToast} />
                 ) : (
-                    <AnalyticsTerminal products={products} />
+                    <AnalyticsTerminal products={products} taxonomy={productTaxonomy} />
                 )}
             </div>
 
@@ -728,6 +745,7 @@ const AdminDashboard = () => {
                                     {editingProduct ? 'Update Asset' : 'New Asset'}
                                 </h2>
                                 </div>
+                                {filteredProducts.length === 0 && <div className="p-16 text-center text-sm font-bold text-stone-500">No products match this category or search.</div>}
                             </div>
                             <button type="button" onClick={() => setIsModalOpen(false)} disabled={uploading || isSaving} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white hover:text-primary disabled:cursor-wait disabled:opacity-50" aria-label="Close product form">
                                 <HiX size={20} />
@@ -1102,6 +1120,13 @@ const AdminDashboard = () => {
 };
 
 
+
+const AdminKpi = ({ label, value, detail, tone }) => (
+    <div className="admin-kpi-card">
+        <span className={`admin-kpi-dot admin-kpi-dot-${tone}`} />
+        <div><p>{label}</p><strong>{value}</strong><small>{detail}</small></div>
+    </div>
+);
 
 const TableHead = ({ label, sortKey, currentSort, onSort }) => (
     <th className="px-8 py-6">

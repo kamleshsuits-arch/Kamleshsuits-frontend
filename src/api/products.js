@@ -209,6 +209,20 @@ export const fetchDeliveryDemands = async () => {
   }
 };
 
+export const updateDeliveryDemand = async (demandId, updates) => {
+  try {
+    const response = await axios.patch(
+      `${API_URL}/admin/delivery/demands/${encodeURIComponent(demandId)}`,
+      updates,
+      { headers: getAuthHeader() }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Update delivery demand error:", err);
+    throw err;
+  }
+};
+
 export const fetchProductTaxonomy = async () => {
   try {
     const response = await axios.get(`${API_URL}/product-taxonomy`);

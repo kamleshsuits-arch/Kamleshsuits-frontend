@@ -10,6 +10,7 @@ import hero2 from "../../assets/hero2.jpg";
 import rustic from "../../assets/Rustic.jpeg";
 import naviBlue from "../../assets/Navi_blue.jpeg";
 import brown from "../../assets/Brown.jpeg";
+import { fetchPublicBanners } from "../../api/banners";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -21,6 +22,8 @@ const Hero = () => {
   const mobileHeroRef = useRef(null);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [prevIdx, setPrevIdx] = useState(0);
+  const [liveBanners, setLiveBanners] = useState([]);
+  const [bannerIdx, setBannerIdx] = useState(0);
 
   const images = [
     { src: rustic, alt: "Rustic Suit" },
@@ -29,6 +32,30 @@ const Hero = () => {
     { src: hero1, alt: "Elegant Suit" },
     { src: hero2, alt: "Cotton Suit" }
   ];
+
+  useEffect(() => {
+    let active = true;
+    const loadBanners = async () => {
+      try {
+        const data = await fetchPublicBanners();
+        if (active) {
+          setLiveBanners(data || []);
+          setBannerIdx(current => (data?.length ? current % data.length : 0));
+        }
+      } catch (error) {
+        console.error('Home banners unavailable; using the default hero.', error);
+      }
+    };
+    loadBanners();
+    const refresh = setInterval(loadBanners, 60000);
+    return () => { active = false; clearInterval(refresh); };
+  }, []);
+
+  useEffect(() => {
+    if (liveBanners.length < 2) return undefined;
+    const timer = setInterval(() => setBannerIdx(current => (current + 1) % liveBanners.length), 6000);
+    return () => clearInterval(timer);
+  }, [liveBanners.length]);
 
   // Auto-advance carousel
   useEffect(() => {
@@ -73,6 +100,26 @@ const Hero = () => {
     }, heroRef);
     return () => ctx.revert();
   }, []);
+
+  if (liveBanners.length > 0) {
+    const banner = liveBanners[bannerIdx] || liveBanners[0];
+    const actionLabel = banner.cta_label || (banner.link_url ? 'Explore collection' : '');
+    return (
+      <section className="relative overflow-hidden bg-stone-900">
+        <div className="relative md:hidden">
+          <img src={banner.mobile_image || banner.desktop_image} alt={banner.alt_text || banner.title} className="aspect-[4/5] max-h-[680px] w-full object-cover" />
+          <BannerOverlay banner={banner} actionLabel={actionLabel} compact />
+          <BannerDots banners={liveBanners} current={bannerIdx} onSelect={setBannerIdx} />
+          <div className="bg-white rounded-t-[2.5rem] -mt-5 relative z-20 overflow-hidden"><div className="pt-4 pb-1"><LocationBar className="!border-none" /></div></div>
+        </div>
+        <div className="relative hidden md:block">
+          <img src={banner.desktop_image} alt={banner.alt_text || banner.title} className="aspect-[8/3] min-h-[430px] max-h-[680px] w-full object-cover" />
+          <BannerOverlay banner={banner} actionLabel={actionLabel} />
+          <BannerDots banners={liveBanners} current={bannerIdx} onSelect={setBannerIdx} />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section ref={heroRef} className="relative overflow-hidden">
@@ -246,5 +293,29 @@ const Hero = () => {
     </section>
   );
 };
+
+const BannerOverlay = ({ banner, actionLabel, compact = false }) => (
+  <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-black/10 to-transparent md:items-center">
+    <div className={`mx-auto w-full max-w-7xl px-5 text-white sm:px-8 lg:px-12 ${compact ? 'pb-14' : 'pb-10 md:pb-0'}`}>
+      <div className="max-w-xl">
+        <span className="inline-flex rounded-full border border-white/30 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-sm">{String(banner.banner_kind || 'featured').replace('-', ' ')}</span>
+        {banner.headline && <h1 className={`mt-3 font-serif font-bold leading-tight drop-shadow-lg ${compact ? 'text-3xl' : 'text-5xl lg:text-6xl'}`}>{banner.headline}</h1>}
+        {banner.subheading && <p className={`mt-3 max-w-lg font-medium text-white/90 drop-shadow ${compact ? 'text-sm' : 'text-lg'}`}>{banner.subheading}</p>}
+        {actionLabel && banner.link_url && <BannerAction to={banner.link_url} label={actionLabel} />}
+      </div>
+    </div>
+  </div>
+);
+
+const BannerAction = ({ to, label }) => {
+  const classes = "mt-5 inline-flex min-h-11 items-center rounded-full bg-white px-6 py-3 text-sm font-black text-stone-900 shadow-xl transition hover:bg-accent hover:text-white";
+  return to.startsWith('/') ? <Link to={to} className={classes}>{label}</Link> : <a href={to} className={classes}>{label}</a>;
+};
+
+const BannerDots = ({ banners, current, onSelect }) => banners.length > 1 && (
+  <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-2 md:bottom-6">
+    {banners.map((banner, index) => <button key={banner.suitId} onClick={() => onSelect(index)} aria-label={`Show banner ${index + 1}`} className={`h-2 rounded-full shadow transition-all ${index === current ? 'w-8 bg-white' : 'w-2 bg-white/55 hover:bg-white'}`} />)}
+  </div>
+);
 
 export default Hero;

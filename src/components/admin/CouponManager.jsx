@@ -1,35 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { 
     HiPlus, HiTrash, HiCheck, HiX, HiTag, HiCalendar, 
     HiCurrencyRupee, HiChatAlt, HiUserGroup, HiSparkles, HiPencil
 } from 'react-icons/hi';
 import { fetchCoupons, saveCoupon, deleteCoupon } from '../../api/coupons';
-import { useAuth } from '../../context/AuthContext';
 
-const CouponManager = ({ showToast }) => {
-    const { user } = useAuth();
-    const token = user?.token;
+const EMPTY_FORM = { code: '', discount: '', type: 'flat', min_purchase: '', usage_limit: '', expires_at: '', description: '', category_ids: [] };
+
+const CouponManager = ({ showToast, taxonomy = [] }) => {
     const [coupons, setCoupons] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     
-    const [formData, setFormData] = useState({
-        code: '',
-        discount: '',
-        type: 'flat',
-        min_purchase: '',
-        usage_limit: '',
-        expires_at: '',
-        description: ''
-    });
+    const [formData, setFormData] = useState(EMPTY_FORM);
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             setLoading(true);
             const data = await fetchCoupons();
@@ -40,7 +27,11 @@ const CouponManager = ({ showToast }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [showToast]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const handleEdit = (coupon) => {
         setFormData({
@@ -50,7 +41,8 @@ const CouponManager = ({ showToast }) => {
             min_purchase: coupon.min_purchase || '',
             usage_limit: coupon.usage_limit || '',
             expires_at: coupon.expires_at ? coupon.expires_at.split('T')[0] : '',
-            description: coupon.description || ''
+            description: coupon.description || '',
+            category_ids: Array.isArray(coupon.category_ids) ? coupon.category_ids : []
         });
         setIsEditing(true);
         setShowForm(true);
@@ -65,7 +57,7 @@ const CouponManager = ({ showToast }) => {
             showToast(`Success: Coupon ${formData.code} ${isEditing ? 'updated' : 'live now'}.`, null, 'success');
             setShowForm(false);
             setIsEditing(false);
-            setFormData({ code: '', discount: '', type: 'flat', min_purchase: '', usage_limit: '', expires_at: '', description: '' });
+            setFormData(EMPTY_FORM);
             loadData();
         } catch (error) {
             showToast('Error: ' + error.message, null, 'error');
@@ -80,7 +72,7 @@ const CouponManager = ({ showToast }) => {
             await deleteCoupon(code);
             showToast('Success: Coupon purged from system.', null, 'success');
             loadData();
-        } catch (error) {
+        } catch {
             showToast('Error: Failed to delete coupon.', null, 'error');
         }
     };
@@ -92,14 +84,14 @@ const CouponManager = ({ showToast }) => {
             {/* Header Section */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-3xl font-black text-primary uppercase tracking-tight">Voucher Command Center</h2>
-                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">Manage dynamic & seasonal rewards</p>
+                    <h2 className="text-2xl font-black text-primary tracking-tight">Coupons</h2>
+                    <p className="text-sm font-medium text-stone-500 mt-1">Create store-wide or product-category offers.</p>
                 </div>
                 <button 
                     onClick={() => {
                         if (showForm) setIsEditing(false);
                         setShowForm(!showForm);
-                        if (!showForm) setFormData({ code: '', discount: '', type: 'flat', min_purchase: '', usage_limit: '', expires_at: '', description: '' });
+                        if (!showForm) setFormData(EMPTY_FORM);
                     }}
                     className="flex items-center gap-2 px-6 py-3.5 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-accent transition-all shadow-xl shadow-primary/20"
                 >
@@ -173,6 +165,21 @@ const CouponManager = ({ showToast }) => {
                         </div>
                         <div className="space-y-6">
                             <InputBox label="Expiry Date" type="date" value={formData.expires_at} onChange={(v) => setFormData({...formData, expires_at: v})} />
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-stone-600 uppercase tracking-wider">Applicable product categories</label>
+                                <p className="text-xs text-stone-400">Leave every option unchecked to apply this coupon store-wide.</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-2xl border border-stone-200 bg-stone-50 p-3 max-h-44 overflow-y-auto">
+                                    {taxonomy.map(category => {
+                                        const selected = formData.category_ids.includes(category.id);
+                                        return (
+                                            <label key={category.id} className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 text-xs font-bold transition ${selected ? 'border-primary bg-white text-primary' : 'border-transparent text-stone-500 hover:bg-white'}`}>
+                                                <input type="checkbox" checked={selected} onChange={() => setFormData(current => ({ ...current, category_ids: selected ? current.category_ids.filter(id => id !== category.id) : [...current.category_ids, category.id] }))} />
+                                                {category.label}
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                             <div className="space-y-1">
                                 <label className="text-[9px] font-black text-stone-500 uppercase tracking-widest ml-1">Event Description</label>
                                 <textarea 
@@ -196,6 +203,7 @@ const CouponManager = ({ showToast }) => {
 
             {/* Coupons List */}
             <div className="bg-white rounded-[2.5rem] shadow-sm border border-stone-100 overflow-hidden">
+                <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-stone-50/50 border-b border-stone-100">
@@ -221,6 +229,7 @@ const CouponManager = ({ showToast }) => {
                                         </span>
                                     </div>
                                     <p className="text-[9px] text-stone-400 mt-1 font-bold uppercase tracking-tighter">Min Purchase: ₹{c.min_purchase || 0}</p>
+                                    <p className="mt-1 text-xs font-bold text-stone-500">{c.category_ids?.length ? c.category_ids.map(id => taxonomy.find(category => category.id === id)?.label || id).join(', ') : 'All product categories'}</p>
                                 </td>
                                 <td className="px-8 py-6">
                                     <div className="flex items-center gap-1.5">
@@ -252,6 +261,7 @@ const CouponManager = ({ showToast }) => {
                         ))}
                     </tbody>
                 </table>
+                </div>
                 {coupons.length === 0 && (
                     <div className="py-20 text-center text-stone-400 bg-stone-50/30">
                         <HiTag className="mx-auto text-4xl mb-4 opacity-20" />

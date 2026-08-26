@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
     AreaChart, Area, PieChart, Pie, Cell, Legend, Line
@@ -24,31 +24,34 @@ const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
 };
 
-const AnalyticsTerminal = ({ products: allProducts }) => {
-    const products = useMemo(() => allProducts.filter(p => (p.type || '').toLowerCase() === 'suit'), [allProducts]);
+const AnalyticsTerminal = ({ products: allProducts, taxonomy = [] }) => {
+    const products = useMemo(() => allProducts || [], [allProducts]);
+    const categoryLabel = useCallback(categoryId => taxonomy.find(category => category.id === categoryId)?.label || categoryId || 'Suits', [taxonomy]);
     const [activeDetailModal, setActiveDetailModal] = useState(null);
     const [realUsers, setRealUsers] = useState([]);
     const [realOrders, setRealOrders] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
 
-    useEffect(() => {
-        const loadData = async () => {
-            setLoadingData(true);
-            try {
-                const [usersData, ordersData] = await Promise.all([
-                    fetchAllUsers(),
-                    fetchAllOrders()
-                ]);
-                setRealUsers(usersData || []);
-                setRealOrders(ordersData || []);
-            } catch (err) {
-                console.error("Failed to fetch analytics data", err);
-            } finally {
-                setLoadingData(false);
-            }
-        };
-        loadData();
+    const loadData = useCallback(async (showLoader = false) => {
+        if (showLoader) setLoadingData(true);
+        try {
+            const [usersData, ordersData] = await Promise.all([fetchAllUsers(), fetchAllOrders()]);
+            setRealUsers(usersData || []);
+            setRealOrders(ordersData || []);
+        } catch (err) {
+            console.error("Failed to fetch analytics data", err);
+        } finally {
+            if (showLoader) setLoadingData(false);
+        }
     }, []);
+
+    useEffect(() => {
+        loadData(true);
+        const interval = setInterval(() => loadData(false), 30000);
+        const handleFocus = () => loadData(false);
+        window.addEventListener('focus', handleFocus);
+        return () => { clearInterval(interval); window.removeEventListener('focus', handleFocus); };
+    }, [loadData]);
 
     // Enriched users with order info
     const userProfiles = useMemo(() => {
@@ -165,49 +168,57 @@ const AnalyticsTerminal = ({ products: allProducts }) => {
         realOrders.forEach(order => {
             if (order.status === 'Cancelled') return;
             order.items?.forEach(item => {
-                const cats = Array.isArray(item.categories) && item.categories.length > 0 ? item.categories : ['General'];
-                cats.forEach(cat => {
-                    catMap[cat] = (catMap[cat] || 0) + (parseInt(item.quantity) || 1);
-                });
+                const product = products.find(entry => entry.suitId === item.suitId);
+                const category = categoryLabel(item.product_category || product?.product_category || 'suits');
+                catMap[category] = (catMap[category] || 0) + (parseInt(item.quantity) || 1);
             });
         });
         
         // If empty fallback
         if (Object.keys(catMap).length === 0) {
             products.forEach(p => {
-                const cats = Array.isArray(p.categories) && p.categories.length > 0 ? p.categories : ['General'];
-                cats.forEach(cat => {
-                    catMap[cat] = (catMap[cat] || 0) + (p.sales || 0);
-                });
+                const category = categoryLabel(p.product_category || 'suits');
+                catMap[category] = (catMap[category] || 0) + 1;
             });
         }
         
         return Object.entries(catMap).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value).slice(0, 6);
-    }, [realOrders, products]);
+    }, [realOrders, products, categoryLabel]);
 
-    const fabricData = useMemo(() => {
-        const famMap = {};
-        realOrders.forEach(order => {
-            if (order.status === 'Cancelled') return;
-            order.items?.forEach(item => {
-                const fam = item.fabric_family || 'Other';
-                famMap[fam] = (famMap[fam] || 0) + (parseInt(item.quantity) || 1);
-            });
+    const inventoryData = useMemo(() => {
+        const categoryStock = {};
+        products.forEach(product => {
+            const category = categoryLabel(product.product_category || 'suits');
+            categoryStock[category] = (categoryStock[category] || 0) + (parseInt(product.stock) || 0);
         });
-        
-        // fallback
-        if (Object.keys(famMap).length === 0) {
-            products.forEach(p => {
-                const fam = p.fabric_family || 'Other';
-                famMap[fam] = (famMap[fam] || 0) + (p.sales || 0);
-            });
-        }
-        
-        return Object.entries(famMap).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value).slice(0, 5);
-    }, [realOrders, products]);
+        return Object.entries(categoryStock).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 7);
+    }, [products, categoryLabel]);
+
+    const exportReport = () => {
+        const escapeCsv = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+        const rows = [['Order ID', 'Date', 'Status', 'Customer', 'Product', 'Category', 'Quantity', 'Unit Price', 'Order Total']];
+        realOrders.forEach(order => (order.items || []).forEach(item => {
+            const product = products.find(entry => entry.suitId === item.suitId);
+            rows.push([
+                order.orderId, order.created_at, order.status, order.user_name,
+                item.title, categoryLabel(item.product_category || product?.product_category || 'suits'),
+                item.quantity || 1, item.price || 0, order.total || 0,
+            ]);
+        }));
+        const url = URL.createObjectURL(new Blob([rows.map(row => row.map(escapeCsv).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `kamlesh-suits-report-${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
 
     return (
         <div className="space-y-8">
+            <div className="admin-section-header">
+                <div><h2 className="text-2xl font-black text-primary">Reports</h2><p className="mt-1 text-sm text-stone-500">Live catalogue, revenue, customer and category performance.</p></div>
+                <button onClick={exportReport} className="admin-secondary-button"><HiExternalLink /> Export CSV</button>
+            </div>
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 {/* KPI Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -336,11 +347,11 @@ const AnalyticsTerminal = ({ products: allProducts }) => {
                     </div>
 
                     <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-stone-100">
-                        <h3 className="text-xl font-black text-primary uppercase tracking-tight mb-1">Fabric Dominance</h3>
-                        <p className="text-stone-400 text-xs font-bold uppercase tracking-widest mb-8">Top Selling Fabric Families</p>
+                        <h3 className="text-xl font-black text-primary uppercase tracking-tight mb-1">Inventory by Category</h3>
+                        <p className="text-stone-400 text-xs font-bold uppercase tracking-widest mb-8">Current units available across the catalogue</p>
                         <div className="h-[250px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={fabricData} layout="vertical">
+                                <BarChart data={inventoryData} layout="vertical">
                                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                                     <XAxis type="number" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700}} dy={10} />
                                     <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 8, fontWeight: 700}} width={80} />
@@ -362,6 +373,7 @@ const AnalyticsTerminal = ({ products: allProducts }) => {
                     orders={realOrders}
                     stats={stats}
                     loading={loadingData}
+                    onExport={exportReport}
                     onClose={() => setActiveDetailModal(null)} 
                 />
             )}
@@ -369,7 +381,7 @@ const AnalyticsTerminal = ({ products: allProducts }) => {
     );
 };
 
-const DetailModal = ({ type, products, users, orders, stats, loading, onClose }) => {
+const DetailModal = ({ type, products, users, orders, stats, loading, onClose, onExport }) => {
     const modalConfig = {
         revenue: { title: 'Most Sold Items (Revenue Breakdown)', icon: <HiCurrencyRupee />, color: 'text-emerald-500' },
         users: { title: 'Deep User Insights', icon: <HiUsers />, color: 'text-blue-500' },
@@ -552,7 +564,7 @@ const DetailModal = ({ type, products, users, orders, stats, loading, onClose })
 
                 <div className="px-10 py-6 bg-stone-50 border-t border-stone-100 flex justify-end gap-3">
                     <button onClick={onClose} className="px-8 py-3 bg-white border border-stone-200 rounded-2xl font-black text-[10px] uppercase tracking-widest text-stone-400 hover:text-primary transition-all">Close Details</button>
-                    <button className="px-8 py-3 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-accent shadow-xl shadow-primary/20"><HiExternalLink /> Export Dashboard Data</button>
+                    <button onClick={onExport} className="px-8 py-3 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-accent shadow-xl shadow-primary/20"><HiExternalLink /> Export Dashboard Data</button>
                 </div>
             </div>
         </div>

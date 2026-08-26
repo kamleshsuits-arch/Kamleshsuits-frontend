@@ -9,6 +9,7 @@ import Signup from './pages/Signup';
 import AuthTest from './pages/AuthTest';
 import AccountPage from './pages/AccountPage';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminBanners from './pages/AdminBanners';
 import NewArrivals from './pages/NewArrivals';
 import Sale from './pages/Sale';
 import TermsAndConditions from './pages/TermsAndConditions';
@@ -20,11 +21,10 @@ import Toast from './components/common/Toast';
 import { useCart } from './hooks/useCart';
 
 import BottomNav from './components/common/BottomNav';
-import LocationBar from './components/common/LocationBar';
 import LaunchScreen from './components/common/LaunchScreen';
 
 function App() {
-  const { toast, hideToast, deliveryLocation } = useCart();
+  const { toast, hideToast } = useCart();
   const location = useLocation();
   const [showLaunch, setShowLaunch] = React.useState(() => {
     return !sessionStorage.getItem('hasSeenLaunch');
@@ -39,7 +39,6 @@ function App() {
   const isHome = location.pathname === '/';
   const isSpecialSession = ['/new-arrivals', '/sale', '/wishlist'].includes(location.pathname);
   const skipGlobalPadding = isHome || isSpecialSession;
-  const isProductPage = location.pathname.startsWith('/product');
 
   return (
     <div className={`flex flex-col min-h-screen ${!isAuthPage ? 'pb-16 md:pb-0' : ''}`}>
@@ -66,6 +65,7 @@ function App() {
           <Route path="/sale" element={<Sale />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/banners" element={<AdminBanners />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/auth-test" element={<AuthTest />} />

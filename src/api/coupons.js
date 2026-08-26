@@ -60,9 +60,9 @@ export const deleteCoupon = async (code) => {
     }
 };
 
-export const validateCoupon = async (code, subtotal) => {
+export const validateCoupon = async (code, subtotal, items = []) => {
     try {
-        const response = await axios.post(`${API_URL}/coupons/validate`, { code, subtotal });
+        const response = await axios.post(`${API_URL}/coupons/validate`, { code, subtotal, items });
         return response.data;
     } catch (err) {
         console.error("Validate coupon error:", err);

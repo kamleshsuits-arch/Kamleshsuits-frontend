@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from "../../hooks/useCart.jsx";
 import { useAuth } from "../../context/AuthContext";
-import { HiMenu, HiX, HiOutlineHeart, HiOutlineShoppingBag, HiChevronDown, HiUserCircle, HiLogout, HiShoppingBag, HiHeart, HiCollection, HiShieldCheck, HiGift, HiCheck, HiClipboard, HiOutlineUser } from 'react-icons/hi';
+import { HiMenu, HiX, HiOutlineHeart, HiOutlineShoppingBag, HiChevronDown, HiUserCircle, HiLogout, HiShoppingBag, HiHeart, HiCollection, HiShieldCheck, HiGift, HiCheck, HiClipboard, HiOutlineUser, HiPhotograph } from 'react-icons/hi';
 import { gsap } from 'gsap';
 import logo from "../../assets/K_suit.png";
 
@@ -137,9 +137,14 @@ const Navbar = () => {
                       <HiCollection size={18} className="text-accent/60" /> Dashboard
                     </Link>
                     {isAdmin && (
-                      <Link to="/admin" onClick={() => setUserDropdownOpen(false)} className="flex items-center gap-3 px-5 py-3 text-emerald-600 hover:bg-emerald-50 transition text-sm font-bold">
-                        <HiShieldCheck size={18} className="text-emerald-400" /> Admin Management
-                      </Link>
+                      <>
+                        <Link to="/admin" onClick={() => setUserDropdownOpen(false)} className="flex items-center gap-3 px-5 py-3 text-emerald-600 hover:bg-emerald-50 transition text-sm font-bold">
+                          <HiShieldCheck size={18} className="text-emerald-400" /> Admin Management
+                        </Link>
+                        <Link to="/admin/banners" onClick={() => setUserDropdownOpen(false)} className="flex items-center gap-3 px-5 py-3 text-violet-700 hover:bg-violet-50 transition text-sm font-bold">
+                          <HiPhotograph size={18} className="text-violet-500" /> Banner Management
+                        </Link>
+                      </>
                     )}
                     <Link to="/track-order" onClick={() => setUserDropdownOpen(false)} className="flex items-center gap-3 px-5 py-3 text-stone-600 hover:text-primary hover:bg-stone-50 transition text-sm font-medium">
                       <HiShoppingBag size={18} className="text-accent/60" /> Track Orders
@@ -158,6 +163,7 @@ const Navbar = () => {
 
             {/* Mobile right icons — wishlist + account ONLY (cart is floating FAB) */}
             <div className="flex items-center md:hidden gap-1">
+              {isAdmin && <Link to="/admin/banners" className="relative p-3 min-w-11 min-h-11" aria-label="Banner Management"><HiPhotograph size={22} className="text-white/90" /></Link>}
               <Link to="/wishlist" className="relative p-3 min-w-11 min-h-11" aria-label="Wishlist">
                 <HiOutlineHeart size={22} className="text-white/90" />
                 {wishlistItems.length > 0 && (

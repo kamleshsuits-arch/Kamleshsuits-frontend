@@ -25,10 +25,12 @@ const OrderStatusPill = ({ status }) => {
     );
 };
 
-const OrderManager = ({ showToast, onPendingCountChange }) => {
+const OrderManager = ({ showToast, onPendingCountChange, taxonomy = [] }) => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All');
+    const [categoryFilter, setCategoryFilter] = useState('all');
     const [expandedOrder, setExpandedOrder] = useState(null);
     const [updatingOrder, setUpdatingOrder] = useState(null);
 
@@ -82,14 +84,40 @@ const OrderManager = ({ showToast, onPendingCountChange }) => {
         }
     };
 
+    const downloadOrderSlip = (order) => {
+        const lines = [
+            'KAMLESH SUITS — ORDER SLIP',
+            `Order: ${order.orderId}`,
+            `Date: ${new Date(order.created_at).toLocaleString('en-IN')}`,
+            `Customer: ${order.user_name || 'Customer'} | ${order.user_phone || ''}`,
+            `Delivery: ${[order.address?.houseNo, order.address?.area, order.address?.city, order.address?.state, order.address?.pincode].filter(Boolean).join(', ')}`,
+            '',
+            ...(order.items || []).map(item => `${item.title} | Qty ${item.quantity || 1} | ${formatPrice(Number(item.price || 0) * Number(item.quantity || 1))}`),
+            '',
+            `Total: ${formatPrice(order.total)}`,
+            `Payment: ${order.paymentMethod || 'cod'} (${order.paymentStatus || 'Not Requested'})`,
+            `Status: ${order.status}`,
+        ];
+        const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${String(order.orderId).replace(/[^a-z0-9-]/gi, '_')}-slip.txt`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
     const filteredOrders = orders.filter(order => {
         const search = searchTerm.toLowerCase();
-        return (
+        const matchesSearch = (
             order.orderId?.toLowerCase().includes(search) ||
             order.user_name?.toLowerCase().includes(search) ||
             order.user_email?.toLowerCase().includes(search) ||
-            order.user_phone?.toLowerCase().includes(search)
+            order.user_phone?.toLowerCase().includes(search) ||
+            order.items?.some(item => item.title?.toLowerCase().includes(search))
         );
+        const matchesStatus = statusFilter === 'All' || order.status === statusFilter;
+        const matchesCategory = categoryFilter === 'all' || order.items?.some(item => (item.product_category || 'suits') === categoryFilter);
+        return matchesSearch && matchesStatus && matchesCategory;
     });
 
     const StatCard = ({ label, value, icon, color }) => (
@@ -136,10 +164,10 @@ const OrderManager = ({ showToast, onPendingCountChange }) => {
             )}
             {/* Stats Summary */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <StatCard label="Total Revenue" value={formatPrice(orders.reduce((acc, o) => acc + o.total, 0))} icon={<HiTrendingUp />} color="bg-primary" />
+                <StatCard label="Total Revenue" value={formatPrice(orders.filter(o => o.status !== 'Cancelled').reduce((acc, o) => acc + Number(o.total || 0), 0))} icon={<HiTrendingUp />} color="bg-primary" />
                 <StatCard label="Active Orders" value={orders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled').length} icon={<HiCube />} color="bg-accent" />
                 <StatCard label="Awaiting Confirmation" value={orders.filter(o => ['Awaiting Confirmation', 'Pending'].includes(o.status)).length} icon={<HiClock />} color="bg-orange-500" />
-                <StatCard label="Total Reach" value={new Set(orders.map(o => o.user_id)).size} icon={<HiUsers />} color="bg-emerald-500" />
+                <StatCard label="Total Reach" value={new Set(orders.map(o => o.user_id || o.user_email || o.user_phone || o.orderId)).size} icon={<HiUsers />} color="bg-emerald-500" />
             </div>
 
             {/* Header & Filter */}
@@ -149,7 +177,7 @@ const OrderManager = ({ showToast, onPendingCountChange }) => {
                     <p className="text-sm font-medium text-stone-600">View customer details and update each order status</p>
                 </div>
                 
-                <div className="flex w-full gap-3 md:w-auto">
+                <div className="flex w-full flex-wrap gap-3 md:w-auto">
                     <div className="relative flex-1 md:w-96">
                         <HiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
                         <input
@@ -160,6 +188,13 @@ const OrderManager = ({ showToast, onPendingCountChange }) => {
                             className="w-full pl-11 pr-4 py-3.5 bg-white border border-stone-200 rounded-2xl focus:ring-2 focus:ring-accent outline-none text-xs font-bold transition-all shadow-sm"
                         />
                     </div>
+                    <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)} className="admin-filter-select">
+                        <option>All</option><option>Awaiting Confirmation</option><option>Confirmed</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option>
+                    </select>
+                    <select value={categoryFilter} onChange={event => setCategoryFilter(event.target.value)} className="admin-filter-select">
+                        <option value="all">All categories</option>
+                        {taxonomy.map(category => <option key={category.id} value={category.id}>{category.label}</option>)}
+                    </select>
                     <button
                         onClick={() => loadOrders(false)}
                         aria-label="Refresh orders"
@@ -259,8 +294,8 @@ const OrderManager = ({ showToast, onPendingCountChange }) => {
                                                                 <HiCollection size={16} />
                                                                 <h4 className="text-sm font-bold">Ordered Items ({order.items?.length})</h4>
                                                             </div>
-                                                            <button className="flex items-center gap-2 text-[9px] font-black text-stone-400 uppercase tracking-widest hover:text-primary transition-colors">
-                                                                <HiPrinter size={16} /> Generate slip
+                                                            <button onClick={() => downloadOrderSlip(order)} className="flex items-center gap-2 text-[9px] font-black text-stone-400 uppercase tracking-widest hover:text-primary transition-colors">
+                                                                <HiPrinter size={16} /> Download slip
                                                             </button>
                                                         </div>
                                                         <div className="bg-white rounded-[2rem] border border-stone-100 shadow-sm overflow-hidden">
@@ -274,6 +309,7 @@ const OrderManager = ({ showToast, onPendingCountChange }) => {
                                                                             <div>
                                                                                 <p className="text-xs font-black text-primary uppercase tracking-tight line-clamp-1">{item.title}</p>
                                                                                 <div className="flex gap-2 items-center mt-1">
+                                                                                    <span className="text-[8px] font-black bg-primary/5 text-primary px-2 py-0.5 rounded uppercase">{taxonomy.find(category => category.id === (item.product_category || 'suits'))?.label || 'Suits'}</span>
                                                                                     <span className="text-[8px] font-black bg-stone-100 text-stone-500 px-2 py-0.5 rounded uppercase tracking-tighter">QTY: {item.quantity}</span>
                                                                                     {item.selectedColor && (
                                                                                         <span className="flex items-center gap-1.5 text-[8px] font-black text-stone-500 uppercase">
