@@ -6,6 +6,35 @@ import { validateDelivery } from '../../api/products';
 import { getStateFromPin, isLikelySupportedPin } from '../../utils/deliveryUtils';
 
 const reverseGeocode = async (latitude, longitude) => {
+  if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+    try {
+      const preciseUrl = new URL(import.meta.env.VITE_REVERSE_GEOCODER_URL || 'https://nominatim.openstreetmap.org/reverse');
+      preciseUrl.searchParams.set('format', 'jsonv2');
+      preciseUrl.searchParams.set('lat', latitude);
+      preciseUrl.searchParams.set('lon', longitude);
+      preciseUrl.searchParams.set('zoom', '18');
+      preciseUrl.searchParams.set('addressdetails', '1');
+      preciseUrl.searchParams.set('accept-language', 'en');
+      const preciseResponse = await fetch(preciseUrl, { headers: { Accept: 'application/json' } });
+      if (preciseResponse.ok) {
+        const precise = await preciseResponse.json();
+        const address = precise.address || {};
+        if (address.country_code && address.country_code.toLowerCase() !== 'in') throw new Error('Kamlesh Suits currently delivers only within India.');
+        const mapped = {
+          countryCode: address.country_code?.toUpperCase(),
+          postcode: address.postcode || '',
+          city: address.city || address.town || address.municipality || address.village || address.county || '',
+          locality: address.neighbourhood || address.suburb || address.village || address.hamlet || address.road || '',
+          principalSubdivision: address.state || '',
+        };
+        if (/^\d{6}$/.test(String(mapped.postcode).replace(/\D/g, ''))) return mapped;
+      }
+    } catch (preciseError) {
+      if (preciseError.message?.includes('only within India')) throw preciseError;
+      console.warn('Precise postal lookup failed, using fallback:', preciseError);
+    }
+  }
+
   const url = new URL('https://api.bigdatacloud.net/data/reverse-geocode-client');
   if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
     url.searchParams.set('latitude', latitude);
@@ -161,7 +190,7 @@ const LocationModal = ({ isOpen, onClose, welcome = false }) => {
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/15"><HiLocationMarker size={24} /></span>
-              <div><p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/70">Kamlesh Suits</p><h2 id="location-title" className="mt-1 text-lg font-black">{welcome ? 'Shop better with your location' : 'Choose your delivery location'}</h2></div>
+              <div><p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/80">Kamlesh Suits</p><h2 id="location-title" className="mt-1 text-lg font-black !text-amber-300 drop-shadow-sm">{welcome ? 'Shop better with your location' : 'Choose your delivery location'}</h2></div>
             </div>
             <button onClick={onClose} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10" aria-label="Close"><HiX size={22} /></button>
           </div>

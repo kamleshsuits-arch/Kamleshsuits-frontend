@@ -32,20 +32,17 @@ function App() {
   });
   const [showLocationWelcome, setShowLocationWelcome] = React.useState(false);
 
+  const handleLaunchComplete = React.useCallback(() => {
+    sessionStorage.setItem('hasSeenLaunch', 'true');
+    setShowLaunch(false);
+  }, []);
+
   React.useEffect(() => {
     const isPublicPage = !location.pathname.startsWith('/admin') && !['/login', '/signup', '/auth-test'].includes(location.pathname);
     if (showLaunch || deliveryLocation || !isPublicPage || sessionStorage.getItem('kamlesh_location_prompt_seen')) return;
-    const timer = window.setTimeout(() => {
-      sessionStorage.setItem('kamlesh_location_prompt_seen', 'true');
-      setShowLocationWelcome(true);
-    }, 450);
-    return () => window.clearTimeout(timer);
+    sessionStorage.setItem('kamlesh_location_prompt_seen', 'true');
+    setShowLocationWelcome(true);
   }, [showLaunch, deliveryLocation, location.pathname]);
-
-  const handleLaunchComplete = () => {
-    sessionStorage.setItem('hasSeenLaunch', 'true');
-    setShowLaunch(false);
-  };
 
   const isAuthPage = ['/login', '/signup', '/auth-test'].includes(location.pathname);
   const isHome = location.pathname === '/';
