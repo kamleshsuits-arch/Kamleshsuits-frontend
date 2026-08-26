@@ -319,9 +319,9 @@ const RotatingBannerHeadline = ({ banner, compact }) => {
 
   return (
     <h1 className={`mt-3 max-w-3xl font-serif font-bold leading-tight drop-shadow-[0_3px_12px_rgba(0,0,0,0.8)] ${compact ? 'text-3xl' : 'text-5xl lg:text-6xl'}`}>
-      {banner.headline && <span>{banner.headline} </span>}
-      {words.length > 0 && <span key={`${banner.suitId}-${wordIndex}`} aria-live="polite" className="inline-block text-amber-300 animate-in fade-in slide-in-from-bottom-2 duration-500">{words[wordIndex]}</span>}
-      {banner.headline_suffix && <span> {banner.headline_suffix}</span>}
+      {banner.headline && <span style={{ color: banner.headline_color || '#FFFFFF' }}>{banner.headline} </span>}
+      {words.length > 0 && <span key={`${banner.suitId}-${wordIndex}`} aria-live="polite" style={{ color: banner.animated_word_color || '#FCD34D' }} className="inline-block animate-in fade-in slide-in-from-bottom-2 duration-500">{words[wordIndex]}</span>}
+      {banner.headline_suffix && <span style={{ color: banner.headline_suffix_color || '#FFFFFF' }}> {banner.headline_suffix}</span>}
     </h1>
   );
 };

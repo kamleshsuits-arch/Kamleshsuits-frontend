@@ -8,7 +8,9 @@ import { uploadProductImage } from '../../api/products';
 
 const EMPTY_BANNER = {
   bannerId: '', title: '', banner_kind: 'festival', desktop_image: '', mobile_image: '',
-  alt_text: '', headline: '', animated_words: '', headline_suffix: '', subheading: '', cta_label: '', link_url: '', active: true,
+  alt_text: '', headline: '', animated_words: '', headline_suffix: '',
+  headline_color: '#FFFFFF', animated_word_color: '#FCD34D', headline_suffix_color: '#FFFFFF',
+  subheading: '', cta_label: '', link_url: '', active: true,
   starts_at: '', ends_at: '', sort_order: 0,
 };
 
@@ -177,6 +179,11 @@ const BannerManager = ({ showToast }) => {
                   <Field label="Rotating words" value={formData.animated_words} onChange={value => setFormData(current => ({ ...current, animated_words: value }))} placeholder="Cotton, Silk, Organza" />
                   <Field label="Text after" value={formData.headline_suffix} onChange={value => setFormData(current => ({ ...current, headline_suffix: value }))} placeholder="suits" />
                 </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                  <ColorField label="Text before color" value={formData.headline_color} onChange={value => setFormData(current => ({ ...current, headline_color: value }))} />
+                  <ColorField label="Rotating words color" value={formData.animated_word_color} onChange={value => setFormData(current => ({ ...current, animated_word_color: value }))} />
+                  <ColorField label="Text after color" value={formData.headline_suffix_color} onChange={value => setFormData(current => ({ ...current, headline_suffix_color: value }))} />
+                </div>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Button label (optional)" value={formData.cta_label} onChange={value => setFormData(current => ({ ...current, cta_label: value }))} placeholder="Shop now" />
@@ -239,11 +246,13 @@ const Field = ({ label, value, onChange, type = 'text', placeholder = '', requir
 
 const SelectField = ({ label, value, onChange, options }) => <label className="block"><span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-stone-600">{label}</span><select value={value} onChange={event => onChange(event.target.value)} className="asset-control">{options.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>;
 
+const ColorField = ({ label, value, onChange }) => <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-stone-200 bg-white p-3"><input type="color" value={value || '#FFFFFF'} onChange={event => onChange(event.target.value.toUpperCase())} className="h-10 w-12 cursor-pointer rounded-lg border-0 bg-transparent p-0" /><span><strong className="block text-xs text-stone-700">{label}</strong><small className="font-mono text-[10px] text-stone-400">{value}</small></span></label>;
+
 const ImageUploader = ({ title, detail, image, uploading, onChoose, onClear }) => <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4"><div className="mb-3 flex items-center justify-between"><div><p className="text-sm font-black text-primary">{title}</p><p className="text-xs text-stone-400">{detail}</p></div>{image && <button type="button" onClick={onClear} className="text-red-500"><HiX /></button>}</div>{image ? <img src={image} alt="" className="mb-3 aspect-[8/3] w-full rounded-xl object-cover" /> : <div className="mb-3 grid aspect-[8/3] place-items-center rounded-xl border border-dashed border-stone-300 bg-white text-3xl text-stone-300"><HiPhotograph /></div>}<button type="button" onClick={onChoose} disabled={uploading} className="admin-secondary-button w-full"><HiUpload /> {uploading ? 'Uploading…' : image ? 'Replace image' : 'Upload image'}</button></div>;
 
 const PreviewOverlay = ({ data, compact = false }) => {
   const firstWord = String(data.animated_words || '').split(',').map(word => word.trim()).filter(Boolean)[0];
-  return <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/75 via-black/20 to-transparent p-3 text-white"><div><p className={`${compact ? 'text-[9px]' : 'text-xs'} font-serif font-bold leading-tight`}>{data.headline} {firstWord && <span className="text-amber-300">{firstWord}</span>} {data.headline_suffix}</p>{data.subheading && <p className="mt-1 line-clamp-2 text-[7px] text-white/85">{data.subheading}</p>}</div></div>;
+  return <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/75 via-black/20 to-transparent p-3 text-white"><div><p className={`${compact ? 'text-[9px]' : 'text-xs'} font-serif font-bold leading-tight`}><span style={{ color: data.headline_color || '#FFFFFF' }}>{data.headline}</span>{firstWord && <> <span style={{ color: data.animated_word_color || '#FCD34D' }}>{firstWord}</span></>} {data.headline_suffix && <span style={{ color: data.headline_suffix_color || '#FFFFFF' }}>{data.headline_suffix}</span>}</p>{data.subheading && <p className="mt-1 line-clamp-2 text-[7px] text-white/85">{data.subheading}</p>}</div></div>;
 };
 
 export default BannerManager;
