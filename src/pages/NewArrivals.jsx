@@ -6,7 +6,7 @@ import Loader from '../components/common/Loader';
 import { HiSparkles } from 'react-icons/hi';
 import SEO from '../components/common/SEO';
 import LocationBar from '../components/common/LocationBar';
-import FuturisticWaves from '../components/common/FuturisticWaves';
+import PremiumHeroMotion from '../components/common/PremiumHeroMotion';
 
 const NewArrivals = () => {
   const [products, setProducts] = useState([]);
@@ -46,25 +46,25 @@ const NewArrivals = () => {
           "url": "https://kamleshsuits.com/new-arrivals"
         }}
       />
-      {/* Premium Header - futuristic wine waves on mobile */}
-      <div className="futuristic-page-hero relative pt-20 pb-20 px-3 sm:px-6 text-center text-primary overflow-hidden md:pt-12 md:pb-24">
+      {/* Premium Header - light carrot glass motion on mobile */}
+      <div className="premium-page-hero relative pt-20 pb-20 px-3 sm:px-6 text-center text-primary overflow-hidden md:pt-12 md:pb-24">
         {/* Animated Light Layers */}
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-white/10 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-black/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
         
-        <FuturisticWaves idPrefix="new-arrivals" variant="new" />
+        <PremiumHeroMotion variant="new" />
         
         <div className="relative z-10">
           <div className="flex justify-center mb-6">
              <div className="p-3 bg-white shadow-xl rounded-full">
-                <HiSparkles className="text-[#fa709a] animate-pulse" size={32} />
+                <HiSparkles className="text-[#d85f32] animate-pulse" size={32} />
              </div>
           </div>
-          <h2 className="text-2xl min-[380px]:text-3xl sm:text-4xl font-serif text-white tracking-tight uppercase tracking-[0.14em] sm:tracking-[0.3em] mb-4">
+          <h2 className="text-2xl min-[380px]:text-3xl sm:text-4xl font-serif text-[#4a2017] md:text-white tracking-tight uppercase tracking-[0.14em] sm:tracking-[0.3em] mb-4 drop-shadow-sm">
             The New Edit
           </h2>
-          <div className="inline-block px-4 py-1.5 bg-white/20 border border-white/40 rounded-full shadow-sm">
-            <p className="text-white text-[9px] font-black uppercase tracking-[0.16em] sm:tracking-[0.4em]">
+          <div className="inline-block px-4 py-1.5 bg-white/55 md:bg-white/20 border border-white/70 md:border-white/40 rounded-full shadow-sm backdrop-blur-md">
+            <p className="text-[#5d2a20] md:text-white text-[9px] font-black uppercase tracking-[0.16em] sm:tracking-[0.4em]">
               Exquisitely Crafted • Season {new Date().getFullYear()}
             </p>
           </div>

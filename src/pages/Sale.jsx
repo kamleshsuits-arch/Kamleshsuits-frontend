@@ -6,7 +6,7 @@ import Loader from '../components/common/Loader';
 import { HiTag } from 'react-icons/hi';
 import SEO from '../components/common/SEO';
 import LocationBar from '../components/common/LocationBar';
-import FuturisticWaves from '../components/common/FuturisticWaves';
+import PremiumHeroMotion from '../components/common/PremiumHeroMotion';
 
 const Sale = () => {
   const [products, setProducts] = useState([]);
@@ -53,29 +53,29 @@ const Sale = () => {
           "url": "https://kamleshsuits.com/sale"
         }}
       />
-      {/* Premium Header - futuristic wine waves on mobile */}
-      <div className="futuristic-page-hero relative pt-20 pb-20 px-3 sm:px-6 text-center text-white overflow-hidden md:pt-12 md:pb-24">
+      {/* Premium Header - light carrot glass motion on mobile */}
+      <div className="premium-page-hero relative pt-20 pb-20 px-3 sm:px-6 text-center text-[#431b18] md:text-white overflow-hidden md:pt-12 md:pb-24">
         {/* Layered Decorative Elements */}
         <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-[20%] right-[-5%] w-48 h-48 bg-black/10 rounded-full blur-2xl" />
         
-        <FuturisticWaves idPrefix="sale" variant="sale" />
+        <PremiumHeroMotion variant="sale" />
 
         <div className="relative z-10 flex flex-col items-center">
-          <div className="bg-white/20 backdrop-blur-md rounded-full px-5 py-2 flex items-center gap-2 mb-6 border border-white/30 shadow-2xl">
-             <HiTag className="text-white" size={16} />
+          <div className="bg-white/55 md:bg-white/20 backdrop-blur-md rounded-full px-5 py-2 flex items-center gap-2 mb-6 border border-white/70 md:border-white/30 shadow-xl">
+             <HiTag className="text-[#a44228] md:text-white" size={16} />
              <span className="text-[10px] font-black uppercase tracking-[0.3em]">Season Finale Blitz</span>
           </div>
           
           <div className="mb-2 relative">
-             <div className="absolute -top-6 -right-10 bg-yellow-400 text-primary text-[10px] font-black px-3 py-1.5 rounded-bl-xl shadow-lg animate-bounce">UP TO</div>
+             <div className="absolute -top-6 -right-10 bg-[#5a251b] text-white text-[10px] font-black px-3 py-1.5 rounded-bl-xl shadow-lg animate-bounce">UP TO</div>
             <span className="text-6xl min-[380px]:text-7xl md:text-9xl font-black tracking-tighter inline-block text-shadow-xl drop-shadow-2xl">
               {maxDiscount}%
             </span>
             <span className="text-3xl md:text-4xl font-serif italic ml-2 opacity-90">OFF</span>
           </div>
           
-          <h1 className="text-xs sm:text-sm md:text-xl uppercase tracking-[0.2em] sm:tracking-[0.5em] font-medium opacity-90 mt-6 pt-2 border-t border-white/10 w-fit mx-auto">
+          <h1 className="text-xs sm:text-sm md:text-xl uppercase tracking-[0.2em] sm:tracking-[0.5em] font-medium opacity-90 mt-6 pt-2 border-t border-[#5a251b]/15 md:border-white/10 w-fit mx-auto">
             Luxury Silk Clearance
           </h1>
         </div>

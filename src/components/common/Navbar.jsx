@@ -61,6 +61,8 @@ const Navbar = () => {
 
   const location = useLocation();
   const isSpecialPage = ['/', '/new-arrivals', '/sale', '/wishlist'].includes(location.pathname);
+  const useDarkMobileHeader = !isScrolled && ['/new-arrivals', '/sale'].includes(location.pathname);
+  const mobileHeaderIcon = useDarkMobileHeader ? 'text-[#4b2118]' : 'text-white/90';
 
   return (
     <>
@@ -79,7 +81,7 @@ const Navbar = () => {
             <div className="flex justify-start">
               <Link to="/" className="flex items-center gap-2 group">
                 <div ref={logoRef} className="h-9 md:h-16 w-auto transition-transform hover:scale-105">
-                  <img src={logo} alt="Kamlesh Suits" className="h-full w-auto object-contain brightness-0 md:brightness-100 invert md:invert-0" />
+                  <img src={logo} alt="Kamlesh Suits" className={`h-full w-auto object-contain brightness-0 md:brightness-100 md:invert-0 ${useDarkMobileHeader ? 'invert-0' : 'invert'}`} />
                 </div>
                 {/* NO TEXT on mobile */}
               </Link>
@@ -163,22 +165,22 @@ const Navbar = () => {
 
             {/* Mobile right icons — wishlist + account ONLY (cart is floating FAB) */}
             <div className="flex items-center md:hidden gap-0 min-[360px]:gap-1">
-              {isAdmin && <Link to="/admin/banners" className="relative p-2 min-w-10 min-h-11 min-[360px]:p-3 min-[360px]:min-w-11" aria-label="Banner Management"><HiPhotograph size={22} className="text-white/90" /></Link>}
+              {isAdmin && <Link to="/admin/banners" className="relative p-2 min-w-10 min-h-11 min-[360px]:p-3 min-[360px]:min-w-11" aria-label="Banner Management"><HiPhotograph size={22} className={mobileHeaderIcon} /></Link>}
               <Link to="/wishlist" className="relative p-2 min-w-10 min-h-11 min-[360px]:p-3 min-[360px]:min-w-11" aria-label="Wishlist">
-                <HiOutlineHeart size={22} className="text-white/90" />
+                <HiOutlineHeart size={22} className={mobileHeaderIcon} />
                 {wishlistItems.length > 0 && (
                   <span className="absolute top-0.5 right-0.5 bg-white text-accent text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">{wishlistItems.length}</span>
                 )}
               </Link>
               {user ? (
                 <Link to="/account" className="relative p-2 min-w-10 min-h-11 min-[360px]:p-3 min-[360px]:min-w-11" aria-label="My account">
-                  <div className="w-7 h-7 rounded-full bg-white/20 border border-white/40 text-white flex items-center justify-center text-xs font-black">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black ${useDarkMobileHeader ? 'bg-[#5a251b]/10 border border-[#5a251b]/25 text-[#4b2118]' : 'bg-white/20 border border-white/40 text-white'}`}>
                     {(user.name?.[0] || user.email?.[0] || 'U').toUpperCase()}
                   </div>
                 </Link>
               ) : (
                 <Link to="/login" className="relative p-2 min-w-10 min-h-11 min-[360px]:p-3 min-[360px]:min-w-11" aria-label="Sign in">
-                  <HiOutlineUser size={22} className="text-white/90" />
+                  <HiOutlineUser size={22} className={mobileHeaderIcon} />
                 </Link>
               )}
             </div>

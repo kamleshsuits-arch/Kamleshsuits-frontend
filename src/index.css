@@ -151,13 +151,13 @@
       radial-gradient(circle at 8% 76%, rgba(244, 114, 182, 0.17), transparent 38%),
       linear-gradient(145deg, #210811 0%, #4b1028 42%, #762746 70%, #3b0b20 100%);
     --mobile-new-gradient:
-      radial-gradient(circle at 82% 14%, rgba(34, 211, 238, 0.27), transparent 31%),
-      radial-gradient(circle at 8% 72%, rgba(167, 139, 250, 0.26), transparent 38%),
-      linear-gradient(145deg, #07152f 0%, #25336f 38%, #5b21b6 70%, #0e7490 112%);
+      radial-gradient(circle at 84% 12%, rgba(255, 255, 255, 0.78), transparent 30%),
+      radial-gradient(circle at 8% 78%, rgba(255, 230, 196, 0.72), transparent 38%),
+      linear-gradient(145deg, #fff8ed 0%, #ffd9b5 38%, #ffad79 70%, #ff8a5b 112%);
     --mobile-sale-gradient:
-      radial-gradient(circle at 82% 12%, rgba(251, 146, 60, 0.32), transparent 31%),
-      radial-gradient(circle at 10% 76%, rgba(232, 121, 249, 0.23), transparent 38%),
-      linear-gradient(145deg, #270824 0%, #6f174f 40%, #be185d 70%, #c2410c 115%);
+      radial-gradient(circle at 82% 10%, rgba(255, 250, 225, 0.72), transparent 31%),
+      radial-gradient(circle at 9% 76%, rgba(255, 214, 172, 0.7), transparent 40%),
+      linear-gradient(145deg, #fff7e8 0%, #ffc98f 36%, #ff9b62 68%, #f47745 112%);
   }
 
   .theme-bg-home { background-color: var(--theme-gold); }
@@ -197,71 +197,156 @@
     color: #fff;
   }
 
-  .futuristic-page-hero {
+  .premium-page-hero {
     background-color: var(--theme-coral);
   }
-  .page-sale .futuristic-page-hero {
+  .page-sale .premium-page-hero {
     background-color: var(--theme-orange);
   }
 
-  .futuristic-wave-scene {
+  .premium-hero-motion {
     position: absolute;
-    inset: auto 0 0;
-    height: 5.75rem;
+    inset: 0;
     overflow: hidden;
     pointer-events: none;
     isolation: isolate;
   }
-  .futuristic-horizon {
+
+  .premium-hero-grid {
     position: absolute;
-    z-index: 1;
-    bottom: 2.5rem;
-    left: 12%;
-    right: 12%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 210, 229, 0.9), transparent);
-    box-shadow: 0 0 18px 4px rgba(244, 114, 182, 0.38);
-    animation: futuristicHorizon 4.8s ease-in-out infinite;
-  }
-  .futuristic-wave {
-    position: absolute;
-    left: 0;
-    bottom: -1px;
-    width: 200%;
-    height: 100%;
-    will-change: transform;
-  }
-  .futuristic-wave-back {
-    z-index: 2;
-    filter: blur(1.5px);
-    animation: futuristicWaveDrift 18s linear infinite;
-    animation-delay: -6s;
-  }
-  .futuristic-wave-middle {
-    z-index: 3;
-    height: 86%;
-    animation: futuristicWaveDriftReverse 13s linear infinite;
-    animation-delay: -8s;
-  }
-  .futuristic-wave-front {
-    z-index: 4;
-    height: 70%;
-    filter: drop-shadow(0 -8px 14px rgba(251, 113, 133, 0.12));
-    animation: futuristicWaveDrift 9s linear infinite;
-    animation-delay: -3s;
+    inset: -20%;
+    opacity: 0.16;
+    background-image:
+      linear-gradient(rgba(113, 47, 29, 0.26) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(113, 47, 29, 0.26) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: radial-gradient(circle at center, black 0%, transparent 72%);
+    -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 72%);
+    animation: premiumGridDrift 18s linear infinite;
   }
 
-  @keyframes futuristicWaveDrift {
+  .premium-hero-aurora {
+    position: absolute;
+    width: 16rem;
+    height: 16rem;
+    border-radius: 999px;
+    filter: blur(42px);
+    opacity: 0.42;
+    will-change: transform, opacity;
+  }
+
+  .premium-hero-aurora-one {
+    right: -5rem;
+    top: -6rem;
+    background: rgba(255, 255, 255, 0.84);
+    animation: premiumAuroraOne 10s ease-in-out infinite alternate;
+  }
+
+  .premium-hero-aurora-two {
+    left: -6rem;
+    bottom: -7rem;
+    background: rgba(255, 111, 66, 0.34);
+    animation: premiumAuroraTwo 12s ease-in-out infinite alternate;
+  }
+
+  .premium-hero-orbit {
+    position: absolute;
+    border-radius: 999px;
+    border: 1px solid rgba(113, 47, 29, 0.18);
+    box-shadow: inset 0 0 28px rgba(255, 255, 255, 0.2), 0 0 20px rgba(255, 122, 69, 0.1);
+  }
+
+  .premium-hero-orbit::after {
+    content: '';
+    position: absolute;
+    width: 0.55rem;
+    height: 0.55rem;
+    top: 12%;
+    left: 18%;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 0 18px 5px rgba(255, 255, 255, 0.46);
+  }
+
+  .premium-hero-orbit-large {
+    width: 12rem;
+    height: 12rem;
+    right: -3.5rem;
+    top: 1.5rem;
+    animation: premiumOrbit 20s linear infinite;
+  }
+
+  .premium-hero-orbit-small {
+    width: 7rem;
+    height: 7rem;
+    left: -2rem;
+    bottom: 1rem;
+    animation: premiumOrbitReverse 14s linear infinite;
+  }
+
+  .premium-hero-glass-orb {
+    position: absolute;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.58);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.06));
+    box-shadow: inset -7px -7px 18px rgba(255, 117, 67, 0.08), 0 12px 30px rgba(121, 54, 32, 0.1);
+    backdrop-filter: blur(5px);
+  }
+
+  .premium-hero-glass-orb-one {
+    width: 2.6rem;
+    height: 2.6rem;
+    left: 15%;
+    top: 23%;
+    animation: premiumOrbFloat 7s ease-in-out infinite;
+  }
+
+  .premium-hero-glass-orb-two {
+    width: 1.6rem;
+    height: 1.6rem;
+    right: 18%;
+    bottom: 22%;
+    animation: premiumOrbFloat 5.5s ease-in-out -2s infinite reverse;
+  }
+
+  .premium-hero-sweep {
+    position: absolute;
+    top: -35%;
+    bottom: -35%;
+    left: -45%;
+    width: 28%;
+    transform: rotate(18deg);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.36), transparent);
+    filter: blur(6px);
+    animation: premiumLightSweep 8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  }
+
+  @keyframes premiumGridDrift {
     from { transform: translate3d(0, 0, 0); }
-    to { transform: translate3d(-50%, 0, 0); }
+    to { transform: translate3d(28px, 28px, 0); }
   }
-  @keyframes futuristicWaveDriftReverse {
-    from { transform: translate3d(-50%, 0, 0); }
-    to { transform: translate3d(0, 0, 0); }
+  @keyframes premiumAuroraOne {
+    from { transform: translate3d(0, 0, 0) scale(0.9); opacity: 0.32; }
+    to { transform: translate3d(-3rem, 2rem, 0) scale(1.15); opacity: 0.52; }
   }
-  @keyframes futuristicHorizon {
-    0%, 100% { opacity: 0.45; transform: scaleX(0.82); }
-    50% { opacity: 1; transform: scaleX(1); }
+  @keyframes premiumAuroraTwo {
+    from { transform: translate3d(0, 0, 0) scale(0.92); }
+    to { transform: translate3d(3.5rem, -2rem, 0) scale(1.18); }
+  }
+  @keyframes premiumOrbit {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes premiumOrbitReverse {
+    to { transform: rotate(-360deg); }
+  }
+  @keyframes premiumOrbFloat {
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(0.75rem, -1.15rem, 0); }
+  }
+  @keyframes premiumLightSweep {
+    0%, 20% { transform: translate3d(0, 0, 0) rotate(18deg); opacity: 0; }
+    35% { opacity: 0.8; }
+    62%, 100% { transform: translate3d(650%, 0, 0) rotate(18deg); opacity: 0; }
   }
 
   /* One consistent wine-gradient identity across customer-facing mobile pages. */
@@ -295,22 +380,12 @@
       background: var(--mobile-cherry-gradient);
     }
 
-    .page-new .futuristic-page-hero {
+    .page-new .premium-page-hero {
       background: var(--mobile-new-gradient);
     }
 
-    .page-sale .futuristic-page-hero {
+    .page-sale .premium-page-hero {
       background: var(--mobile-sale-gradient);
-    }
-
-    .futuristic-wave-scene-new .futuristic-horizon {
-      background: linear-gradient(90deg, transparent, rgba(103, 232, 249, 0.95), transparent);
-      box-shadow: 0 0 18px 4px rgba(34, 211, 238, 0.38);
-    }
-
-    .futuristic-wave-scene-sale .futuristic-horizon {
-      background: linear-gradient(90deg, transparent, rgba(253, 186, 116, 0.95), transparent);
-      box-shadow: 0 0 18px 4px rgba(251, 146, 60, 0.4);
     }
 
     .cart-fab-green {
@@ -320,9 +395,14 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .futuristic-wave,
-    .futuristic-horizon {
+    .premium-hero-motion * {
       animation: none;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .premium-hero-motion {
+      display: none;
     }
   }
 
