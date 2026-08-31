@@ -59,7 +59,7 @@ const Sale = () => {
         <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-[20%] right-[-5%] w-48 h-48 bg-black/10 rounded-full blur-2xl" />
         
-        <FuturisticWaves idPrefix="sale" />
+        <FuturisticWaves idPrefix="sale" variant="sale" />
 
         <div className="relative z-10 flex flex-col items-center">
           <div className="bg-white/20 backdrop-blur-md rounded-full px-5 py-2 flex items-center gap-2 mb-6 border border-white/30 shadow-2xl">

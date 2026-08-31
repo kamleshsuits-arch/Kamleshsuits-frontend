@@ -150,6 +150,14 @@
       radial-gradient(circle at 82% 18%, rgba(251, 113, 133, 0.24), transparent 32%),
       radial-gradient(circle at 8% 76%, rgba(244, 114, 182, 0.17), transparent 38%),
       linear-gradient(145deg, #210811 0%, #4b1028 42%, #762746 70%, #3b0b20 100%);
+    --mobile-new-gradient:
+      radial-gradient(circle at 82% 14%, rgba(34, 211, 238, 0.27), transparent 31%),
+      radial-gradient(circle at 8% 72%, rgba(167, 139, 250, 0.26), transparent 38%),
+      linear-gradient(145deg, #07152f 0%, #25336f 38%, #5b21b6 70%, #0e7490 112%);
+    --mobile-sale-gradient:
+      radial-gradient(circle at 82% 12%, rgba(251, 146, 60, 0.32), transparent 31%),
+      radial-gradient(circle at 10% 76%, rgba(232, 121, 249, 0.23), transparent 38%),
+      linear-gradient(145deg, #270824 0%, #6f174f 40%, #be185d 70%, #c2410c 115%);
   }
 
   .theme-bg-home { background-color: var(--theme-gold); }
@@ -226,21 +234,21 @@
   .futuristic-wave-back {
     z-index: 2;
     filter: blur(1.5px);
-    animation: futuristicWaveDrift 23s linear infinite, futuristicWaveBreathe 7.2s ease-in-out infinite;
-    animation-delay: -7s, -2.4s;
+    animation: futuristicWaveDrift 18s linear infinite;
+    animation-delay: -6s;
   }
   .futuristic-wave-middle {
     z-index: 3;
     height: 86%;
-    animation: futuristicWaveDriftReverse 17s linear infinite, futuristicWaveBreathe 5.8s ease-in-out infinite reverse;
-    animation-delay: -11s, -1.7s;
+    animation: futuristicWaveDriftReverse 13s linear infinite;
+    animation-delay: -8s;
   }
   .futuristic-wave-front {
     z-index: 4;
     height: 70%;
     filter: drop-shadow(0 -8px 14px rgba(251, 113, 133, 0.12));
-    animation: futuristicWaveDrift 12.5s linear infinite;
-    animation-delay: -3.4s;
+    animation: futuristicWaveDrift 9s linear infinite;
+    animation-delay: -3s;
   }
 
   @keyframes futuristicWaveDrift {
@@ -250,10 +258,6 @@
   @keyframes futuristicWaveDriftReverse {
     from { transform: translate3d(-50%, 0, 0); }
     to { transform: translate3d(0, 0, 0); }
-  }
-  @keyframes futuristicWaveBreathe {
-    0%, 100% { opacity: 0.72; transform-origin: center bottom; }
-    50% { opacity: 1; transform-origin: center bottom; }
   }
   @keyframes futuristicHorizon {
     0%, 100% { opacity: 0.45; transform: scaleX(0.82); }
@@ -287,9 +291,26 @@
       box-shadow: 0 8px 20px -4px rgba(75, 16, 40, 0.4);
     }
 
-    .futuristic-page-hero,
     .mobile-wine-surface {
       background: var(--mobile-cherry-gradient);
+    }
+
+    .page-new .futuristic-page-hero {
+      background: var(--mobile-new-gradient);
+    }
+
+    .page-sale .futuristic-page-hero {
+      background: var(--mobile-sale-gradient);
+    }
+
+    .futuristic-wave-scene-new .futuristic-horizon {
+      background: linear-gradient(90deg, transparent, rgba(103, 232, 249, 0.95), transparent);
+      box-shadow: 0 0 18px 4px rgba(34, 211, 238, 0.38);
+    }
+
+    .futuristic-wave-scene-sale .futuristic-horizon {
+      background: linear-gradient(90deg, transparent, rgba(253, 186, 116, 0.95), transparent);
+      box-shadow: 0 0 18px 4px rgba(251, 146, 60, 0.4);
     }
 
     .cart-fab-green {

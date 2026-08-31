@@ -52,7 +52,7 @@ const NewArrivals = () => {
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-white/10 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-black/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
         
-        <FuturisticWaves idPrefix="new-arrivals" />
+        <FuturisticWaves idPrefix="new-arrivals" variant="new" />
         
         <div className="relative z-10">
           <div className="flex justify-center mb-6">
