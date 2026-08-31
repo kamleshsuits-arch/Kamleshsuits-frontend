@@ -37,20 +37,20 @@ const StyleDealsSection = () => {
   if (products.length === 0) return null;
 
   return (
-    <div className="md:hidden bg-[#E88A38]/5 mt-1 pb-4">
+    <div className="md:hidden bg-[#681F3B]/5 mt-1 pb-4">
       {/* Section Header */}
       <div className="px-4 pt-4 pb-2 flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="font-serif text-2xl text-stone-900 leading-tight">
-              Style <span className="text-[#E88A38] italic">Collection</span>
+              Style <span className="text-[#681F3B] italic">Collection</span>
             </h2>
             <span className="text-xl">🛍️</span>
           </div>
           <p className="text-[10px] text-stone-500 uppercase tracking-widest mt-0.5">Curated suits, every budget</p>
         </div>
         {/* "Everything Under" badge */}
-        <div className="bg-[#E88A38] text-white rounded-xl px-2.5 py-1.5 text-right shadow-md">
+        <div className="bg-gradient-to-br from-[#4b1028] to-[#7d2949] text-white rounded-xl px-2.5 py-1.5 text-right shadow-md">
           <p className="text-[8px] uppercase tracking-widest font-bold opacity-80">UPTO</p>
           <p className="text-sm font-black leading-none">{PRICE_BANDS[activeBand].label}</p>
         </div>
@@ -65,7 +65,7 @@ const StyleDealsSection = () => {
               onClick={() => setActiveBand(idx)}
               className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-black border-2 transition-all duration-200 ${
                 activeBand === idx
-                  ? 'bg-[#E88A38] text-white border-[#E88A38] shadow-md'
+                  ? 'bg-gradient-to-r from-[#4b1028] to-[#7d2949] text-white border-[#681F3B] shadow-md'
                   : 'bg-white text-stone-700 border-stone-200'
               }`}
             >
@@ -106,7 +106,7 @@ const StyleDealsSection = () => {
                 >
                   <img src={img} alt={product.title} className="w-full h-full object-cover" />
                   {discount > 0 && (
-                    <div className="absolute top-2 left-2 bg-[#E88A38] text-white text-[9px] font-black px-1.5 py-0.5 rounded-md">
+                    <div className="absolute top-2 left-2 bg-[#681F3B] text-white text-[9px] font-black px-1.5 py-0.5 rounded-md">
                       {discount}% OFF
                     </div>
                   )}
@@ -132,7 +132,7 @@ const StyleDealsSection = () => {
                     className={`absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all border-2 z-20 ${
                       inCart
                         ? 'bg-white text-stone-600 border-stone-100'
-                        : 'bg-white text-[#CFB53B] border-[#CFB53B] shadow-sm hover:bg-[#CFB53B] hover:text-white'
+                        : 'bg-white text-[#681F3B] border-[#681F3B] shadow-sm hover:bg-[#681F3B] hover:text-white'
                     }`}
                   >
                     {inCart ? <HiCheck size={14} /> : <HiPlus size={14} />}
@@ -157,16 +157,16 @@ const StyleDealsSection = () => {
 
           {/* See All card */}
           <div
-            className="flex-shrink-0 w-28 bg-[#E88A38]/10 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer border-2 border-[#E88A38]/20 shadow-inner"
+            className="flex-shrink-0 w-28 bg-[#681F3B]/10 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer border-2 border-[#681F3B]/20 shadow-inner"
             onClick={() => {
               navigate('/');
               setTimeout(() => document.getElementById('collection-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
             }}
           >
-            <div className="w-10 h-10 rounded-full bg-[#E88A38]/10 flex items-center justify-center">
-              <HiChevronRight size={20} className="text-[#E88A38]" />
+            <div className="w-10 h-10 rounded-full bg-[#681F3B]/10 flex items-center justify-center">
+              <HiChevronRight size={20} className="text-[#681F3B]" />
             </div>
-            <p className="text-[10px] font-black text-[#E88A38] uppercase tracking-wide text-center px-2">See All →</p>
+            <p className="text-[10px] font-black text-[#681F3B] uppercase tracking-wide text-center px-2">See All →</p>
           </div>
         </div>
       )}

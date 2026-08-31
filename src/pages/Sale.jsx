@@ -6,6 +6,7 @@ import Loader from '../components/common/Loader';
 import { HiTag } from 'react-icons/hi';
 import SEO from '../components/common/SEO';
 import LocationBar from '../components/common/LocationBar';
+import FuturisticWaves from '../components/common/FuturisticWaves';
 
 const Sale = () => {
   const [products, setProducts] = useState([]);
@@ -52,35 +53,13 @@ const Sale = () => {
           "url": "https://kamleshsuits.com/sale"
         }}
       />
-      {/* Premium Header - Orange Theme with Waves */}
-      <div 
-        className="relative pt-20 pb-20 px-3 sm:px-6 text-center text-white overflow-hidden md:pt-12 md:pb-24"
-        style={{ backgroundColor: 'var(--theme-orange)' }}
-      >
+      {/* Premium Header - futuristic wine waves on mobile */}
+      <div className="futuristic-page-hero relative pt-20 pb-20 px-3 sm:px-6 text-center text-white overflow-hidden md:pt-12 md:pb-24">
         {/* Layered Decorative Elements */}
         <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-[20%] right-[-5%] w-48 h-48 bg-black/10 rounded-full blur-2xl" />
         
-        {/* Animated Fluid Waves */}
-        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] h-[50px]">
-          <div className="absolute inset-0 z-10">
-            <svg className="w-[200%] h-full animate-[wave_15s_linear_infinite] opacity-30" viewBox="0 0 1200 120" preserveAspectRatio="none">
-              <path d="M0,60 C150,110 450,10 600,60 C750,110 1050,10 1200,60 L1200,120 L0,120 Z" fill="#780000" />
-            </svg>
-          </div>
-          <div className="absolute inset-0 z-20">
-            <svg className="w-[200%] h-full animate-[wave_10s_linear_infinite]" viewBox="0 0 1200 120" preserveAspectRatio="none">
-              <path d="M0,60 C150,110 450,10 600,60 C750,110 1050,10 1200,60 L1200,120 L0,120 Z" fill="#FFFFFF" />
-            </svg>
-          </div>
-        </div>
-
-        <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes wave {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-        `}} />
+        <FuturisticWaves idPrefix="sale" />
 
         <div className="relative z-10 flex flex-col items-center">
           <div className="bg-white/20 backdrop-blur-md rounded-full px-5 py-2 flex items-center gap-2 mb-6 border border-white/30 shadow-2xl">

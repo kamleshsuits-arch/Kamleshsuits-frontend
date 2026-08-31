@@ -182,10 +182,126 @@
 
   .theme-animated-gradient {
     background:
-      radial-gradient(circle at 82% 18%, rgba(251, 191, 36, 0.2), transparent 32%),
-      radial-gradient(circle at 8% 76%, rgba(251, 113, 133, 0.17), transparent 38%),
-      linear-gradient(145deg, #210811 0%, #4b1028 46%, #762746 72%, #3b0b20 100%);
+      radial-gradient(circle at 82% 18%, rgba(251, 113, 133, 0.24), transparent 32%),
+      radial-gradient(circle at 8% 76%, rgba(244, 114, 182, 0.17), transparent 38%),
+      linear-gradient(145deg, #210811 0%, #4b1028 42%, #762746 70%, #3b0b20 100%);
     color: #fff;
+  }
+
+  .futuristic-page-hero {
+    background-color: var(--theme-coral);
+  }
+  .page-sale .futuristic-page-hero {
+    background-color: var(--theme-orange);
+  }
+
+  .futuristic-wave-scene {
+    position: absolute;
+    inset: auto 0 0;
+    height: 5.75rem;
+    overflow: hidden;
+    pointer-events: none;
+    isolation: isolate;
+  }
+  .futuristic-horizon {
+    position: absolute;
+    z-index: 1;
+    bottom: 2.5rem;
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 210, 229, 0.9), transparent);
+    box-shadow: 0 0 18px 4px rgba(244, 114, 182, 0.38);
+    animation: futuristicHorizon 4.8s ease-in-out infinite;
+  }
+  .futuristic-wave {
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 200%;
+    height: 100%;
+    will-change: transform;
+  }
+  .futuristic-wave-back {
+    z-index: 2;
+    filter: blur(1.5px);
+    animation: futuristicWaveDrift 19s linear infinite, futuristicWaveBreathe 6s ease-in-out infinite;
+  }
+  .futuristic-wave-middle {
+    z-index: 3;
+    height: 86%;
+    animation: futuristicWaveDriftReverse 14s linear infinite, futuristicWaveBreathe 4.8s ease-in-out infinite reverse;
+  }
+  .futuristic-wave-front {
+    z-index: 4;
+    height: 70%;
+    filter: drop-shadow(0 -8px 14px rgba(251, 113, 133, 0.12));
+    animation: futuristicWaveDrift 10.5s linear infinite;
+  }
+
+  @keyframes futuristicWaveDrift {
+    from { transform: translate3d(0, 0, 0); }
+    to { transform: translate3d(-50%, 0, 0); }
+  }
+  @keyframes futuristicWaveDriftReverse {
+    from { transform: translate3d(-50%, 0, 0); }
+    to { transform: translate3d(0, 0, 0); }
+  }
+  @keyframes futuristicWaveBreathe {
+    0%, 100% { opacity: 0.72; transform-origin: center bottom; }
+    50% { opacity: 1; transform-origin: center bottom; }
+  }
+  @keyframes futuristicHorizon {
+    0%, 100% { opacity: 0.45; transform: scaleX(0.82); }
+    50% { opacity: 1; transform: scaleX(1); }
+  }
+
+  /* One consistent wine-gradient identity across customer-facing mobile pages. */
+  @media (max-width: 767px) {
+    :root {
+      --theme-gold: #681F3B;
+      --theme-orange: #681F3B;
+      --theme-cherry: #681F3B;
+      --theme-coral: #681F3B;
+    }
+
+    .theme-bg-home,
+    .theme-bg-new,
+    .theme-bg-sale,
+    .theme-bg-wishlist,
+    .mobile-nav-gradient,
+    .page-new .mobile-nav-gradient,
+    .page-sale .mobile-nav-gradient,
+    .page-wishlist .mobile-nav-gradient {
+      background-color: #681F3B;
+      background-image: linear-gradient(110deg, #350b1b 0%, #681f3b 52%, #8c3155 100%);
+      box-shadow: 0 8px 24px rgba(53, 11, 27, 0.22);
+    }
+
+    .glass-chip-active {
+      background: linear-gradient(135deg, #4b1028, #7d2949);
+      box-shadow: 0 8px 20px -4px rgba(75, 16, 40, 0.4);
+    }
+
+    .futuristic-page-hero,
+    .mobile-wine-surface {
+      background:
+        radial-gradient(circle at 82% 10%, rgba(251, 113, 133, 0.26), transparent 30%),
+        radial-gradient(circle at 12% 72%, rgba(244, 114, 182, 0.16), transparent 38%),
+        linear-gradient(145deg, #210811 0%, #4b1028 44%, #762746 72%, #3b0b20 100%);
+    }
+
+    .cart-fab-green {
+      background: linear-gradient(135deg, #4b1028, #7d2949);
+      box-shadow: 0 10px 30px -5px rgba(75, 16, 40, 0.46);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .futuristic-wave,
+    .futuristic-horizon {
+      animation: none;
+    }
   }
 
   /* Slide-in from bottom (for cart FAB) */

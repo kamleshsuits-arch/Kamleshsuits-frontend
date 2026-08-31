@@ -64,7 +64,7 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className={`z-[100] transition-all duration-700 ${isScrolled || !isSpecialPage ? 'fixed top-0 left-0 right-0 max-md:animate-in max-md:slide-in-from-top-2 max-md:bg-accent shadow-lg md:bg-white' : `absolute top-0 left-0 right-0 max-md:animate-in max-md:slide-in-from-top-2 max-md:bg-transparent md:bg-white border-none`} md:sticky md:top-0 md:bg-white md:border-b md:border-stone-100 md:shadow-sm`}>
+      <nav className={`z-[100] transition-all duration-700 ${isScrolled || !isSpecialPage ? 'fixed top-0 left-0 right-0 max-md:animate-in max-md:slide-in-from-top-2 mobile-nav-gradient shadow-lg md:bg-white' : `absolute top-0 left-0 right-0 max-md:animate-in max-md:slide-in-from-top-2 max-md:bg-transparent md:bg-white border-none`} md:sticky md:top-0 md:bg-white md:border-b md:border-stone-100 md:shadow-sm`}>
         <div className="max-w-7xl mx-auto px-2 min-[360px]:px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 md:h-20">
 

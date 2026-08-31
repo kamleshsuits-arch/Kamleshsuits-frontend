@@ -190,7 +190,7 @@ const Hero = () => {
                 <HiSparkles size={13} /> New season edit
               </div>
               {user && (
-                <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-rose-100/80">
+                <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-amber-100/80">
                   Namaste, {user.name?.split(' ')[0] || user.email?.split('@')[0]}
                 </p>
               )}
@@ -254,7 +254,7 @@ const Hero = () => {
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-amber-200/15 text-amber-200"><HiTruck size={18} /></span>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-black uppercase tracking-wide">Complimentary shipping</p>
-              <p className="text-[9px] text-rose-100/75">Automatically applied on orders above ₹5,000</p>
+              <p className="text-[9px] text-amber-100/75">Automatically applied on orders above ₹5,000</p>
             </div>
             <span className="rounded-full bg-white/10 px-2 py-1 text-[8px] font-black uppercase tracking-wider">Auto</span>
           </div>

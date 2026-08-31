@@ -6,6 +6,7 @@ import Loader from '../components/common/Loader';
 import { HiSparkles } from 'react-icons/hi';
 import SEO from '../components/common/SEO';
 import LocationBar from '../components/common/LocationBar';
+import FuturisticWaves from '../components/common/FuturisticWaves';
 
 const NewArrivals = () => {
   const [products, setProducts] = useState([]);
@@ -45,40 +46,13 @@ const NewArrivals = () => {
           "url": "https://kamleshsuits.com/new-arrivals"
         }}
       />
-      {/* Premium Header - Coral Theme with Waves */}
-      <div 
-        className="relative pt-20 pb-20 px-3 sm:px-6 text-center text-primary overflow-hidden md:pt-12 md:pb-24"
-        style={{ backgroundColor: 'var(--theme-coral)' }}
-      >
+      {/* Premium Header - futuristic wine waves on mobile */}
+      <div className="futuristic-page-hero relative pt-20 pb-20 px-3 sm:px-6 text-center text-primary overflow-hidden md:pt-12 md:pb-24">
         {/* Animated Light Layers */}
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-white/10 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-black/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
         
-        {/* Animated Three-Layer Waves */}
-        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] h-[50px]">
-          <div className="absolute inset-0 z-10">
-            <svg className="w-[200%] h-full animate-[wave_20s_linear_infinite] opacity-40" viewBox="0 0 1200 120" preserveAspectRatio="none">
-              <path d="M0,60 C150,110 450,10 600,60 C750,110 1050,10 1200,60 L1200,120 L0,120 Z" fill="#F3EFE0" />
-            </svg>
-          </div>
-          <div className="absolute inset-0 z-20">
-            <svg className="w-[200%] h-full animate-[wave_15s_linear_infinite] opacity-60" viewBox="0 0 1200 120" preserveAspectRatio="none">
-              <path d="M0,60 C150,110 450,10 600,60 C750,110 1050,10 1200,60 L1200,120 L0,120 Z" fill="#EAE3D2" />
-            </svg>
-          </div>
-          <div className="absolute inset-0 z-30">
-            <svg className="w-[200%] h-full animate-[wave_10s_linear_infinite]" viewBox="0 0 1200 120" preserveAspectRatio="none">
-              <path d="M0,60 C150,110 450,10 600,60 C750,110 1050,10 1200,60 L1200,120 L0,120 Z" fill="#FFFFFF" />
-            </svg>
-          </div>
-        </div>
-        
-        <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes wave {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-        `}} />
+        <FuturisticWaves idPrefix="new-arrivals" />
         
         <div className="relative z-10">
           <div className="flex justify-center mb-6">

@@ -27,7 +27,7 @@ const WishlistPage = () => {
       
       {/* Premium Header - Teal Theme */}
       <div 
-        className="relative pt-20 pb-20 px-3 sm:px-6 text-center text-white overflow-hidden animate-bg-pulse"
+        className="mobile-wine-surface relative pt-20 pb-20 px-3 sm:px-6 text-center text-white overflow-hidden animate-bg-pulse"
         style={{ backgroundColor: 'var(--theme-cherry)' }}
       >
         <div className="relative z-10">
