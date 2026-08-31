@@ -37,7 +37,9 @@ const ProductDetails = () => {
       const all = await fetchProducts();
       setAllProducts(all);
 
-      if (data?.images?.length > 0) {
+      if (data?.variants?.[0]?.images?.length > 0) {
+        setSelectedImage(data.variants[0].images[0]);
+      } else if (data?.images?.length > 0) {
         setSelectedImage(data.images[0]);
       } else if (data?.image) {
         setSelectedImage(data.image);
@@ -70,10 +72,13 @@ const ProductDetails = () => {
   const getGalleryItems = () => {
     if (!product) return [];
     const items = [];
-    const images = product.images || [];
+    const activeVariant = Array.isArray(product.variants)
+      ? product.variants.find(variant => variant.colorName === selectedColor) || product.variants[0]
+      : null;
+    const images = activeVariant?.images?.length ? activeVariant.images : (product.images || []);
 
     // Add main image if not in images array
-    if (product.image && !images.includes(product.image)) {
+    if (!activeVariant && product.image && !images.includes(product.image)) {
       items.push({ type: 'image', src: product.image, id: 'main' });
     }
 
@@ -86,6 +91,9 @@ const ProductDetails = () => {
   };
 
   const galleryItems = getGalleryItems();
+  const availableColors = Array.isArray(product?.variants) && product.variants.length
+    ? product.variants.map(variant => variant.colorName).filter(Boolean)
+    : (Array.isArray(product?.colors) ? product.colors : []);
 
   // Price Logic
   const mrp = product ? (product.mrp || Math.round(product.price * 1.25)) : 0; 
@@ -275,15 +283,20 @@ const ProductDetails = () => {
               </p>
 
               {/* Color Selection - Dynamic from Admin */}
-              {product.colors && product.colors.length > 0 && (
+              {availableColors.length > 0 && (
                 <div className="mb-8">
                   <h3 className="text-xs font-black uppercase tracking-[0.12em] mb-2 text-stone-700">Choose a colour *</h3>
                   <p className="text-xs text-stone-500 mb-4">Please select one colour before adding this item.</p>
                   <div className="flex flex-wrap gap-4">
-                    {product.colors.map((color, idx) => (
+                    {availableColors.map((color, idx) => (
                       <button
                         key={idx}
-                        onClick={() => { setSelectedColor(color); setColorError(''); }}
+                        onClick={() => {
+                          const variant = product.variants?.find(item => item.colorName === color);
+                          setSelectedColor(color);
+                          if (variant?.images?.[0]) setSelectedImage(variant.images[0]);
+                          setColorError('');
+                        }}
                         aria-pressed={selectedColor === color}
                         aria-label={`Select ${color}`}
                         className={`min-w-20 min-h-11 px-3 py-2 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
@@ -312,11 +325,18 @@ const ProductDetails = () => {
                     if (isInCart(product.suitId)) {
                       removeFromCart(product.suitId);
                     } else {
-                      if (product.colors?.length > 0 && !selectedColor) {
+                      if (availableColors.length > 0 && !selectedColor) {
                         setColorError('Choose a colour before adding to cart.');
                         return;
                       }
-                      addToCart({ ...product, selectedColor });
+                      const selectedVariant = product.variants?.find(variant => variant.colorName === selectedColor);
+                      addToCart({
+                        ...product,
+                        selectedColor,
+                        selectedVariantId: selectedVariant?.id,
+                        image: selectedVariant?.images?.[0] || product.image,
+                        images: selectedVariant?.images?.length ? selectedVariant.images : product.images
+                      });
                     }
                   }}
                   className={`w-full py-4 text-white text-lg font-medium tracking-wide hover:shadow-lg transition-all duration-300 rounded-sm flex items-center justify-center gap-2 ${

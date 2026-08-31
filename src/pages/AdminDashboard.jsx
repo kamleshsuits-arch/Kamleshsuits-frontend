@@ -16,6 +16,8 @@ import AnalyticsTerminal from '../components/admin/AnalyticsTerminal';
 import CouponManager from '../components/admin/CouponManager';
 import DeliveryDemandInsights from '../components/admin/DeliveryDemandInsights';
 import OrderManager from '../components/admin/OrderManager';
+import ProductVariantManager from '../components/admin/ProductVariantManager';
+import { createEmptyVariant, normalizeProductVariants } from '../utils/productVariants';
 import Loader from '../components/common/Loader';
 import { useCart } from '../hooks/useCart';
 import { getColorName, getColorDisplay } from '../utils/colors';
@@ -95,6 +97,7 @@ const AdminDashboard = () => {
         image: '', 
         images: [], 
         colors: [], 
+        variants: [createEmptyVariant()],
         stock: 4,
         rating: 4.1,
         reviews: 26
@@ -281,6 +284,7 @@ const AdminDashboard = () => {
                 product_subcategory: product.product_subcategory || '',
                 images: product.images || [], 
                 colors: product.colors || [],
+                variants: normalizeProductVariants(product),
                 fabric_family: product.fabric_family || '',
                 fabric_category: product.fabric_category || '',
                 rating: product.rating || 4.1,
@@ -290,7 +294,7 @@ const AdminDashboard = () => {
             setEditingProduct(null);
             setFormData({ 
                 title: '', product_category: defaultCategory, product_subcategory: '', categories: [], price: '', discount: 0, description: '',
-                image: '', images: [], colors: [], stock: 4,
+                image: '', images: [], colors: [], variants: [createEmptyVariant()], stock: 4,
                 fabric_family: '', fabric_category: '',
                 rating: 4.1, reviews: 26
             });
@@ -331,13 +335,31 @@ const AdminDashboard = () => {
             showToast('Fabric Details Missing: Please select both family and category.', null, 'error');
             return;
         }
+        const populatedVariants = (formData.variants || []).filter(variant => Array.isArray(variant.images) && variant.images.length > 0);
+        if (!populatedVariants.length) {
+            showToast('Product Images Missing: Add at least one colour variant and its photos.', null, 'error');
+            return;
+        }
+        if (populatedVariants.some(variant => !variant.colorName?.trim())) {
+            showToast('Colour Missing: Confirm the detected colour name for every uploaded variant.', null, 'error');
+            return;
+        }
 
         let dataToSave = {};
         try {
             setIsSaving(true);
             const price = parseFloat(formData.price) || 0;
             const discount = parseInt(formData.discount) || 0;
-            const stock = parseInt(formData.stock) || 0;
+            const variants = populatedVariants.map((variant, index) => ({
+                id: variant.id || `variant-${index + 1}`,
+                colorName: variant.colorName.trim(),
+                colorHex: variant.colorHex || getColorDisplay(variant.colorName),
+                images: variant.images.filter(Boolean),
+                stock: Math.max(0, parseInt(variant.stock) || 0)
+            }));
+            const flattenedImages = variants.flatMap(variant => variant.images);
+            const variantColours = variants.map(variant => variant.colorName);
+            const stock = variants.reduce((total, variant) => total + variant.stock, 0);
             
             // Ensure all numbers are valid
             const safePrice = isNaN(price) ? 0 : price;
@@ -356,9 +378,10 @@ const AdminDashboard = () => {
                 type: 'product',
                 product_category: formData.product_category,
                 product_subcategory: formData.product_subcategory || '',
-                image: formData.images[0] || '',
-                images: formData.images || [],
-                colors: formData.colors || [],
+                image: flattenedImages[0] || '',
+                images: flattenedImages,
+                colors: variantColours,
+                variants,
                 categories: formData.categories || [],
                 fabric_family: formData.fabric_family, 
                 fabric_category: formData.fabric_category,
@@ -895,6 +918,18 @@ const AdminDashboard = () => {
 
                                 {/* Right Form Section */}
                                 <div className="space-y-6">
+                                    <FormSectionTitle number="03" label="Suit Colours & Pose Images" description="Add every colour in this design and group all of its pose photos together." />
+                                    <ProductVariantManager
+                                        variants={formData.variants || []}
+                                        onChange={(updater) => setFormData(prev => ({
+                                            ...prev,
+                                            variants: typeof updater === 'function' ? updater(prev.variants || []) : updater
+                                        }))}
+                                        onUploadingChange={setUploading}
+                                        showToast={showToast}
+                                    />
+
+                                    <div className="hidden" aria-hidden="true">
                                     <FormSectionTitle number="03" label="Product Gallery" description="Show the product clearly from multiple angles." />
                                     <div className="space-y-4">
                                         <div className="flex items-end justify-between gap-4 px-1">
@@ -1071,10 +1106,12 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
 
-                                    <FormSectionTitle number="05" label="Inventory & Description" description="Finish with stock information and a short product summary." />
+                                    </div>
+
+                                    <FormSectionTitle number="04" label="Inventory & Description" description="Stock is calculated from all colour variants. Finish with the product summary." />
                                     <div className="asset-section-card space-y-5">
                                     <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                                        <InputBox label="Stock Level" type="number" value={formData.stock} onChange={(v) => setFormData({...formData, stock: v})} icon={<HiCube />} />
+                                        <InputBox label="Total Stock (auto)" type="number" value={(formData.variants || []).reduce((total, variant) => total + (parseInt(variant.stock) || 0), 0)} onChange={() => {}} icon={<HiCube />} disabled />
                                         <div className="grid grid-cols-2 gap-2 sm:gap-3">
                                             <InputBox label="Rating" type="number" value={formData.rating} onChange={(v) => setFormData({...formData, rating: v})} icon={<HiStar className="text-yellow-400" />} />
                                             <InputBox label="Reviews" type="number" value={formData.reviews} onChange={(v) => setFormData({...formData, reviews: v})} icon={<HiUsers />} />
@@ -1150,17 +1187,18 @@ const FormSectionTitle = ({ number, label, description }) => (
     </div>
 );
 
-const InputBox = ({ label, type = 'text', value, onChange, icon, color, placeholder = '' }) => (
+const InputBox = ({ label, type = 'text', value, onChange, icon, color, placeholder = '', disabled = false }) => (
     <div className="w-full space-y-2">
         <label className="block text-sm font-black text-stone-800">{label}</label>
         <div className="relative">
             {icon && <div className="pointer-events-none absolute left-4 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center text-stone-400">{icon}</div>}
             <input 
-                type={type} required 
+                type={type} required={!disabled}
+                disabled={disabled}
                 value={value}
                 placeholder={placeholder}
                 onChange={(e) => onChange(e.target.value)}
-                className={`asset-control ${icon ? 'asset-control-with-icon' : ''} ${color || 'text-primary'}`}
+                className={`asset-control ${icon ? 'asset-control-with-icon' : ''} ${color || 'text-primary'} disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-500`}
             />
         </div>
     </div>
