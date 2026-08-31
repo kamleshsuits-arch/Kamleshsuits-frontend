@@ -85,6 +85,7 @@ const Hero = () => {
           lineTwo: cleanBannerText(item.line_two),
           lineOneColor: item.line_one_color || '#FDE68A',
           lineTwoColor: item.line_two_color || '#FFFFFF',
+          productPath: cleanBannerText(item.product_path),
         })).filter(item => item.src);
         const nextImages = [...DEFAULT_HERO_IMAGES, ...uploaded];
         setImages(nextImages);
@@ -216,7 +217,7 @@ const Hero = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-[#260914]/45 to-transparent" />
             </div>
 
-            <div className="absolute left-1/2 top-0 z-10 h-[252px] w-[61%] max-w-[230px] -translate-x-1/2 overflow-hidden rounded-[2rem] border-[3px] border-white/70 bg-stone-100 shadow-[0_24px_55px_rgba(12,3,8,0.55)] min-[380px]:h-[274px]">
+            <HeroProductLink item={images[currentIdx]} className="absolute left-1/2 top-0 z-10 h-[252px] w-[61%] max-w-[230px] -translate-x-1/2 overflow-hidden rounded-[2rem] border-[3px] border-white/70 bg-stone-100 shadow-[0_24px_55px_rgba(12,3,8,0.55)] min-[380px]:h-[274px]">
               <img src={images[prevIdx].src} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
               <img src={images[currentIdx].src} alt={images[currentIdx].alt} className="image-overlay absolute inset-0 h-full w-full object-cover opacity-0" />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent px-4 pb-4 pt-14 text-white">
@@ -226,7 +227,8 @@ const Hero = () => {
               <div className="absolute right-3 top-3 rounded-full border border-white/30 bg-black/25 px-2 py-1 text-[8px] font-black uppercase tracking-wider text-white backdrop-blur-md">
                 0{currentIdx + 1} / 0{images.length}
               </div>
-            </div>
+              {images[currentIdx].productPath && <span className="absolute left-3 top-3 rounded-full border border-white/30 bg-white/90 px-2 py-1 text-[8px] font-black uppercase tracking-wider text-[#681f3b] shadow backdrop-blur-md">View product →</span>}
+            </HeroProductLink>
 
             <div className="absolute inset-x-0 bottom-0 z-20 flex justify-center gap-1.5">
               {images.map((image, idx) => (
@@ -297,7 +299,7 @@ const Hero = () => {
           </div>
           <div ref={imageRef} className="relative h-[600px] hidden md:block">
             {/* Slot 1: Desktop Main stack */}
-            <div className="absolute top-10 right-10 w-80 h-[500px] overflow-hidden shadow-2xl z-20 bg-muted">
+            <HeroProductLink item={images[currentIdx]} className="absolute top-10 right-10 z-20 h-[500px] w-80 overflow-hidden bg-muted shadow-2xl">
               <img 
                 src={images[prevIdx].src} 
                 alt={images[prevIdx].alt} 
@@ -308,7 +310,8 @@ const Hero = () => {
                 alt={images[currentIdx].alt} 
                 className="absolute inset-0 w-full h-full object-cover image-overlay opacity-0"
               />
-            </div>
+              {images[currentIdx].productPath && <span className="absolute bottom-5 right-5 z-10 rounded-full bg-white/95 px-4 py-2 text-xs font-black uppercase tracking-wide text-primary shadow-xl">View product <HiArrowRight className="ml-1 inline" /></span>}
+            </HeroProductLink>
             {/* Slot 2: Desktop Sub stack */}
             <div className="absolute bottom-10 left-10 w-72 h-[400px] overflow-hidden shadow-xl z-10 border-4 border-white bg-muted">
               <img 
@@ -352,6 +355,10 @@ const BannerOverlay = ({ banner, actionLabel, bannerLink, compact = false }) => 
     </div>
   </div>
 );
+
+const HeroProductLink = ({ item, className, children }) => item?.productPath
+  ? <Link to={item.productPath} className={`${className} group`} aria-label={`View ${item.alt || item.lineTwo || 'featured product'}`}>{children}</Link>
+  : <div className={className}>{children}</div>;
 
 const RotatingBannerHeadline = ({ banner, compact }) => {
   const words = Array.isArray(banner.animated_words) ? banner.animated_words.map(cleanBannerText).filter(Boolean) : [];

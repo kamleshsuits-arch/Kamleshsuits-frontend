@@ -17,7 +17,10 @@ import CouponManager from '../components/admin/CouponManager';
 import DeliveryDemandInsights from '../components/admin/DeliveryDemandInsights';
 import OrderManager from '../components/admin/OrderManager';
 import ProductVariantManager from '../components/admin/ProductVariantManager';
+import ProductHeroFeature from '../components/admin/ProductHeroFeature';
 import { createEmptyVariant, normalizeProductVariants } from '../utils/productVariants';
+import { createProductHeroFeature, normalizeProductHeroFeature } from '../utils/productHeroFeature';
+import { deleteHeroImage, saveHeroImage } from '../api/banners';
 import Loader from '../components/common/Loader';
 import { useCart } from '../hooks/useCart';
 import { getColorName, getColorDisplay } from '../utils/colors';
@@ -98,6 +101,7 @@ const AdminDashboard = () => {
         images: [], 
         colors: [], 
         variants: [createEmptyVariant()],
+        heroFeature: createProductHeroFeature(),
         stock: 4,
         rating: 4.1,
         reviews: 26
@@ -285,6 +289,7 @@ const AdminDashboard = () => {
                 images: product.images || [], 
                 colors: product.colors || [],
                 variants: normalizeProductVariants(product),
+                heroFeature: normalizeProductHeroFeature(product),
                 fabric_family: product.fabric_family || '',
                 fabric_category: product.fabric_category || '',
                 rating: product.rating || 4.1,
@@ -294,7 +299,7 @@ const AdminDashboard = () => {
             setEditingProduct(null);
             setFormData({ 
                 title: '', product_category: defaultCategory, product_subcategory: '', categories: [], price: '', discount: 0, description: '',
-                image: '', images: [], colors: [], variants: [createEmptyVariant()], stock: 4,
+                image: '', images: [], colors: [], variants: [createEmptyVariant()], heroFeature: createProductHeroFeature(), stock: 4,
                 fabric_family: '', fabric_category: '',
                 rating: 4.1, reviews: 26
             });
@@ -360,6 +365,14 @@ const AdminDashboard = () => {
             const flattenedImages = variants.flatMap(variant => variant.images);
             const variantColours = variants.map(variant => variant.colorName);
             const stock = variants.reduce((total, variant) => total + variant.stock, 0);
+            const heroImage = flattenedImages.includes(formData.heroFeature?.image)
+                ? formData.heroFeature.image
+                : flattenedImages[0];
+            const heroFeature = createProductHeroFeature({
+                ...formData.heroFeature,
+                image: heroImage,
+                line_two: formData.heroFeature?.line_two?.trim() || formData.title.trim()
+            });
             
             // Ensure all numbers are valid
             const safePrice = isNaN(price) ? 0 : price;
@@ -382,6 +395,9 @@ const AdminDashboard = () => {
                 images: flattenedImages,
                 colors: variantColours,
                 variants,
+                hero_feature: heroFeature,
+                featured_on_home: Boolean(heroFeature.enabled),
+                hero_image_id: heroFeature.heroImageId || '',
                 categories: formData.categories || [],
                 fabric_family: formData.fabric_family, 
                 fabric_category: formData.fabric_category,
@@ -395,13 +411,45 @@ const AdminDashboard = () => {
                 ].filter(Boolean).join(' - ')
             };
             
+            let savedProduct = editingProduct
+                ? await updateProduct(editingProduct.suitId, dataToSave)
+                : await addProduct(dataToSave);
+
+            try {
+                let syncedHeroFeature = heroFeature;
+                if (heroFeature.enabled) {
+                    const savedHero = await saveHeroImage({
+                        heroImageId: heroFeature.heroImageId || undefined,
+                        image: heroFeature.image,
+                        line_one: heroFeature.line_one,
+                        line_two: heroFeature.line_two,
+                        line_one_color: heroFeature.line_one_color,
+                        line_two_color: heroFeature.line_two_color,
+                        alt_text: `${formData.title} homepage feature`,
+                        active: true,
+                        product_id: savedProduct.suitId
+                    });
+                    syncedHeroFeature = { ...heroFeature, heroImageId: savedHero.suitId };
+                } else if (heroFeature.heroImageId) {
+                    await deleteHeroImage(heroFeature.heroImageId);
+                    syncedHeroFeature = { ...heroFeature, heroImageId: '' };
+                }
+
+                savedProduct = await updateProduct(savedProduct.suitId, {
+                    hero_feature: syncedHeroFeature,
+                    featured_on_home: Boolean(syncedHeroFeature.enabled),
+                    hero_image_id: syncedHeroFeature.heroImageId || ''
+                });
+            } catch (heroError) {
+                console.error('Product saved but homepage hero sync failed:', heroError);
+                showToast('Product saved, but its homepage hero could not be updated. Edit the product to retry.', null, 'error');
+            }
+
             if (editingProduct) {
-                const updated = await updateProduct(editingProduct.suitId, dataToSave);
-                setProducts(prev => prev.map(p => p.suitId === editingProduct.suitId ? ({...p, ...updated}) : p));
+                setProducts(prev => prev.map(p => p.suitId === editingProduct.suitId ? ({...p, ...savedProduct}) : p));
                 showToast(`Asset Updated: ${formData.title} - Successfully synchronized with global catalog.`, null, 'success');
             } else {
-                const created = await addProduct(dataToSave);
-                setProducts(prev => [created, ...prev]);
+                setProducts(prev => [savedProduct, ...prev]);
                 showToast(`Product Published: ${formData.title} is now live on the storefront.`, null, 'success');
             }
             setIsModalOpen(false);
@@ -929,6 +977,17 @@ const AdminDashboard = () => {
                                         showToast={showToast}
                                     />
 
+                                    <FormSectionTitle number="04" label="Homepage Hero" description="Optionally reuse this product's image as a clickable homepage highlight." />
+                                    <ProductHeroFeature
+                                        value={formData.heroFeature || createProductHeroFeature()}
+                                        onChange={(updater) => setFormData(prev => ({
+                                            ...prev,
+                                            heroFeature: typeof updater === 'function' ? updater(prev.heroFeature || createProductHeroFeature()) : updater
+                                        }))}
+                                        variants={formData.variants || []}
+                                        productTitle={formData.title}
+                                    />
+
                                     <div className="hidden" aria-hidden="true">
                                     <FormSectionTitle number="03" label="Product Gallery" description="Show the product clearly from multiple angles." />
                                     <div className="space-y-4">
@@ -1108,7 +1167,7 @@ const AdminDashboard = () => {
 
                                     </div>
 
-                                    <FormSectionTitle number="04" label="Inventory & Description" description="Stock is calculated from all colour variants. Finish with the product summary." />
+                                    <FormSectionTitle number="05" label="Inventory & Description" description="Stock is calculated from all colour variants. Finish with the product summary." />
                                     <div className="asset-section-card space-y-5">
                                     <div className="grid grid-cols-2 gap-3 sm:gap-4">
                                         <InputBox label="Total Stock (auto)" type="number" value={(formData.variants || []).reduce((total, variant) => total + (parseInt(variant.stock) || 0), 0)} onChange={() => {}} icon={<HiCube />} disabled />

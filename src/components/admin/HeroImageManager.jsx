@@ -18,7 +18,7 @@ const DEFAULT_IMAGES = [
 
 const EMPTY_HERO = {
   heroImageId: '', image: '', line_one: 'Featured piece', line_two: '',
-  line_one_color: '#FDE68A', line_two_color: '#FFFFFF', alt_text: '', active: true, sort_order: 0,
+  line_one_color: '#FDE68A', line_two_color: '#FFFFFF', alt_text: '', active: true, sort_order: 0, product_id: '',
 };
 
 const COLOR_PRESETS = ['#FFFFFF', '#FDE68A', '#FCD34D', '#FDBA74', '#FDA4AF', '#C4B5FD', '#86EFAC', '#1C1917', '#7F1D1D'];
@@ -159,6 +159,7 @@ const HeroImageManager = ({ showToast }) => {
                 </div>
                 <div className="p-3">
                   <p className="truncate text-xs font-black text-primary">{item.line_two || 'Untitled hero'}</p>
+                  {item.product_id && <span className="mt-2 inline-flex rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black uppercase text-emerald-700">Linked product</span>}
                   {item.builtIn ? <span className="mt-2 inline-flex rounded-full bg-stone-100 px-2 py-1 text-[9px] font-black uppercase text-stone-500">Built in</span> : (
                     <div className="mt-2 flex gap-2">
                       <button type="button" onClick={() => openEdit(item)} className="admin-secondary-button flex-1"><HiPencil /> Edit</button>
