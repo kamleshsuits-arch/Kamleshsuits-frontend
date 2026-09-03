@@ -30,11 +30,16 @@ function App() {
   const [showLaunch, setShowLaunch] = React.useState(() => {
     return !sessionStorage.getItem('hasSeenLaunch');
   });
+  const [initialCollectionReady, setInitialCollectionReady] = React.useState(false);
   const [showLocationWelcome, setShowLocationWelcome] = React.useState(false);
 
   const handleLaunchComplete = React.useCallback(() => {
     sessionStorage.setItem('hasSeenLaunch', 'true');
     setShowLaunch(false);
+  }, []);
+
+  const handleInitialCollectionReady = React.useCallback(() => {
+    setInitialCollectionReady(true);
   }, []);
 
   React.useEffect(() => {
@@ -51,7 +56,7 @@ function App() {
 
   return (
     <div className={`flex flex-col min-h-screen ${!isAuthPage ? 'pb-16 md:pb-0' : ''}`}>
-      {showLaunch && <LaunchScreen onComplete={handleLaunchComplete} />}
+      {showLaunch && <LaunchScreen ready={!isHome || initialCollectionReady} onComplete={handleLaunchComplete} />}
       <LocationModal isOpen={showLocationWelcome} onClose={() => setShowLocationWelcome(false)} welcome />
       {!isAuthPage && <Navbar />}
       <Toast 
@@ -65,7 +70,7 @@ function App() {
         {/* Global LocationBar removed per request - now page-specific */}
         {/* {!isAuthPage && !skipGlobalPadding && !isProductPage && !deliveryLocation && <LocationBar />} */}
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home onInitialCollectionReady={handleInitialCollectionReady} />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/track-order" element={<TrackOrder />} />

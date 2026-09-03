@@ -5,13 +5,12 @@ import { fetchProducts } from "../../api/products";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ProductCard from "./ProductCard";
 import ProductFilter from "./ProductFilter";
-import { useCart } from "../../hooks/useCart.jsx";
 import { HiFilter, HiSortAscending, HiX, HiCheck, HiChevronUp } from "react-icons/hi";
 import Loader from "../common/Loader";
 import { useProductTaxonomy } from "../../hooks/useProductTaxonomy";
 import { DEFAULT_PRODUCT_CATEGORY } from "../../utils/productTaxonomy";
 
-const ProductList = () => {
+const ProductList = ({ onInitialReady }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -32,9 +31,7 @@ const ProductList = () => {
 
   const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [showMobileSort, setShowMobileSort] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const { addToCart } = useCart();
+  const [searchParams] = useSearchParams();
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Show scroll top button after 800px (roughly 8 items)
@@ -71,7 +68,7 @@ const ProductList = () => {
 
   // --- Lazy loading / paging state ---
   const PAGE_SIZE = 12; // items per "page" loaded
-  const [page, setPage] = useState(1); // current page (1-indexed)
+  const [, setPage] = useState(1); // current page (1-indexed)
   const [displayed, setDisplayed] = useState([]); // currently displayed products (subset)
   const sentinelRef = useRef(null);
   const observerRef = useRef(null);
@@ -85,7 +82,10 @@ const ProductList = () => {
       } catch (err) {
         console.error("Error fetching products:", err);
       } finally {
-        if (showLoader) setLoading(false);
+        if (showLoader) {
+          setLoading(false);
+          onInitialReady?.();
+        }
       }
     };
 
@@ -102,7 +102,7 @@ const ProductList = () => {
       window.removeEventListener('focus', handleFocus);
       clearInterval(pollInterval);
     };
-  }, []);
+  }, [onInitialReady]);
 
   // compute filtered and sorted list
   const filteredAndSorted = useMemo(() => {
@@ -174,7 +174,8 @@ const ProductList = () => {
   const loadMore = useCallback(() => {
     if (isLoadingMore) return;
     setIsLoadingMore(true);
-    // simulate small delay for UX (optional)
+    // A short transition keeps appended cards feeling deliberate without
+    // making users wait once the next batch is near the viewport.
     setTimeout(() => {
       setPage((prev) => {
         const next = prev + 1;
@@ -183,7 +184,7 @@ const ProductList = () => {
         return next;
       });
       setIsLoadingMore(false);
-    }, 250);
+    }, 120);
   }, [filteredAndSorted, isLoadingMore]);
 
   // IntersectionObserver to auto-load when sentinel is visible
@@ -209,7 +210,7 @@ const ProductList = () => {
       },
       {
         root: null,
-        rootMargin: "200px",
+        rootMargin: "600px 0px",
         threshold: 0.1,
       }
     );

@@ -7,7 +7,7 @@ import StyleDealsSection from "../components/home/StyleDealsSection";
 import ProductList from "../components/product/ProductList";
 import SEO from "../components/common/SEO";
 
-export default function Home() {
+export default function Home({ onInitialCollectionReady }) {
   return (
     <div className="min-h-screen bg-gray-50 page-home">
       <SEO
@@ -39,7 +39,7 @@ export default function Home() {
 
       {/* Full product grid */}
       <div id="collection-section" className="container mx-auto scroll-mt-[8.75rem]">
-        <ProductList />
+        <ProductList onInitialReady={onInitialCollectionReady} />
       </div>
     </div>
   );
