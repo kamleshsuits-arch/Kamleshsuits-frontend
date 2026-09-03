@@ -1,0 +1,50 @@
+{
+  "id": "/",
+  "name": "Kamlesh Suits",
+  "short_name": "Kamlesh Suits",
+  "description": "Shop premium Indian suits and ethnic wear from Kamlesh Suits.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FFFAF0",
+  "theme_color": "#3B1F12",
+  "categories": ["shopping", "fashion", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icons/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Arrivals",
+      "short_name": "New",
+      "url": "/new-arrivals"
+    },
+    {
+      "name": "Sale Collection",
+      "short_name": "Sale",
+      "url": "/sale"
+    },
+    {
+      "name": "My Wishlist",
+      "short_name": "Wishlist",
+      "url": "/wishlist"
+    }
+  ]
+}

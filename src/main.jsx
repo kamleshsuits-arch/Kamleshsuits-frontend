@@ -14,6 +14,9 @@ import { CartProvider } from './hooks/useCart.jsx';
 import { AuthProvider } from './context/AuthContext';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { registerServiceWorker } from './pwa';
+
+registerServiceWorker();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
