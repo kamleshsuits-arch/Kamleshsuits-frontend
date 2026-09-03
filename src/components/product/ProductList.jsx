@@ -394,7 +394,7 @@ const ProductList = ({ onInitialReady }) => {
       {showScrollTop && (
         <button
           onClick={scrollToCollection}
-          className="fixed bottom-24 right-6 z-50 p-4 bg-white/30 backdrop-blur-lg border border-primary/20 text-primary rounded-full shadow-2xl hover:bg-primary hover:text-white transition-all duration-500 animate-in fade-in zoom-in slide-in-from-bottom-10"
+          className="fixed bottom-24 right-6 z-50 hidden p-4 bg-white/30 backdrop-blur-lg border border-primary/20 text-primary rounded-full shadow-2xl hover:bg-primary hover:text-white transition-all duration-500 animate-in fade-in zoom-in slide-in-from-bottom-10 md:block"
           aria-label="Scroll to top of collection"
         >
           <HiChevronUp size={24} />

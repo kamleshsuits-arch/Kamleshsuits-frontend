@@ -2,6 +2,19 @@ import { AWS_CONFIG } from './lib/aws-config';
 
 const INSTALLATION_KEY = 'kamlesh_pwa_installation_id';
 const API_URL = AWS_CONFIG.apiBaseUrl;
+let deferredInstallPrompt = null;
+
+export const canInstallPwa = () => Boolean(deferredInstallPrompt);
+
+export const promptPwaInstall = async () => {
+  if (!deferredInstallPrompt) return { outcome: 'unavailable' };
+  const promptEvent = deferredInstallPrompt;
+  deferredInstallPrompt = null;
+  await promptEvent.prompt();
+  const choice = await promptEvent.userChoice;
+  window.dispatchEvent(new CustomEvent('kamlesh:pwa-install-state', { detail: choice }));
+  return choice;
+};
 
 const getAuthHeaders = () => {
   const clientId = import.meta.env.VITE_AWS_COGNITO_CLIENT_ID;
@@ -74,6 +87,12 @@ export const enablePushNotifications = async () => {
 export const registerServiceWorker = () => {
   if (!('serviceWorker' in navigator) || !import.meta.env.PROD) return;
 
+  window.addEventListener('beforeinstallprompt', event => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    window.dispatchEvent(new CustomEvent('kamlesh:pwa-install-ready'));
+  });
+
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(() => trackPwaInstallation(isStandalonePwa()))
@@ -81,6 +100,7 @@ export const registerServiceWorker = () => {
   });
 
   window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
     trackPwaInstallation(true);
     window.dispatchEvent(new CustomEvent('kamlesh:pwa-installed'));
   });

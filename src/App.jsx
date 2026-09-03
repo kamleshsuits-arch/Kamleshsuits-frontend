@@ -24,6 +24,7 @@ import BottomNav from './components/common/BottomNav';
 import LaunchScreen from './components/common/LaunchScreen';
 import LocationModal from './components/common/LocationModal';
 import NotificationCenter from './components/common/NotificationCenter';
+import InstallPrompt from './components/common/InstallPrompt';
 
 function App() {
   const { toast, hideToast, deliveryLocation } = useCart();
@@ -59,6 +60,7 @@ function App() {
     <div className={`flex flex-col min-h-screen ${!isAuthPage ? 'pb-16 md:pb-0' : ''}`}>
       {showLaunch && <LaunchScreen ready={!isHome || initialCollectionReady} onComplete={handleLaunchComplete} />}
       <LocationModal isOpen={showLocationWelcome} onClose={() => setShowLocationWelcome(false)} welcome />
+      {!isAuthPage && !location.pathname.startsWith('/admin') && <InstallPrompt />}
       {!isAuthPage && <NotificationCenter />}
       {!isAuthPage && <Navbar />}
       <Toast 
