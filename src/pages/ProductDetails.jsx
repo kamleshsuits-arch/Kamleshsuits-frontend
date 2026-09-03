@@ -12,6 +12,43 @@ import SEO from '../components/common/SEO';
 import LocationBar from '../components/common/LocationBar';
 import { getProductCategoryLabel } from '../utils/productTaxonomy';
 
+const ProductColorSelector = ({ product, colors, selectedColor, colorError, onSelect, compact = false, className = '' }) => (
+  <div className={className}>
+    <div className={compact ? 'mb-3 flex items-center justify-between gap-3' : ''}>
+      <h3 className="mb-2 text-xs font-black uppercase tracking-[0.12em] text-stone-700">Choose a colour</h3>
+      {compact && selectedColor && <span className="truncate text-[10px] font-bold text-emerald-700">Selected: {selectedColor}</span>}
+    </div>
+    {!compact && <p className="mb-4 text-xs text-stone-500">The product's primary colour is selected. Choose another shade if preferred.</p>}
+    <div className={compact ? 'flex gap-2 overflow-x-auto px-1 pb-2 pt-1' : 'flex flex-wrap gap-4'}>
+      {colors.map(color => {
+        const variant = product.variants?.find(item => item.colorName === color);
+        const isSelected = selectedColor === color;
+        return (
+          <button
+            key={color}
+            type="button"
+            onClick={() => onSelect(color)}
+            aria-pressed={isSelected}
+            aria-label={`Select ${color}`}
+            className={`flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border-2 px-3 py-2 transition-all ${
+              isSelected ? 'border-primary bg-primary/5 ring-2 ring-primary/20' : 'border-stone-200 bg-white'
+            } ${compact ? '' : 'min-w-20'}`}
+            title={color}
+          >
+            <span
+              className="h-5 w-5 shrink-0 rounded-full border border-stone-200 shadow-inner"
+              style={{ backgroundColor: variant?.colorHex || getColorDisplay(color) }}
+            />
+            <span className="text-[10px] font-bold text-primary">{color}</span>
+          </button>
+        );
+      })}
+    </div>
+    {!compact && selectedColor && <p className="mt-4 text-xs font-bold text-emerald-700">Selected colour: {selectedColor}</p>}
+    {colorError && <p className="mt-3 text-xs font-bold text-red-600" role="alert">{colorError}</p>}
+  </div>
+);
+
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -99,6 +136,13 @@ const ProductDetails = () => {
   const availableColors = Array.isArray(product?.variants) && product.variants.length
     ? product.variants.map(variant => variant.colorName).filter(Boolean)
     : (Array.isArray(product?.colors) ? product.colors : []);
+
+  const handleColorSelect = color => {
+    const variant = product?.variants?.find(item => item.colorName === color);
+    setSelectedColor(color);
+    if (variant?.images?.[0]) setSelectedImage(variant.images[0]);
+    setColorError('');
+  };
 
   // Price Logic
   const mrp = product ? (product.mrp || Math.round(product.price * 1.25)) : 0; 
@@ -262,6 +306,18 @@ const ProductDetails = () => {
               </div>
             </div>
 
+            {availableColors.length > 0 && (
+              <ProductColorSelector
+                product={product}
+                colors={availableColors}
+                selectedColor={selectedColor}
+                colorError={colorError}
+                onSelect={handleColorSelect}
+                compact
+                className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm md:hidden"
+              />
+            )}
+
             {/* Thumbnails Grid (3 Boxes) */}
             <div className="grid grid-cols-3 gap-2 sm:gap-4">
               {galleryItems.slice(0, 3).map((item, index) => {
@@ -332,37 +388,14 @@ const ProductDetails = () => {
 
               {/* Color Selection - Dynamic from Admin */}
               {availableColors.length > 0 && (
-                <div className="mb-8">
-                  <h3 className="text-xs font-black uppercase tracking-[0.12em] mb-2 text-stone-700">Choose a colour *</h3>
-                  <p className="text-xs text-stone-500 mb-4">The product's primary colour is selected. Choose another shade if preferred.</p>
-                  <div className="flex flex-wrap gap-4">
-                    {availableColors.map((color, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          const variant = product.variants?.find(item => item.colorName === color);
-                          setSelectedColor(color);
-                          if (variant?.images?.[0]) setSelectedImage(variant.images[0]);
-                          setColorError('');
-                        }}
-                        aria-pressed={selectedColor === color}
-                        aria-label={`Select ${color}`}
-                        className={`min-w-20 min-h-11 px-3 py-2 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
-                          selectedColor === color ? 'border-primary ring-2 ring-primary/20 scale-110' : 'border-stone-200'
-                        }`}
-                        title={color}
-                      >
-                        <div 
-                          className="w-5 h-5 rounded-full shadow-inner border border-stone-200"
-                          style={{ backgroundColor: product.variants?.find(item => item.colorName === color)?.colorHex || getColorDisplay(color) }}
-                        />
-                        <span className="text-[10px] font-bold text-primary">{color}</span>
-                      </button>
-                    ))}
-                  </div>
-                  {selectedColor && <p className="text-xs font-bold text-emerald-700 mt-4">Selected colour: {selectedColor}</p>}
-                  {colorError && <p className="text-xs font-bold text-red-600 mt-4" role="alert">{colorError}</p>}
-                </div>
+                <ProductColorSelector
+                  product={product}
+                  colors={availableColors}
+                  selectedColor={selectedColor}
+                  colorError={colorError}
+                  onSelect={handleColorSelect}
+                  className="mb-8 hidden md:block"
+                />
               )}
 
 
