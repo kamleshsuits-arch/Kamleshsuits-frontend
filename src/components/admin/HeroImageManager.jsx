@@ -2,19 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { HiCheck, HiColorSwatch, HiPencil, HiPhotograph, HiPlus, HiRefresh, HiTrash, HiUpload, HiX } from 'react-icons/hi';
 import { deleteHeroImage, fetchAdminHeroImages, saveHeroImage } from '../../api/banners';
 import { uploadProductImage } from '../../api/products';
-import hero1 from '../../assets/hero1.webp';
-import hero2 from '../../assets/hero2.jpg';
-import rustic from '../../assets/Rustic.jpeg';
-import naviBlue from '../../assets/Navi_blue.jpeg';
-import brown from '../../assets/Brown.jpeg';
-
-const DEFAULT_IMAGES = [
-  { suitId: 'default-rustic', image: rustic, line_one: 'Featured piece', line_two: 'Rustic Suit', line_one_color: '#FDE68A', line_two_color: '#FFFFFF', builtIn: true },
-  { suitId: 'default-navi-blue', image: naviBlue, line_one: 'Featured piece', line_two: 'Navi Blue Suit', line_one_color: '#FDE68A', line_two_color: '#FFFFFF', builtIn: true },
-  { suitId: 'default-brown', image: brown, line_one: 'Featured piece', line_two: 'Brown Suit', line_one_color: '#FDE68A', line_two_color: '#FFFFFF', builtIn: true },
-  { suitId: 'default-elegant', image: hero1, line_one: 'Featured piece', line_two: 'Elegant Suit', line_one_color: '#FDE68A', line_two_color: '#FFFFFF', builtIn: true },
-  { suitId: 'default-cotton', image: hero2, line_one: 'Featured piece', line_two: 'Cotton Suit', line_one_color: '#FDE68A', line_two_color: '#FFFFFF', builtIn: true },
-];
 
 const EMPTY_HERO = {
   heroImageId: '', image: '', line_one: 'Featured piece', line_two: '',
@@ -44,7 +31,7 @@ const HeroImageManager = ({ showToast }) => {
   useEffect(() => { loadImages(); }, [loadImages]);
 
   const openCreate = () => {
-    setFormData({ ...EMPTY_HERO, sort_order: DEFAULT_IMAGES.length + savedImages.length });
+    setFormData({ ...EMPTY_HERO, sort_order: savedImages.length });
     setShowForm(true);
     setTimeout(() => document.getElementById('hero-image-editor')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
   };
@@ -97,7 +84,7 @@ const HeroImageManager = ({ showToast }) => {
     }
   };
 
-  const images = [...DEFAULT_IMAGES, ...savedImages];
+  const images = savedImages;
 
   return (
     <section className="admin-panel overflow-hidden border-amber-200">
@@ -160,12 +147,10 @@ const HeroImageManager = ({ showToast }) => {
                 <div className="p-3">
                   <p className="truncate text-xs font-black text-primary">{item.line_two || 'Untitled hero'}</p>
                   {item.product_id && <span className="mt-2 inline-flex rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black uppercase text-emerald-700">Linked product</span>}
-                  {item.builtIn ? <span className="mt-2 inline-flex rounded-full bg-stone-100 px-2 py-1 text-[9px] font-black uppercase text-stone-500">Built in</span> : (
-                    <div className="mt-2 flex gap-2">
-                      <button type="button" onClick={() => openEdit(item)} className="admin-secondary-button flex-1"><HiPencil /> Edit</button>
-                      <button type="button" onClick={() => removeImage(item)} className="grid h-11 w-11 place-items-center rounded-xl border border-red-100 text-red-600 hover:bg-red-50" aria-label={`Delete ${item.line_two || 'hero image'}`}><HiTrash /></button>
-                    </div>
-                  )}
+                  <div className="mt-2 flex gap-2">
+                    <button type="button" onClick={() => openEdit(item)} className="admin-secondary-button flex-1"><HiPencil /> Edit</button>
+                    <button type="button" onClick={() => removeImage(item)} className="grid h-11 w-11 place-items-center rounded-xl border border-red-100 text-red-600 hover:bg-red-50" aria-label={`Delete ${item.line_two || 'hero image'}`}><HiTrash /></button>
+                  </div>
                 </div>
               </article>
             ))}

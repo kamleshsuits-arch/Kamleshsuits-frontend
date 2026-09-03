@@ -6,11 +6,6 @@ import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
 import { HiArrowRight, HiSparkles, HiTag, HiTruck } from "react-icons/hi";
 import LocationBar from "../common/LocationBar";
-import hero1 from "../../assets/hero1.webp";
-import hero2 from "../../assets/hero2.jpg";
-import rustic from "../../assets/Rustic.jpeg";
-import naviBlue from "../../assets/Navi_blue.jpeg";
-import brown from "../../assets/Brown.jpeg";
 import { fetchPublicBanners, fetchPublicHeroImages } from "../../api/banners";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -34,14 +29,6 @@ const getBannerOverlay = banner => {
   return `linear-gradient(to top, ${rgbaFromHex(color, opacity)} 0%, ${rgbaFromHex(color, opacity * 0.48)} 48%, ${rgbaFromHex(color, 0.04)} 100%)`;
 };
 
-const DEFAULT_HERO_IMAGES = [
-  { src: rustic, alt: "Rustic Suit", lineOne: "Featured piece", lineTwo: "Rustic Suit", lineOneColor: "#FDE68A", lineTwoColor: "#FFFFFF" },
-  { src: naviBlue, alt: "Navi Blue Suit", lineOne: "Featured piece", lineTwo: "Navi Blue Suit", lineOneColor: "#FDE68A", lineTwoColor: "#FFFFFF" },
-  { src: brown, alt: "Brown Suit", lineOne: "Featured piece", lineTwo: "Brown Suit", lineOneColor: "#FDE68A", lineTwoColor: "#FFFFFF" },
-  { src: hero1, alt: "Elegant Suit", lineOne: "Featured piece", lineTwo: "Elegant Suit", lineOneColor: "#FDE68A", lineTwoColor: "#FFFFFF" },
-  { src: hero2, alt: "Cotton Suit", lineOne: "Featured piece", lineTwo: "Cotton Suit", lineOneColor: "#FDE68A", lineTwoColor: "#FFFFFF" },
-];
-
 const Hero = () => {
   const { user } = useAuth();
   const heroRef = useRef(null);
@@ -52,7 +39,8 @@ const Hero = () => {
   const [prevIdx, setPrevIdx] = useState(0);
   const [liveBanners, setLiveBanners] = useState([]);
   const [bannerIdx, setBannerIdx] = useState(0);
-  const [images, setImages] = useState(DEFAULT_HERO_IMAGES);
+  const [images, setImages] = useState([]);
+  const [heroImagesLoaded, setHeroImagesLoaded] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -87,12 +75,13 @@ const Hero = () => {
           lineTwoColor: item.line_two_color || '#FFFFFF',
           productPath: cleanBannerText(item.product_path),
         })).filter(item => item.src);
-        const nextImages = [...DEFAULT_HERO_IMAGES, ...uploaded];
-        setImages(nextImages);
-        setCurrentIdx(current => current % nextImages.length);
-        setPrevIdx(current => current % nextImages.length);
+        setImages(uploaded);
+        setCurrentIdx(current => uploaded.length ? current % uploaded.length : 0);
+        setPrevIdx(current => uploaded.length ? current % uploaded.length : 0);
       } catch (error) {
-        console.error('Custom hero images unavailable; using the built-in carousel.', error);
+        console.error('Collection hero images are unavailable.', error);
+      } finally {
+        if (active) setHeroImagesLoaded(true);
       }
     };
     loadHeroImages();
@@ -108,6 +97,7 @@ const Hero = () => {
 
   // Auto-advance carousel
   useEffect(() => {
+    if (images.length < 2) return undefined;
     const timer = setInterval(() => {
       setPrevIdx(currentIdx);
       setCurrentIdx((prev) => (prev + 1) % images.length);
@@ -171,6 +161,16 @@ const Hero = () => {
     );
   }
 
+  if (!images.length) {
+    return (
+      <section className="grid min-h-72 place-items-center bg-background px-6 text-center" aria-busy={!heroImagesLoaded}>
+        <p className="font-serif text-lg text-secondary">
+          {heroImagesLoaded ? 'Featured collection is being refreshed.' : 'Loading the featured collection…'}
+        </p>
+      </section>
+    );
+  }
+
   return (
     <section ref={heroRef} className="relative overflow-hidden">
 
@@ -207,15 +207,15 @@ const Hero = () => {
 
           {/* Product gallery: the active item is the main hero highlight. */}
           <div className="relative mt-4 h-[278px] min-[380px]:h-[300px]" aria-roledescription="carousel" aria-label="Featured suit collection">
-            <div className="absolute left-0 top-6 h-[176px] w-[31%] -rotate-6 overflow-hidden rounded-[1.4rem] border border-white/35 bg-white/10 shadow-2xl">
+            <HeroProductLink item={images[(currentIdx + images.length - 1) % images.length]} className="absolute left-0 top-6 h-[176px] w-[31%] -rotate-6 overflow-hidden rounded-[1.4rem] border border-white/35 bg-white/10 shadow-2xl">
               <img src={images[(currentIdx + images.length - 1) % images.length].src} alt={images[(currentIdx + images.length - 1) % images.length].alt} className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#260914]/45 to-transparent" />
-            </div>
+            </HeroProductLink>
 
-            <div className="absolute right-0 top-10 h-[166px] w-[29%] rotate-6 overflow-hidden rounded-[1.4rem] border border-white/35 bg-white/10 shadow-2xl">
+            <HeroProductLink item={images[(currentIdx + 1) % images.length]} className="absolute right-0 top-10 h-[166px] w-[29%] rotate-6 overflow-hidden rounded-[1.4rem] border border-white/35 bg-white/10 shadow-2xl">
               <img src={images[(currentIdx + 1) % images.length].src} alt={images[(currentIdx + 1) % images.length].alt} className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#260914]/45 to-transparent" />
-            </div>
+            </HeroProductLink>
 
             <HeroProductLink item={images[currentIdx]} className="absolute left-1/2 top-0 z-10 h-[252px] w-[61%] max-w-[230px] -translate-x-1/2 overflow-hidden rounded-[2rem] border-[3px] border-white/70 bg-stone-100 shadow-[0_24px_55px_rgba(12,3,8,0.55)] min-[380px]:h-[274px]">
               <img src={images[prevIdx].src} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
@@ -313,7 +313,7 @@ const Hero = () => {
               {images[currentIdx].productPath && <span className="absolute bottom-5 right-5 z-10 rounded-full bg-white/95 px-4 py-2 text-xs font-black uppercase tracking-wide text-primary shadow-xl">View product <HiArrowRight className="ml-1 inline" /></span>}
             </HeroProductLink>
             {/* Slot 2: Desktop Sub stack */}
-            <div className="absolute bottom-10 left-10 w-72 h-[400px] overflow-hidden shadow-xl z-10 border-4 border-white bg-muted">
+            <HeroProductLink item={images[(currentIdx + 1) % images.length]} className="absolute bottom-10 left-10 z-10 h-[400px] w-72 overflow-hidden border-4 border-white bg-muted shadow-xl">
               <img 
                 src={images[(prevIdx + 1) % images.length].src} 
                 alt={images[(prevIdx + 1) % images.length].alt} 
@@ -324,7 +324,7 @@ const Hero = () => {
                 alt={images[(currentIdx + 1) % images.length].alt} 
                 className="absolute inset-0 w-full h-full object-cover image-overlay opacity-0"
               />
-            </div>
+            </HeroProductLink>
 
             {/* Subtle Carousel Indicators */}
             <div className="absolute bottom-0 right-10 flex gap-2 z-30">

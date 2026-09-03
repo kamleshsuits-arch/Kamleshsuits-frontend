@@ -20,6 +20,7 @@ const ProductDetails = () => {
   const [selectedImage, setSelectedImage] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [colorError, setColorError] = useState('');
+  const [shareStatus, setShareStatus] = useState('');
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { addToCart, toggleWishlist, isInWishlist, isInCart, removeFromCart } = useCart();
@@ -37,17 +38,21 @@ const ProductDetails = () => {
       const all = await fetchProducts();
       setAllProducts(all);
 
-      if (data?.variants?.[0]?.images?.length > 0) {
-        setSelectedImage(data.variants[0].images[0]);
+      const primaryVariant = Array.isArray(data?.variants)
+        ? data.variants.find(variant => variant.images?.includes(data.image)) || data.variants[0]
+        : null;
+
+      if (primaryVariant?.images?.length > 0) {
+        setSelectedImage(primaryVariant.images[0]);
       } else if (data?.images?.length > 0) {
         setSelectedImage(data.images[0]);
       } else if (data?.image) {
         setSelectedImage(data.image);
       }
 
-      // Customers must actively confirm a variation to avoid wrong-colour orders.
-      setSelectedColor('');
+      setSelectedColor(primaryVariant?.colorName || data?.colors?.[0] || '');
       setColorError('');
+      setShareStatus('');
     };
     load();
   }, [id]);
@@ -128,6 +133,46 @@ const ProductDetails = () => {
     }
   };
 
+  const handleShare = async () => {
+    const shareUrl = window.location.href;
+    const shareData = {
+      title: product.title,
+      text: `View ${product.title} at Kamlesh Suits`,
+      url: shareUrl,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        setShareStatus('Shared');
+        return;
+      } catch (error) {
+        if (error?.name === 'AbortError') return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+    } catch {
+      const input = document.createElement('textarea');
+      input.value = shareUrl;
+      input.setAttribute('readonly', '');
+      input.style.position = 'fixed';
+      input.style.opacity = '0';
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+    }
+    setShareStatus('Link copied');
+  };
+
+  useEffect(() => {
+    if (!shareStatus) return undefined;
+    const timer = window.setTimeout(() => setShareStatus(''), 2500);
+    return () => window.clearTimeout(timer);
+  }, [shareStatus]);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (!isLightboxOpen) return;
@@ -186,9 +231,12 @@ const ProductDetails = () => {
             <HiArrowLeft className="text-lg" /> Back
           </button>
           
-          <button className="text-secondary hover:text-primary transition">
-             <HiOutlineShare className="text-xl" />
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-emerald-700" role="status" aria-live="polite">{shareStatus}</span>
+            <button onClick={handleShare} className="rounded-full p-2 text-secondary transition hover:bg-stone-100 hover:text-primary" aria-label={`Share ${product.title}`} title="Share product">
+              <HiOutlineShare className="text-xl" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -286,7 +334,7 @@ const ProductDetails = () => {
               {availableColors.length > 0 && (
                 <div className="mb-8">
                   <h3 className="text-xs font-black uppercase tracking-[0.12em] mb-2 text-stone-700">Choose a colour *</h3>
-                  <p className="text-xs text-stone-500 mb-4">Please select one colour before adding this item.</p>
+                  <p className="text-xs text-stone-500 mb-4">The product's primary colour is selected. Choose another shade if preferred.</p>
                   <div className="flex flex-wrap gap-4">
                     {availableColors.map((color, idx) => (
                       <button
@@ -306,7 +354,7 @@ const ProductDetails = () => {
                       >
                         <div 
                           className="w-5 h-5 rounded-full shadow-inner border border-stone-200"
-                          style={{ backgroundColor: getColorDisplay(color) }} 
+                          style={{ backgroundColor: product.variants?.find(item => item.colorName === color)?.colorHex || getColorDisplay(color) }}
                         />
                         <span className="text-[10px] font-bold text-primary">{color}</span>
                       </button>
