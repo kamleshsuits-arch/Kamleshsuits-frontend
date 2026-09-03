@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { AWS_CONFIG } from '../lib/aws-config';
+import { getInstallationId } from '../pwa';
 
 const API_URL = AWS_CONFIG.apiBaseUrl;
 
@@ -106,7 +107,7 @@ export const placeOrder = async (orderData) => {
   try {
     const authHeader = getAuthHeader();
     const endpoint = authHeader.Authorization ? '/user/orders' : '/orders';
-    const response = await axios.post(`${API_URL}${endpoint}`, orderData, {
+    const response = await axios.post(`${API_URL}${endpoint}`, { ...orderData, installationId: getInstallationId() }, {
       headers: authHeader
     });
     return response.data;

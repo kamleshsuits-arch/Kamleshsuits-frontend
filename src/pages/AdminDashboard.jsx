@@ -16,6 +16,7 @@ import AnalyticsTerminal from '../components/admin/AnalyticsTerminal';
 import CouponManager from '../components/admin/CouponManager';
 import DeliveryDemandInsights from '../components/admin/DeliveryDemandInsights';
 import OrderManager from '../components/admin/OrderManager';
+import NotificationManager from '../components/admin/NotificationManager';
 import ProductVariantManager from '../components/admin/ProductVariantManager';
 import ProductHeroFeature from '../components/admin/ProductHeroFeature';
 import { createEmptyVariant, normalizeProductVariants } from '../utils/productVariants';
@@ -641,6 +642,12 @@ const AdminDashboard = () => {
                         >
                             <HiTruck size={16} /> Delivery Requests
                         </button>
+                        <button
+                            onClick={() => setActiveTab('notifications')}
+                            className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === 'notifications' ? 'bg-primary text-white shadow-xl' : 'text-stone-400 hover:text-stone-600'}`}
+                        >
+                            <HiBell size={16} /> Notifications
+                        </button>
                     </div>
                 </div>
 
@@ -796,6 +803,8 @@ const AdminDashboard = () => {
                     <CouponManager showToast={showToast} taxonomy={productTaxonomy} />
                 ) : activeTab === 'delivery' ? (
                     <DeliveryDemandInsights showToast={showToast} />
+                ) : activeTab === 'notifications' ? (
+                    <NotificationManager showToast={showToast} />
                 ) : (
                     <AnalyticsTerminal products={products} taxonomy={productTaxonomy} />
                 )}

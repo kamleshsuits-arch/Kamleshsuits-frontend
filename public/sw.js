@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'kamlesh-suits-v1';
+const CACHE_VERSION = 'kamlesh-suits-v2';
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const APP_SHELL = [
@@ -56,6 +56,44 @@ self.addEventListener('fetch', event => {
         return response;
       });
       return cached || network;
+    })
+  );
+});
+
+self.addEventListener('push', event => {
+  let payload = {};
+  try { payload = event.data?.json() || {}; } catch { payload = { body: event.data?.text() || '' }; }
+  const title = payload.title || 'Kamlesh Suits';
+  const options = {
+    body: payload.body || 'There is a new update from Kamlesh Suits.',
+    icon: '/icons/pwa-192.png',
+    badge: '/icons/favicon-48.png',
+    image: payload.image || undefined,
+    vibrate: [300, 120, 300, 120, 600],
+    tag: payload.tag || 'kamlesh-suits',
+    renotify: true,
+    data: { url: payload.url || '/', createdAt: payload.createdAt || new Date().toISOString() },
+  };
+
+  event.waitUntil(Promise.all([
+    self.registration.showNotification(title, options),
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+      clients.forEach(client => client.postMessage({ type: 'KAMLESH_NOTIFICATION', notification: { title, ...options } }));
+    }),
+  ]));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const targetUrl = new URL(event.notification.data?.url || '/', self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+      const existing = clients.find(client => client.url.startsWith(self.location.origin));
+      if (existing) {
+        existing.navigate(targetUrl);
+        return existing.focus();
+      }
+      return self.clients.openWindow(targetUrl);
     })
   );
 });
