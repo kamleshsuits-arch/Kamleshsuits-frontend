@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from "../../hooks/useCart.jsx";
 import { useAuth } from "../../context/AuthContext";
-import { HiMenu, HiX, HiOutlineHeart, HiOutlineShoppingBag, HiChevronDown, HiUserCircle, HiLogout, HiShoppingBag, HiHeart, HiCollection, HiShieldCheck, HiGift, HiCheck, HiClipboard, HiOutlineUser, HiPhotograph } from 'react-icons/hi';
+import { HiMenu, HiX, HiOutlineHeart, HiOutlineShoppingBag, HiChevronDown, HiUserCircle, HiLogout, HiShoppingBag, HiHeart, HiCollection, HiShieldCheck, HiGift, HiCheck, HiClipboard, HiOutlineUser, HiPhotograph, HiOutlineBell } from 'react-icons/hi';
 import { gsap } from 'gsap';
 import logo from "../../assets/K_suit.png";
 
@@ -163,9 +163,17 @@ const Navbar = () => {
               </div>
             </div>
 
-            {/* Mobile right icons — wishlist + account ONLY (cart is floating FAB) */}
+            {/* Mobile right icons — notifications, wishlist and account (cart is floating FAB) */}
             <div className="flex items-center md:hidden gap-0 min-[360px]:gap-1">
               {isAdmin && <Link to="/admin/banners" className="relative p-2 min-w-10 min-h-11 min-[360px]:p-3 min-[360px]:min-w-11" aria-label="Banner Management"><HiPhotograph size={22} className={mobileHeaderIcon} /></Link>}
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('kamlesh:notifications-toggle'))}
+                className="relative p-2 min-w-10 min-h-11 min-[360px]:p-3 min-[360px]:min-w-11"
+                aria-label="Open notifications"
+              >
+                <HiOutlineBell size={22} className={mobileHeaderIcon} />
+              </button>
               <Link to="/wishlist" className="relative p-2 min-w-10 min-h-11 min-[360px]:p-3 min-[360px]:min-w-11" aria-label="Wishlist">
                 <HiOutlineHeart size={22} className={mobileHeaderIcon} />
                 {wishlistItems.length > 0 && (

@@ -91,7 +91,11 @@ const Cart = () => {
     setLastAddrCount(addresses.length);
   }, [addresses.length]);
 
-  const gst = Math.round(subtotal * 0.05);
+  // Product prices are GST-inclusive. Split the embedded 5% tax equally without
+  // adding tax on top of the price entered by the admin.
+  const includedGst = subtotal - (subtotal / 1.05);
+  const cgst = includedGst / 2;
+  const sgst = includedGst / 2;
 
   // Shipping is only final after a delivery address has been selected and checked.
   const shippingFee = !selectedAddressId || subtotal >= 5000
@@ -100,7 +104,7 @@ const Cart = () => {
   const isTotalEstimated = !selectedAddressId;
 
   // Total Payable
-  let total = subtotal + gst + shippingFee;
+  let total = subtotal + shippingFee;
   if (isCouponApplied && appliedCoupon) {
     const couponSubtotal = Number(appliedCoupon.eligible_subtotal ?? getCouponEligibleSubtotal(appliedCoupon));
     if (appliedCoupon.discount_type === 'percent') {
@@ -1342,8 +1346,12 @@ const Cart = () => {
                     <span>{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between gap-3">
-                    <span className="text-stone-600">GST (5%)</span>
-                    <span className="text-primary font-bold">{formatPrice(gst)}</span>
+                    <span className="text-stone-600">CGST (2.5%, included)</span>
+                    <span className="text-primary font-bold">{formatPrice(cgst)}</span>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-stone-600">SGST (2.5%, included)</span>
+                    <span className="text-primary font-bold">{formatPrice(sgst)}</span>
                   </div>
                   <div className="flex justify-between items-center gap-3 border-b border-stone-50 pb-4 mb-4">
                     <span className="text-stone-600">

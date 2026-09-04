@@ -12,8 +12,17 @@ const NotificationCenter = () => {
   const [notifications, setNotifications] = useState(() => {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
   });
+  const [isMobile, setIsMobile] = useState(() => globalThis.matchMedia?.('(max-width: 767px)').matches ?? false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia('(max-width: 767px)');
+    const updateViewport = event => setIsMobile(event.matches);
+    setIsMobile(mobileQuery.matches);
+    mobileQuery.addEventListener('change', updateViewport);
+    return () => mobileQuery.removeEventListener('change', updateViewport);
+  }, []);
 
   useEffect(() => {
     trackPwaInstallation(isStandalonePwa());
@@ -24,8 +33,13 @@ const NotificationCenter = () => {
 
   useEffect(() => {
     const showOptIn = () => setOpen(true);
+    const togglePanel = () => setOpen(current => !current);
     window.addEventListener('kamlesh:pwa-installed', showOptIn);
-    return () => window.removeEventListener('kamlesh:pwa-installed', showOptIn);
+    window.addEventListener('kamlesh:notifications-toggle', togglePanel);
+    return () => {
+      window.removeEventListener('kamlesh:pwa-installed', showOptIn);
+      window.removeEventListener('kamlesh:notifications-toggle', togglePanel);
+    };
   }, []);
 
   useEffect(() => {
@@ -56,9 +70,9 @@ const NotificationCenter = () => {
   };
 
   return (
-    <div className="fixed bottom-24 right-4 z-[80] md:bottom-8 md:right-8">
+    <div className="fixed right-2 top-14 z-[110] md:bottom-8 md:right-8 md:top-auto md:z-[80]">
       {open && (
-        <section className="absolute bottom-16 right-0 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-amber-100 bg-white shadow-2xl">
+        <section className="absolute right-0 top-2 w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-3xl border border-amber-100 bg-white shadow-2xl md:bottom-16 md:top-auto md:w-[min(22rem,calc(100vw-2rem))]">
           <header className="flex items-center justify-between bg-gradient-to-r from-[#3B1F12] to-[#6B3A21] px-5 py-4 text-white">
             <div><p className="font-serif text-lg font-bold">Kamlesh Updates</p><p className="text-[10px] text-amber-100/75">Orders, arrivals and special offers</p></div>
             <button onClick={() => setOpen(false)} className="rounded-full p-2 hover:bg-white/10" aria-label="Close notifications"><HiX /></button>
@@ -80,7 +94,7 @@ const NotificationCenter = () => {
           </div>
         </section>
       )}
-      <button onClick={() => setOpen(current => !current)} className="relative grid h-14 w-14 place-items-center rounded-full bg-primary text-xl text-white shadow-2xl ring-4 ring-white/80 transition hover:scale-105" aria-label="Open Kamlesh Suits notifications"><HiBell />{permission !== 'granted' && <span className="absolute right-0 top-0 h-3 w-3 rounded-full border-2 border-white bg-amber-400" />}</button>
+      {!isMobile && <button onClick={() => setOpen(current => !current)} className="relative grid h-14 w-14 place-items-center rounded-full bg-primary text-xl text-white shadow-2xl ring-4 ring-white/80 transition hover:scale-105" aria-label="Open Kamlesh Suits notifications"><HiBell />{permission !== 'granted' && <span className="absolute right-0 top-0 h-3 w-3 rounded-full border-2 border-white bg-amber-400" />}</button>}
     </div>
   );
 };

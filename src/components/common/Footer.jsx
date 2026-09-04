@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { HiOutlineMail, HiOutlinePhone, HiOutlineLocationMarker } from 'react-icons/hi';
+import { SiInstagram } from 'react-icons/si';
 import logo from "../../assets/K_suit.png";
 
 const Footer = () => {
@@ -70,6 +71,10 @@ const Footer = () => {
               <li className="flex items-center gap-3">
                 <HiOutlineMail className="text-xl text-accent shrink-0" />
                 <a href="mailto:kamleshsuits@gmail.com" className="hover:text-accent transition">kamleshsuits@gmail.com</a>
+              </li>
+              <li className="flex items-center gap-3">
+                <SiInstagram className="text-xl text-accent shrink-0" />
+                <a href="https://www.instagram.com/kamleshsuits/" target="_blank" rel="me noopener noreferrer" className="hover:text-accent transition">@kamleshsuits</a>
               </li>
             </ul>
           </div>

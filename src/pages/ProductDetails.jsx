@@ -178,7 +178,7 @@ const ProductDetails = () => {
   };
 
   const handleShare = async () => {
-    const shareUrl = window.location.href;
+    const shareUrl = `https://kamleshsuits.com/product/${encodeURIComponent(id)}`;
     const shareData = {
       title: product.title,
       text: `View ${product.title} at Kamlesh Suits`,
@@ -243,6 +243,9 @@ const ProductDetails = () => {
         image={product.image || product.images?.[0]}
         url={`/product/${id}`}
         type="product"
+        price={product.price}
+        currency="INR"
+        availability={Number(product.stock) === 0 ? 'out of stock' : 'in stock'}
         schemaData={{
           "@context": "https://schema.org",
           "@type": "Product",
@@ -259,7 +262,7 @@ const ProductDetails = () => {
             "url": `https://kamleshsuits.com/product/${id}`,
             "priceCurrency": "INR",
             "price": product.price,
-            "availability": "https://schema.org/InStock",
+            "availability": Number(product.stock) === 0 ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
             "itemCondition": "https://schema.org/NewCondition"
           }
         }}

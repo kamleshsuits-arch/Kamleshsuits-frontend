@@ -8,7 +8,8 @@ const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
 const InstallPrompt = () => {
   const [delayFinished, setDelayFinished] = useState(false);
   const [installAvailable, setInstallAvailable] = useState(() => canInstallPwa());
-  const [showIosHelp, setShowIosHelp] = useState(false);
+  const [installing, setInstalling] = useState(false);
+  const [installHelp, setInstallHelp] = useState('');
   const [dismissed, setDismissed] = useState(() => sessionStorage.getItem(DISMISSED_KEY) === 'true');
 
   useEffect(() => {
@@ -36,12 +37,29 @@ const InstallPrompt = () => {
   };
 
   const install = async () => {
-    if (installAvailable) {
-      const choice = await promptPwaInstall();
-      if (choice.outcome === 'accepted') dismiss();
+    if (!installAvailable) {
+      setInstallHelp(isIos()
+        ? 'Tap the browser Share button, then choose “Add to Home Screen”.'
+        : 'Open this website in Chrome or Edge and choose “Install app” from the browser menu.');
       return;
     }
-    setShowIosHelp(true);
+
+    setInstalling(true);
+    setInstallHelp('');
+    try {
+      const choice = await promptPwaInstall();
+      if (choice.outcome === 'accepted') {
+        dismiss();
+      } else if (choice.outcome === 'unavailable') {
+        setInstallAvailable(false);
+        setInstallHelp('The browser installer is not available. Try “Install app” from your browser menu.');
+      }
+    } catch (error) {
+      console.error('Could not open the PWA installer:', error);
+      setInstallHelp('Could not open the browser installer. Please try again from your browser menu.');
+    } finally {
+      setInstalling(false);
+    }
   };
 
   if (!delayFinished || dismissed || isStandalonePwa() || (!installAvailable && !isIos())) return null;
@@ -53,7 +71,15 @@ const InstallPrompt = () => {
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-50 text-2xl text-amber-700"><HiOutlineDeviceMobile /></span>
         <div><p className="font-serif text-lg font-black text-primary">Install Kamlesh Suits</p><p className="mt-1 text-xs leading-relaxed text-stone-600">Shop faster and receive order updates directly on your device.</p></div>
       </div>
-      {showIosHelp ? <p className="mt-3 rounded-xl bg-amber-50 p-3 text-xs font-bold text-stone-700">Tap the browser Share button, then choose “Add to Home Screen”.</p> : <button onClick={install} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-black uppercase tracking-wide text-white"><HiDownload className="text-lg" /> Install app</button>}
+      {installHelp && <p className="mt-3 rounded-xl bg-amber-50 p-3 text-xs font-bold text-stone-700">{installHelp}</p>}
+      <button
+        type="button"
+        onClick={install}
+        disabled={installing}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-black uppercase tracking-wide text-white disabled:cursor-wait disabled:opacity-70"
+      >
+        <HiDownload className="text-lg" /> {installing ? 'Opening installer…' : 'Download PWA'}
+      </button>
     </aside>
   );
 };

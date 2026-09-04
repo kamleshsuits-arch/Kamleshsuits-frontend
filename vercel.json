@@ -12,6 +12,21 @@
   ],
   "rewrites": [
     {
+      "source": "/product/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|WhatsApp|Instagram|Twitterbot|LinkedInBot|TelegramBot|Slackbot|Discordbot|Pinterest).*"
+        }
+      ],
+      "destination": "https://kamleshsuits-backend.onrender.com/api/share/product/:id"
+    },
+    {
+      "source": "/share/product/:id",
+      "destination": "https://kamleshsuits-backend.onrender.com/api/share/product/:id"
+    },
+    {
       "source": "/((?!.*\\.).*)",
       "destination": "/index.html"
     }
