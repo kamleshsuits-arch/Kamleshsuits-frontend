@@ -43,7 +43,7 @@ const NewArrivals = () => {
           "@type": "CollectionPage",
           "name": `New Arrivals - Season ${new Date().getFullYear()}`,
           "description": "Discover our latest and most exclusive ethnic wear additions.",
-          "url": "https://kamleshsuits.com/new-arrivals"
+          "url": `${window.location.origin}/new-arrivals`
         }}
       />
       {/* Premium Header - light carrot glass motion on mobile */}

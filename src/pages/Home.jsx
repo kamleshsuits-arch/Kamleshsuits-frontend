@@ -19,10 +19,10 @@ export default function Home({ onInitialCollectionReady }) {
           "@context": "https://schema.org",
           "@type": "WebSite",
           "name": "Kamlesh Suits",
-          "url": "https://kamleshsuits.com",
+          "url": window.location.origin,
           "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://kamleshsuits.com/?s={search_term_string}",
+            "target": `${window.location.origin}/?s={search_term_string}`,
             "query-input": "required name=search_term_string"
           }
         }}

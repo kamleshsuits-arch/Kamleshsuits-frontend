@@ -50,7 +50,7 @@ const Sale = () => {
           "@type": "CollectionPage",
           "name": `Ethnic Wear Sale - Up to ${maxDiscount}% Off`,
           "description": "Exclusive offers on ladies suits and ethnic collections.",
-          "url": "https://kamleshsuits.com/sale"
+          "url": `${window.location.origin}/sale`
         }}
       />
       {/* Premium Header - light carrot glass motion on mobile */}

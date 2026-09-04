@@ -16,7 +16,7 @@ const SEO = ({
   const siteName = "Kamlesh Suits";
   const fullTitle = title ? `${title} | ${siteName}` : `${siteName} | Premium Indian Ethnic Wear`;
   const defaultDescription = "Discover the finest Indian ladies suits and ethnic wear in Gurugram. High-quality unstitched suits, silk collections, and festive wear at Kamlesh Suits.";
-  const siteUrl = "https://kamleshsuits.com";
+  const siteUrl = globalThis.location?.origin || "https://kamleshsuits-frontend.vercel.app";
   const canonicalUrl = url?.startsWith('http') ? url : `${siteUrl}${url || ''}`;
   const socialImage = image
     ? (image.startsWith('http') ? image : `${siteUrl}${image.startsWith('/') ? '' : '/'}${image}`)

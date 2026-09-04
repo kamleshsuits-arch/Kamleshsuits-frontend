@@ -178,7 +178,7 @@ const ProductDetails = () => {
   };
 
   const handleShare = async () => {
-    const shareUrl = `https://kamleshsuits.com/product/${encodeURIComponent(id)}`;
+    const shareUrl = `${window.location.origin}/product/${encodeURIComponent(id)}`;
     const shareData = {
       title: product.title,
       text: `View ${product.title} at Kamlesh Suits`,
@@ -259,7 +259,7 @@ const ProductDetails = () => {
           },
           "offers": {
             "@type": "Offer",
-            "url": `https://kamleshsuits.com/product/${id}`,
+            "url": `${window.location.origin}/product/${id}`,
             "priceCurrency": "INR",
             "price": product.price,
             "availability": Number(product.stock) === 0 ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
