@@ -38,7 +38,7 @@ export default function Home({ onInitialCollectionReady }) {
       <StyleDealsSection />
 
       {/* Full product grid */}
-      <div id="collection-section" className="container mx-auto scroll-mt-[8.75rem]">
+      <div id="collection-section" className="container mx-auto scroll-mt-16 md:scroll-mt-[8.75rem]">
         <ProductList onInitialReady={onInitialCollectionReady} />
       </div>
     </div>

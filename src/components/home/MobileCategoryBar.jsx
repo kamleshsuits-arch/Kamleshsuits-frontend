@@ -47,7 +47,7 @@ const MobileCategoryBar = () => {
 
   return (
     <div 
-      className="md:hidden sticky top-14 z-40 bg-[#f5ece4] border-b border-[#ddc9b8] h-[94px] overflow-hidden"
+      className="md:hidden relative bg-[#f5ece4] border-b border-[#ddc9b8] h-[94px] overflow-hidden"
       id="mobile-category-bar"
     >
       <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 py-3 items-center">

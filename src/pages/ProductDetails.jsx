@@ -317,33 +317,33 @@ const ProductDetailsContent = ({ id }) => {
         }}
       />
       {/* --- Top Navigation --- */}
-      <div className="sticky top-14 md:top-20 z-30 bg-white/90 backdrop-blur-sm border-b border-stone-100 flex flex-col transition-all">
+      <div className="relative md:sticky md:top-20 z-30 bg-white/90 backdrop-blur-sm border-b border-stone-100 flex flex-col transition-all">
         <LocationBar className="!bg-transparent border-b border-stone-100/30" />
-        <div className="w-full max-w-7xl mx-auto flex justify-between items-center px-4 py-3 md:py-4">
+        <div className="w-full max-w-7xl mx-auto flex justify-between items-center px-4 py-1 md:py-4">
           <button 
             onClick={() => navigate(-1)} 
-            className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors"
+            className="flex min-h-11 items-center gap-1.5 text-[11px] md:text-xs font-bold uppercase tracking-wide md:tracking-widest text-secondary hover:text-primary transition-colors"
           >
-            <HiArrowLeft className="text-lg" /> Back
+            <HiArrowLeft className="text-base md:text-lg" /> Back
           </button>
           
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-emerald-700" role="status" aria-live="polite">{shareStatus}</span>
-            <button onClick={handleShare} className="rounded-full p-2 text-secondary transition hover:bg-stone-100 hover:text-primary" aria-label={`Share ${product.title}`} title="Share product">
-              <HiOutlineShare className="text-xl" />
+            <button onClick={handleShare} className="flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-secondary transition hover:bg-stone-100 hover:text-primary" aria-label={`Share ${product.title}`} title="Share product">
+              <HiOutlineShare className="text-lg md:text-xl" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Main Content - transform-gpu to help with rendering crispness */}
-      <div ref={containerRef} className="container mx-auto px-4 py-6 md:py-12 transform-gpu filter-none">
+      <div ref={containerRef} className="container mx-auto px-4 py-3 md:py-12 transform-gpu filter-none">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12">
           {/* Left Column: Gallery */}
           <div className="flex flex-col gap-6">
             {/* Main View Container */}
             <div 
-              className="relative overflow-hidden bg-muted cursor-zoom-in aspect-[3/4] rounded-2xl shadow-sm group max-h-[700px] w-full mx-auto"
+              className="relative flex items-center justify-center overflow-hidden bg-muted cursor-zoom-in h-[min(58svh,520px)] md:h-auto md:aspect-[3/4] rounded-2xl shadow-sm group max-h-[700px] w-full mx-auto"
               style={{ touchAction: 'pan-y pinch-zoom' }}
               onTouchStart={onImageTouchStart}
               onTouchEnd={onImageTouchEnd}
@@ -353,7 +353,7 @@ const ProductDetailsContent = ({ id }) => {
               <img
                 src={selectedImage || product.image || product.images?.[0]}
                 alt={product.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full object-contain object-center md:object-cover transition-transform duration-700 md:group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 flex items-center justify-center">
                  <div className="bg-white/90 backdrop-blur-md p-3 rounded-full opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-xl">

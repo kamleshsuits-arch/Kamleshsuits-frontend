@@ -79,13 +79,27 @@ const Hero = () => {
   };
 
   useEffect(() => {
-    if (!swipeRef.current) return;
+    // Keep the frame, captions and controls stationary; only fade banner artwork.
+    const artwork = swipeRef.current?.querySelector('[role="img"]');
+    if (!artwork) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const animation = gsap.fromTo(swipeRef.current,
-      { x: reduced ? 0 : swipeDirection.current * 35, opacity: reduced ? 1 : 0.65 },
-      { x: 0, opacity: 1, duration: reduced ? 0 : 0.45, ease: 'power3.out' });
+    const animation = gsap.fromTo(artwork,
+      { opacity: reduced ? 1 : 0.8 },
+      { opacity: 1, duration: reduced ? 0 : 0.25, ease: 'power1.out', overwrite: true });
     return () => animation.kill();
   }, [currentIdx, bannerIdx, images.length, liveBanners.length]);
+
+  useEffect(() => {
+    // Warm the next photo before switching, without downloading the whole catalog.
+    const nextImage = liveBanners.length
+      ? liveBanners[(bannerIdx + 1) % liveBanners.length]
+      : images[(currentIdx + 1) % images.length];
+    const src = nextImage?.src || (window.innerWidth < 768 ? nextImage?.mobile_image || nextImage?.desktop_image : nextImage?.desktop_image);
+    if (!src) return;
+    const preload = new Image();
+    preload.src = src;
+    preload.decode?.().catch(() => {});
+  }, [images, liveBanners, currentIdx, bannerIdx]);
 
   useEffect(() => {
     let active = true;
@@ -154,12 +168,14 @@ const Hero = () => {
   useEffect(() => {
     const imagesToFade = heroRef.current?.querySelectorAll('.image-overlay');
     if (imagesToFade?.length) {
-      gsap.fromTo(imagesToFade,
-        { opacity: 0, scale: 1.05 },
-        { opacity: 1, scale: 1, duration: 1.2, ease: "sine.inOut" }
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const animation = gsap.fromTo(imagesToFade,
+        { opacity: reduced ? 1 : 0 },
+        { opacity: 1, duration: reduced ? 0 : 0.3, ease: "power1.out", overwrite: true }
       );
+      return () => animation.kill();
     }
-  }, [currentIdx]);
+  }, [currentIdx, images.length]);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -231,7 +247,7 @@ const Hero = () => {
         <div className="absolute inset-x-0 top-14 h-px bg-gradient-to-r from-transparent via-amber-200/40 to-transparent" />
 
         <div ref={mobileHeroRef} className="relative z-10 px-4 pt-[4.5rem] pb-5 min-[380px]:px-5">
-          <div className="flex items-start justify-between gap-3">
+          <div className="text-center">
             <div className="min-w-0">
               <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200/25 bg-white/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-amber-100 backdrop-blur-md">
                 <HiSparkles size={13} /> New season edit
@@ -241,29 +257,26 @@ const Hero = () => {
                   Namaste, {user.name?.split(' ')[0] || user.email?.split('@')[0]}
                 </p>
               )}
-              <h1 className="font-serif text-[1.75rem] leading-[1.05] text-white drop-shadow-sm min-[380px]:text-[2rem]">
-                Your statement look,
-                <span className="mt-1 block italic text-amber-200">beautifully curated.</span>
+              <h1 className="font-serif text-[clamp(1.75rem,8vw,3rem)] leading-[1.1] text-white drop-shadow-sm">
+                <span className="block">Timeless suits.</span>
+                <span className="mt-1 block italic text-amber-200">Made for you.</span>
               </h1>
             </div>
-            <span className="shrink-0 rounded-full border border-white/15 bg-black/15 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-white/75 backdrop-blur-sm">
-              Premium suits
-            </span>
           </div>
 
           {/* Product gallery: the active item is the main hero highlight. */}
-          <div ref={swipeRef} {...swipeHandlers} className="relative mt-4 h-[278px] min-[380px]:h-[300px]" aria-roledescription="carousel" aria-label="Featured suit collection. Swipe left or right to browse.">
-            <HeroProductLink item={images[(currentIdx + images.length - 1) % images.length]} className="absolute left-0 top-6 h-[176px] w-[31%] -rotate-6 overflow-hidden rounded-[1.4rem] border border-white/35 bg-white/10 shadow-2xl">
+          <div ref={swipeRef} {...swipeHandlers} className="relative mt-6 h-[380px] min-[380px]:h-[450px]" aria-roledescription="carousel" aria-label="Featured suit collection. Swipe left or right to browse.">
+            <HeroProductLink item={images[(currentIdx + images.length - 1) % images.length]} className="absolute left-0 top-10 h-[280px] w-[36%] -rotate-6 overflow-hidden rounded-[1.4rem] border border-white/35 bg-white/10 shadow-2xl">
               <img src={images[(currentIdx + images.length - 1) % images.length].src} alt={images[(currentIdx + images.length - 1) % images.length].alt} className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#260914]/45 to-transparent" />
             </HeroProductLink>
 
-            <HeroProductLink item={images[(currentIdx + 1) % images.length]} className="absolute right-0 top-10 h-[166px] w-[29%] rotate-6 overflow-hidden rounded-[1.4rem] border border-white/35 bg-white/10 shadow-2xl">
+            <HeroProductLink item={images[(currentIdx + 1) % images.length]} className="absolute right-0 top-14 h-[280px] w-[36%] rotate-6 overflow-hidden rounded-[1.4rem] border border-white/35 bg-white/10 shadow-2xl">
               <img src={images[(currentIdx + 1) % images.length].src} alt={images[(currentIdx + 1) % images.length].alt} className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#260914]/45 to-transparent" />
             </HeroProductLink>
 
-            <HeroProductLink item={images[currentIdx]} className="absolute left-1/2 top-0 z-10 h-[252px] w-[61%] max-w-[230px] -translate-x-1/2 overflow-hidden rounded-[2rem] border-[3px] border-white/70 bg-stone-100 shadow-[0_24px_55px_rgba(12,3,8,0.55)] min-[380px]:h-[274px]">
+            <HeroProductLink item={images[currentIdx]} className="absolute left-1/2 top-0 z-10 h-[360px] w-[82%] max-w-[380px] -translate-x-1/2 overflow-hidden rounded-[2rem] border-[3px] border-white/70 bg-stone-100 shadow-[0_24px_55px_rgba(12,3,8,0.55)] min-[380px]:h-[430px]">
               <img src={images[prevIdx].src} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
               <img src={images[currentIdx].src} alt={images[currentIdx].alt} className="image-overlay absolute inset-0 h-full w-full object-cover opacity-0" />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent px-4 pb-4 pt-14 text-white">
