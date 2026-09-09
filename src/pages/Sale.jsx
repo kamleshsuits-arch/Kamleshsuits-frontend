@@ -86,24 +86,9 @@ const Sale = () => {
         <LocationBar className="!border-none" />
       </div>
 
-      {/* Sticky Quick Switcher - Moved above buttons */}
-      <div className="sticky top-[80px] z-40 bg-white/95 backdrop-blur-sm border-t border-stone-100 flex md:hidden">
-        <button 
-          onClick={() => navigate('/new-arrivals')}
-          className="flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-stone-400"
-        >
-          New Arrivals
-        </button>
-        <div className="w-px h-8 bg-stone-100 my-auto" />
-        <button 
-          className="flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b-2 border-primary"
-        >
-          Flash Sale
-        </button>
-      </div>
 
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 -mt-10 relative z-20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 mt-4 md:-mt-10 relative z-20">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 min-[380px]:gap-3 sm:gap-6">
           {products.map((product) => (
             <div key={product.suitId} className="relative group/sale">
