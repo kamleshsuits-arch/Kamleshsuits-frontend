@@ -35,12 +35,57 @@ const Hero = () => {
   const textRef = useRef(null);
   const imageRef = useRef(null);
   const mobileHeroRef = useRef(null);
+  const swipeRef = useRef(null);
+  const swipeStart = useRef(null);
+  const suppressClick = useRef(false);
+  const swipeDirection = useRef(1);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [prevIdx, setPrevIdx] = useState(0);
   const [liveBanners, setLiveBanners] = useState([]);
   const [bannerIdx, setBannerIdx] = useState(0);
   const [images, setImages] = useState([]);
   const [heroImagesLoaded, setHeroImagesLoaded] = useState(false);
+
+  const startSwipe = event => {
+    suppressClick.current = false;
+    const touch = event.touches[0];
+    swipeStart.current = event.touches.length === 1 ? { x: touch.clientX, y: touch.clientY } : null;
+  };
+  const endSwipe = event => {
+    const start = swipeStart.current;
+    swipeStart.current = null;
+    if (!start) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    const count = liveBanners.length || images.length;
+    if (count < 2 || Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+    suppressClick.current = true;
+    swipeDirection.current = dx < 0 ? 1 : -1;
+    if (liveBanners.length) setBannerIdx(index => (index + swipeDirection.current + count) % count);
+    else {
+      setPrevIdx(currentIdx);
+      setCurrentIdx(index => (index + swipeDirection.current + count) % count);
+    }
+  };
+  const swipeHandlers = {
+    onTouchStart: startSwipe,
+    onTouchEnd: endSwipe,
+    onTouchCancel: () => { swipeStart.current = null; },
+    onClickCapture: event => {
+      if (suppressClick.current) { event.preventDefault(); event.stopPropagation(); }
+    },
+    style: { touchAction: 'pan-y pinch-zoom' },
+  };
+
+  useEffect(() => {
+    if (!swipeRef.current) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const animation = gsap.fromTo(swipeRef.current,
+      { x: reduced ? 0 : swipeDirection.current * 35, opacity: reduced ? 1 : 0.65 },
+      { x: 0, opacity: 1, duration: reduced ? 0 : 0.45, ease: 'power3.out' });
+    return () => animation.kill();
+  }, [currentIdx, bannerIdx, images.length, liveBanners.length]);
 
   useEffect(() => {
     let active = true;
@@ -146,10 +191,11 @@ const Hero = () => {
     const actionLabel = cleanBannerText(banner.cta_label) || (bannerLink ? 'Explore collection' : '');
     return (
       <section className="relative overflow-hidden bg-stone-900">
-        <div className="relative md:hidden">
+        <div className="relative md:hidden" {...swipeHandlers}>
+          <div ref={swipeRef}>
           <div role="img" aria-label={banner.alt_text || banner.title} className="aspect-[4/5] max-h-[680px] w-full bg-cover bg-center" style={{ backgroundImage: `url(${banner.mobile_image || banner.desktop_image})` }} />
           <BannerOverlay banner={banner} actionLabel={actionLabel} bannerLink={bannerLink} compact />
-          <BannerDots banners={liveBanners} current={bannerIdx} onSelect={setBannerIdx} />
+          </div>
           <div className="bg-white rounded-t-[2.5rem] -mt-5 relative z-20 overflow-hidden"><div className="pt-4 pb-1"><LocationBar className="!border-none" /></div></div>
         </div>
         <div className="relative hidden md:block">
@@ -206,7 +252,7 @@ const Hero = () => {
           </div>
 
           {/* Product gallery: the active item is the main hero highlight. */}
-          <div className="relative mt-4 h-[278px] min-[380px]:h-[300px]" aria-roledescription="carousel" aria-label="Featured suit collection">
+          <div ref={swipeRef} {...swipeHandlers} className="relative mt-4 h-[278px] min-[380px]:h-[300px]" aria-roledescription="carousel" aria-label="Featured suit collection. Swipe left or right to browse.">
             <HeroProductLink item={images[(currentIdx + images.length - 1) % images.length]} className="absolute left-0 top-6 h-[176px] w-[31%] -rotate-6 overflow-hidden rounded-[1.4rem] border border-white/35 bg-white/10 shadow-2xl">
               <img src={images[(currentIdx + images.length - 1) % images.length].src} alt={images[(currentIdx + images.length - 1) % images.length].alt} className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#260914]/45 to-transparent" />
@@ -230,17 +276,6 @@ const Hero = () => {
               {images[currentIdx].productPath && <span className="absolute left-3 top-3 rounded-full border border-white/30 bg-white/90 px-2 py-1 text-[8px] font-black uppercase tracking-wider text-[#681f3b] shadow backdrop-blur-md">View product →</span>}
             </HeroProductLink>
 
-            <div className="absolute inset-x-0 bottom-0 z-20 flex justify-center gap-1.5">
-              {images.map((image, idx) => (
-                <button
-                  key={image.alt}
-                  type="button"
-                  onClick={() => { setPrevIdx(currentIdx); setCurrentIdx(idx); }}
-                  aria-label={`Show ${image.alt}`}
-                  className={`h-1.5 rounded-full transition-all ${idx === currentIdx ? 'w-7 bg-amber-200' : 'w-1.5 bg-white/35'}`}
-                />
-              ))}
-            </div>
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-2.5">

@@ -31,7 +31,7 @@ const MobileCategoryBar = () => {
       label: category.label,
       ...(CATEGORY_VISUALS[category.id] || { emoji: '📦' }),
       value: category.id,
-      color: index % 2 ? 'from-amber-100 to-amber-50' : 'from-stone-100 to-white'
+      color: ['from-rose-200 to-rose-100', 'from-amber-200 to-amber-100', 'from-teal-200 to-teal-100', 'from-violet-200 to-violet-100'][index % 4]
     })),
     { label: 'Hot Sale', emoji: '🏷️', value: 'Sale', href: '/sale', color: 'from-red-100 to-red-50' },
     { label: 'Just In', emoji: '✨', value: 'New', href: '/new-arrivals', color: 'from-cyan-100 to-cyan-50' },
@@ -47,7 +47,7 @@ const MobileCategoryBar = () => {
 
   return (
     <div 
-      className="md:hidden sticky top-14 z-40 bg-white border-b border-stone-100 h-[84px] overflow-hidden"
+      className="md:hidden sticky top-14 z-40 bg-[#f5ece4] border-b border-[#ddc9b8] h-[94px] overflow-hidden"
       id="mobile-category-bar"
     >
       <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 py-3 items-center">
@@ -56,14 +56,16 @@ const MobileCategoryBar = () => {
           return (
             <button
               key={cat.label}
+              type="button"
+              aria-pressed={isActive}
               onClick={() => handleCategoryClick(cat)}
-              className={`flex-shrink-0 relative group transition-all duration-300 w-[78px] h-[60px] rounded-2xl overflow-hidden ${
-                isActive ? 'glass-chip-active scale-105 z-10' : 'glass-chip'
+              className={`flex-shrink-0 relative group transition-all duration-300 w-[82px] h-[68px] rounded-2xl overflow-hidden border shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#681f3b] ${
+                isActive ? 'bg-gradient-to-br from-[#7d2949] to-[#421426] border-[#a66577] shadow-md ring-2 ring-[#b77d90]/40 z-10' : 'border-[#b89576]/30'
               }`}
             >
               {/* Background gradient for inactive chips */}
               {!isActive && (
-                <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-40 group-hover:opacity-70 transition-opacity`} />
+                <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} group-hover:brightness-95 transition-all`} />
               )}
               
               <div className="relative z-10 flex flex-col items-center justify-center h-full p-1.5">
@@ -87,10 +89,6 @@ const MobileCategoryBar = () => {
                 </span>
               </div>
               
-              {/* Active accent dot */}
-              {isActive && (
-                <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-white rounded-full animate-pulse shadow-sm" />
-              )}
             </button>
           );
         })}

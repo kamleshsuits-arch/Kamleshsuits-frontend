@@ -17,6 +17,7 @@ import OrderSuccessAnimation from '../common/OrderSuccessAnimation';
 import DeliveryLocationMap from './DeliveryLocationMap';
 import { SiPhonepe } from 'react-icons/si';
 import { saveGuestOrderReference } from '../../utils/guestOrders';
+import { lookupCoordinates, lookupPincode, fetchLocationJson } from '../../utils/locationLookup';
 
 
 const Cart = () => {
@@ -39,7 +40,8 @@ const Cart = () => {
     landmark: '',
     city: '',
     state: '',
-    type: 'home' // home, office, other
+    type: 'home', // home, office, other
+    whatsappOptIn: false
   });
   const [addressErrors, setAddressErrors] = useState({});
   const [isCouponApplied, setIsCouponApplied] = useState(false);
@@ -48,14 +50,14 @@ const Cart = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const summaryRef = useRef(null);
-  const reverseGeocodeCacheRef = useRef(new Map());
-  const lastReverseGeocodeAtRef = useRef(0);
+  const postalRequestRef = useRef(0);
   const pinRequestIdRef = useRef(0);
   const navigate = useNavigate();
   const { user } = useAuth();
   const [availableCoupons, setAvailableCoupons] = useState([]);
   const [deliveryDetails, setDeliveryDetails] = useState({ isAllowed: true, deliveryFee: 0 });
   const [isValidatingDelivery, setIsValidatingDelivery] = useState(false);
+  const [deliveryRetry, setDeliveryRetry] = useState(0);
   const [showDemandModal, setShowDemandModal] = useState(false);
   const [unsupportedPincode, setUnsupportedPincode] = useState('');
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
@@ -224,13 +226,12 @@ const Cart = () => {
 
   const fillFromPincode = async (pin, preserveCity = false) => {
     if (pin.length !== 6) return;
+    const requestId = ++postalRequestRef.current;
     setIsFetchingPincode(true);
     try {
-      const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
-      const data = await res.json();
-      if (data?.[0]?.Status === 'Success') {
-        const postOffice = data[0].PostOffice[0];
-        setAddressForm(prev => ({
+      const postOffice = await lookupPincode(pin);
+      if (requestId === postalRequestRef.current) {
+        setAddressForm(prev => prev.pincode !== pin ? prev : ({
           ...prev,
           city: preserveCity && prev.city ? prev.city : (postOffice.District || prev.city),
           state: postOffice.State || prev.state,
@@ -240,7 +241,7 @@ const Cart = () => {
     } catch (err) {
       console.error('Pincode fetch error:', err);
     } finally {
-      setIsFetchingPincode(false);
+      if (requestId === postalRequestRef.current) setIsFetchingPincode(false);
     }
   };
 
@@ -272,11 +273,12 @@ const Cart = () => {
     }));
 
     setShowManualAddress(true);
+    if (!pincode) setLocationError('Your area was found, but its PIN code was not supplied. Enter the six-digit delivery PIN below.');
     setLocationMessage(isApproximate
       ? 'Approximate location found using your internet connection. Check the map and edit it if needed.'
       : 'Location found. Please check the map and save your address.');
     if (pincode.length === 6) {
-      await fillFromPincode(pincode, true);
+      // Reverse geocoding already supplied the city and state; avoid a duplicate lookup.
       let deliveryResult = { isAllowed: isLikelySupportedPin(pincode) };
       try {
         const checked = await validateDelivery(pincode);
@@ -305,57 +307,11 @@ const Cart = () => {
       url.searchParams.set('longitude', longitude);
     }
     url.searchParams.set('localityLanguage', 'en');
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Location lookup failed');
-    const place = await response.json();
+    const place = await fetchLocationJson(url);
     await applyDetectedLocation(place, latitude, longitude, isApproximate);
   };
 
-  const reverseGeocodePinnedLocation = async (latitude, longitude) => {
-    const cacheKey = `${latitude.toFixed(5)},${longitude.toFixed(5)}`;
-    if (reverseGeocodeCacheRef.current.has(cacheKey)) {
-      return reverseGeocodeCacheRef.current.get(cacheKey);
-    }
-
-    const elapsed = Date.now() - lastReverseGeocodeAtRef.current;
-    if (elapsed < 1100) {
-      await new Promise(resolve => setTimeout(resolve, 1100 - elapsed));
-    }
-    lastReverseGeocodeAtRef.current = Date.now();
-
-    const endpoint = import.meta.env.VITE_REVERSE_GEOCODER_URL || 'https://nominatim.openstreetmap.org/reverse';
-    const url = new URL(endpoint);
-    url.searchParams.set('format', 'jsonv2');
-    url.searchParams.set('lat', latitude);
-    url.searchParams.set('lon', longitude);
-    url.searchParams.set('zoom', '18');
-    url.searchParams.set('addressdetails', '1');
-    url.searchParams.set('layer', 'address');
-    url.searchParams.set('accept-language', 'en');
-
-    const response = await fetch(url, { headers: { Accept: 'application/json' } });
-    if (!response.ok) throw new Error('Could not read the address at this pin.');
-    const result = await response.json();
-    const address = result.address || {};
-    if (address.country_code && address.country_code.toLowerCase() !== 'in') {
-      throw new Error('Please place the delivery pin inside India.');
-    }
-
-    const road = address.road || address.pedestrian || address.residential || '';
-    const area = address.neighbourhood || address.suburb || address.village || address.hamlet || road || address.county || '';
-    const city = address.city || address.town || address.municipality || address.village || address.county || '';
-    const place = {
-      countryCode: address.country_code?.toUpperCase(),
-      postcode: address.postcode || '',
-      city,
-      locality: area,
-      principalSubdivision: address.state || '',
-      pinnedHouse: [address.house_number, road].filter(Boolean).join(', '),
-      displayName: result.display_name || ''
-    };
-    reverseGeocodeCacheRef.current.set(cacheKey, place);
-    return place;
-  };
+  const reverseGeocodePinnedLocation = lookupCoordinates;
 
   const handlePinChange = async (rawLatitude, rawLongitude) => {
     const latitude = Number(rawLatitude.toFixed(6));
@@ -412,30 +368,7 @@ const Cart = () => {
         }
         setLocationMessage('Location found. Drag the map pin to your exact house if needed.');
 
-        // A fast network-assisted result is shown first. This second pass quietly
-        // improves it when the phone can obtain a more accurate GPS reading.
-        navigator.geolocation.getCurrentPosition(async ({ coords: preciseCoords }) => {
-          if (gpsRequestId !== pinRequestIdRef.current || preciseCoords.accuracy >= coords.accuracy) return;
-          const preciseLatitude = Number(preciseCoords.latitude.toFixed(6));
-          const preciseLongitude = Number(preciseCoords.longitude.toFixed(6));
-          try {
-            const precisePlace = await reverseGeocodePinnedLocation(preciseLatitude, preciseLongitude);
-            if (gpsRequestId !== pinRequestIdRef.current) return;
-            await applyDetectedLocation(precisePlace, preciseLatitude, preciseLongitude);
-            if (precisePlace.pinnedHouse) {
-              setAddressForm(prev => ({ ...prev, houseNo: precisePlace.pinnedHouse }));
-            }
-            setLocationMessage('Precise GPS location found. Drag the pin if you want to adjust the exact gate or house.');
-          } catch (preciseError) {
-            console.warn('High-accuracy location lookup skipped:', preciseError);
-          }
-        }, () => {
-          // The fast location and draggable pin remain available if precise GPS is slow.
-        }, {
-          enableHighAccuracy: true,
-          timeout: 25000,
-          maximumAge: 0
-        });
+        // Keep the confirmed pin stable; users can drag it to refine their address.
       } catch (error) {
         console.error('Reverse geocoding failed:', error);
         setAddressForm(prev => ({ ...prev, latitude, longitude }));
@@ -445,6 +378,13 @@ const Cart = () => {
         if (gpsRequestId === pinRequestIdRef.current) setIsLocating(false);
       }
     }, async (error) => {
+      if (gpsRequestId !== pinRequestIdRef.current) return;
+      if (error.code === 1) {
+        setLocationError('Location access was declined. Enter your delivery PIN code below.');
+        setShowManualAddress(true);
+        setIsLocating(false);
+        return;
+      }
       const messages = {
         1: 'Exact GPS could not be used by this browser.',
         2: 'Your precise location could not be detected.',
@@ -472,12 +412,13 @@ const Cart = () => {
       setIsLocating(false);
     }, {
       enableHighAccuracy: false,
-      timeout: 12000,
-      maximumAge: 600000
+      timeout: 8000,
+      maximumAge: 60000
     });
   };
 
   const handlePlaceOrder = async () => {
+    if (isPlacingOrder || isValidatingDelivery || !deliveryDetails.isAllowed || total <= 0) return;
     if (addresses.length === 0) {
       alert("Please add your delivery address and mobile number first.");
       setShowAddressForm(true);
@@ -552,14 +493,15 @@ const Cart = () => {
     setEditingAddressId(null);
     setAddressForm({
       name: '', phone: '', pincode: '', houseNo: '',
-      area: '', landmark: '', city: '', state: '', type: 'home', latitude: null, longitude: null
+      area: '', landmark: '', city: '', state: '', type: 'home', latitude: null, longitude: null,
+      whatsappOptIn: false
     });
     setAddressErrors({});
     resetLocationState();
   };
 
   const startEditAddress = (addr) => {
-    setAddressForm(addr);
+    setAddressForm({ whatsappOptIn: false, ...addr });
     setEditingAddressId(addr.id);
     setShowManualAddress(true);
     setLocationMessage(addr.latitude && addr.longitude ? 'Saved map location loaded.' : '');
@@ -571,6 +513,7 @@ const Cart = () => {
 
   // --- DELIVERY VALIDATION LOGIC ---
   useEffect(() => {
+    let cancelled = false;
     const checkDelivery = async () => {
       if (!selectedAddressId) {
         setDeliveryDetails({ isAllowed: true, deliveryFee: 0 });
@@ -581,30 +524,22 @@ const Cart = () => {
       if (!addr?.pincode) return;
 
       setIsValidatingDelivery(true);
+      setDeliveryDetails({ isAllowed: false, deliveryFee: 0 });
       try {
         const result = await validateDelivery(addr.pincode);
+        if (cancelled) return;
 
         if (result.isAllowed === true) {
           // ✅ Backend confirmed delivery is available
           setDeliveryDetails(result);
 
         } else if (result.isAllowed === null || result.error) {
-          // ⚠️ API error / backend unreachable – use client-side prefix check as fallback
-          // Never block a valid-prefix pincode just because of a network error
-          if (isLikelySupportedPin(addr.pincode)) {
-            setDeliveryDetails({ isAllowed: true, deliveryFee: 60, estimatedFee: true });
-          } else {
-            // Prefix is also unknown – be lenient, don't show the popup on API error
-            setDeliveryDetails({ isAllowed: true, deliveryFee: 0 });
-          }
+          // A postcode prefix cannot confirm current delivery fees or availability.
+          setDeliveryDetails({ isAllowed: false, deliveryFee: 0, error: true });
 
         } else {
-          // ❌ Backend explicitly says isAllowed: false
-          // Double-check with client-side prefix – if prefix is valid, ignore the backend response
-          // (can happen when backend isn't restarted yet with new pincode list)
-          if (isLikelySupportedPin(addr.pincode)) {
-            setDeliveryDetails({ isAllowed: true, deliveryFee: 60, estimatedFee: true });
-          } else {
+          // Respect the server's delivery decision.
+          {
             // Truly unsupported area – show the demand modal
             setDeliveryDetails(result);
             setUnsupportedPincode(addr.pincode);
@@ -612,16 +547,18 @@ const Cart = () => {
           }
         }
       } catch (err) {
+        if (cancelled) return;
         console.error("Delivery validation failed", err);
-        // On unexpected error, don't block the user
-        setDeliveryDetails({ isAllowed: true, deliveryFee: 0 });
+        // Let the customer retry before submitting an order with unknown charges.
+        setDeliveryDetails({ isAllowed: false, deliveryFee: 0, error: true });
       } finally {
-        setIsValidatingDelivery(false);
+        if (!cancelled) setIsValidatingDelivery(false);
       }
     };
 
     checkDelivery();
-  }, [selectedAddressId, addresses]);
+    return () => { cancelled = true; };
+  }, [selectedAddressId, addresses, deliveryRetry]);
 
   const DeliveryDemandModal = () => {
     const [demandForm, setDemandForm] = useState({
@@ -933,7 +870,8 @@ const Cart = () => {
                       onClick={() => {
                         setAddressForm({
                           name: '', phone: '', pincode: '', houseNo: '',
-                          area: '', landmark: '', city: '', state: '', type: 'home', latitude: null, longitude: null
+                          area: '', landmark: '', city: '', state: '', type: 'home', latitude: null, longitude: null,
+                          whatsappOptIn: false
                         });
                         setEditingAddressId(null);
                         setAddressErrors({});
@@ -1231,6 +1169,19 @@ const Cart = () => {
                           ))}
                         </div>
                       </div>
+
+                      <label className="sm:col-span-2 flex cursor-pointer items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:p-5">
+                        <input
+                          type="checkbox"
+                          checked={addressForm.whatsappOptIn === true}
+                          onChange={(event) => setAddressForm({ ...addressForm, whatsappOptIn: event.target.checked })}
+                          className="mt-0.5 h-5 w-5 shrink-0 accent-emerald-600"
+                        />
+                        <span>
+                          <span className="block text-sm font-black text-emerald-900">Send order updates to this number on WhatsApp</span>
+                          <span className="mt-1 block text-xs leading-relaxed text-emerald-700">We will use the delivery phone number only for this order's confirmation, shipping and delivery updates. You can leave this unchecked.</span>
+                        </span>
+                      </label>
                       </>}
 
                       <button 
@@ -1427,12 +1378,13 @@ const Cart = () => {
 
                   <button 
                     onClick={handlePlaceOrder}
-                    disabled={total <= 0 || isPlacingOrder || !deliveryDetails.isAllowed || !selectedAddressId}
+                    disabled={total <= 0 || isPlacingOrder || isValidatingDelivery || !deliveryDetails.isAllowed || !selectedAddressId}
                     className={`w-full bg-primary text-white py-4 text-xs font-black uppercase tracking-[0.14em] hover:bg-accent transition-all duration-500 shadow-xl hover:shadow-primary/20 rounded-2xl flex items-center justify-center gap-3 active:scale-95 ${(!selectedAddressId || isPlacingOrder || !deliveryDetails.isAllowed) ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
                   >
                     {isPlacingOrder ? 'Saving Order...' : addresses.length === 0 ? 'Add Address First' : !selectedAddressId ? 'Select an Address' : !deliveryDetails.isAllowed ? 'Delivery Not Available' : 'Place Order Request'}
                     <HiCheck size={18} />
                   </button>
+                  {deliveryDetails.error && <div role="alert" className="mt-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">We could not confirm delivery charges. Please try again.<button type="button" onClick={() => setDeliveryRetry(value => value + 1)} className="mt-2 block min-h-11 font-bold underline">Retry delivery check</button></div>}
                   <p className="text-[11px] text-stone-500 font-medium text-center mt-4 leading-relaxed">No sign-in or online payment needed. We will confirm your order by WhatsApp or phone call.</p>
                 </div>
                 

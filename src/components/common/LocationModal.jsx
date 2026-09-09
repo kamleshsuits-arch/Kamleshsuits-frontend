@@ -4,59 +4,13 @@ import { HiCheckCircle, HiLocationMarker, HiShieldCheck, HiX, HiXCircle } from '
 import { useCart } from '../../hooks/useCart';
 import { validateDelivery } from '../../api/products';
 import { getStateFromPin, isLikelySupportedPin } from '../../utils/deliveryUtils';
+import { lookupCoordinates, lookupPincode } from '../../utils/locationLookup';
 
-const reverseGeocode = async (latitude, longitude) => {
-  if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
-    try {
-      const preciseUrl = new URL(import.meta.env.VITE_REVERSE_GEOCODER_URL || 'https://nominatim.openstreetmap.org/reverse');
-      preciseUrl.searchParams.set('format', 'jsonv2');
-      preciseUrl.searchParams.set('lat', latitude);
-      preciseUrl.searchParams.set('lon', longitude);
-      preciseUrl.searchParams.set('zoom', '18');
-      preciseUrl.searchParams.set('addressdetails', '1');
-      preciseUrl.searchParams.set('accept-language', 'en');
-      const preciseResponse = await fetch(preciseUrl, { headers: { Accept: 'application/json' } });
-      if (preciseResponse.ok) {
-        const precise = await preciseResponse.json();
-        const address = precise.address || {};
-        if (address.country_code && address.country_code.toLowerCase() !== 'in') throw new Error('Kamlesh Suits currently delivers only within India.');
-        const mapped = {
-          countryCode: address.country_code?.toUpperCase(),
-          postcode: address.postcode || '',
-          city: address.city || address.town || address.municipality || address.village || address.county || '',
-          locality: address.neighbourhood || address.suburb || address.village || address.hamlet || address.road || '',
-          principalSubdivision: address.state || '',
-        };
-        if (/^\d{6}$/.test(String(mapped.postcode).replace(/\D/g, ''))) return mapped;
-      }
-    } catch (preciseError) {
-      if (preciseError.message?.includes('only within India')) throw preciseError;
-      console.warn('Precise postal lookup failed, using fallback:', preciseError);
-    }
-  }
-
-  const url = new URL('https://api.bigdatacloud.net/data/reverse-geocode-client');
-  if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
-    url.searchParams.set('latitude', latitude);
-    url.searchParams.set('longitude', longitude);
-  }
-  url.searchParams.set('localityLanguage', 'en');
-  const response = await fetch(url);
-  if (!response.ok) throw new Error('Could not read your location.');
-  const place = await response.json();
-  if (place.countryCode && place.countryCode !== 'IN') throw new Error('Kamlesh Suits currently delivers only within India.');
-  return place;
-};
+const reverseGeocode = (latitude, longitude) => lookupCoordinates(latitude, longitude);
 
 const resolvePincode = async pincode => {
-  const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-  const data = await response.json();
-  const office = data?.[0]?.Status === 'Success' ? data[0].PostOffice?.[0] : null;
-  return {
-    city: office?.District || office?.Division || '',
-    area: office?.Name || office?.Block || '',
-    state: office?.State || getStateFromPin(pincode),
-  };
+  const office = await lookupPincode(pincode);
+  return { city: office.District || office.Division || '', area: office.Name || '', state: office.State || getStateFromPin(pincode) };
 };
 
 const LocationModal = ({ isOpen, onClose, welcome = false }) => {
@@ -94,6 +48,7 @@ const LocationModal = ({ isOpen, onClose, welcome = false }) => {
     setDeliveryLocation(saved);
     setPincode(pin);
     setResult(saved);
+    if (welcome) onClose();
     return saved;
   };
 
@@ -133,14 +88,12 @@ const LocationModal = ({ isOpen, onClose, welcome = false }) => {
         setIsLocating(false);
       }
     }, async locationError => {
-      let permissionState = 'unknown';
-      try {
-        permissionState = (await navigator.permissions?.query({ name: 'geolocation' }))?.state || 'unknown';
-      } catch {
-        // Permissions API is not available in some iOS and in-app browsers.
+      if (welcome && locationError.code === 1) {
+        setIsLocating(false);
+        onClose();
+        return;
       }
-
-      if (locationError.code === 1 && permissionState === 'denied') {
+      if (locationError.code === 1) {
         setError('Location is blocked in this browser’s site settings. Enable Location for Kamlesh Suits, then tap the button again.');
         setIsLocating(false);
         return;
@@ -160,7 +113,7 @@ const LocationModal = ({ isOpen, onClose, welcome = false }) => {
       } finally {
         setIsLocating(false);
       }
-    }, { enableHighAccuracy: true, timeout: 18000, maximumAge: 300000 });
+    }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 });
   };
 
   const handleSubmit = async event => {
@@ -213,6 +166,7 @@ const LocationModal = ({ isOpen, onClose, welcome = false }) => {
             <button onClick={onClose} className="mt-4 min-h-11 w-full rounded-xl border border-current text-xs font-black uppercase tracking-wider">Continue shopping</button>
           </div>}
           {error && <p role="alert" className="rounded-xl bg-amber-50 p-3 text-xs font-semibold leading-relaxed text-amber-800">{error}</p>}
+          {welcome && !result && <button type="button" onClick={onClose} className="min-h-11 w-full text-sm font-semibold text-stone-500">Not now — continue shopping</button>}
           <p className="flex items-start gap-2 text-[10px] leading-relaxed text-stone-500"><HiShieldCheck className="mt-0.5 shrink-0 text-emerald-600" size={16} /> Kamlesh Suits does not continuously track your location. You can change it anytime from the location bar.</p>
         </div>
       </section>

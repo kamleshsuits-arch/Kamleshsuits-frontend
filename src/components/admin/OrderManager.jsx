@@ -107,7 +107,17 @@ const OrderManager = ({ showToast, onPendingCountChange, taxonomy = [] }) => {
             if (['Awaiting Confirmation', 'Pending'].includes(order.status) && !['Awaiting Confirmation', 'Pending'].includes(status)) {
                 onPendingCountChange?.(Math.max(0, orders.filter(item => ['Awaiting Confirmation', 'Pending'].includes(item.status)).length - 1));
             }
-            if (showToast) showToast(`Order marked ${status}.`, null, 'success');
+            if (showToast) {
+                const whatsapp = updated.whatsappNotification;
+                const message = whatsapp?.sent
+                    ? `Order marked ${status}. WhatsApp update sent.`
+                    : whatsapp?.reason === 'customer_not_opted_in'
+                        ? `Order marked ${status}. Customer did not opt in to WhatsApp updates.`
+                        : whatsapp?.reason === 'whatsapp_not_configured'
+                            ? `Order marked ${status}. WhatsApp is not configured yet.`
+                            : `Order marked ${status}. WhatsApp update could not be sent.`;
+                showToast(message, null, whatsapp?.sent || whatsapp?.reason === 'customer_not_opted_in' ? 'success' : 'error');
+            }
         } catch (error) {
             console.error('Failed to update order:', error);
             if (showToast) showToast('Could not update order. Please try again.', null, 'error');
@@ -123,7 +133,7 @@ const OrderManager = ({ showToast, onPendingCountChange, taxonomy = [] }) => {
         };
         try {
             setUpdatingOrder(order.orderId);
-            const updated = await updateOrderStatus(order.orderId, order.status, draft.status, draft.method);
+            const updated = await updateOrderStatus(order.orderId, order.status, draft.status, draft.method, false);
             setOrders(current => current.map(item => item.orderId === order.orderId ? { ...item, ...updated } : item));
             setPaymentDrafts(current => ({
                 ...current,

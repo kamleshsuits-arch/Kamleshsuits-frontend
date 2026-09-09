@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Hung geocoder aborts within bounded timeout",
+    "status": "PASS"
+  },
+  {
+    "name": "Successful PIN lookup cached",
+    "status": "PASS"
+  },
+  {
+    "name": "Unknown PIN rejected",
+    "status": "PASS"
+  },
+  {
+    "name": "Coordinates missing PIN never invent one",
+    "status": "PASS"
+  },
+  {
+    "name": "Foreign coordinate rejected",
+    "status": "PASS"
+  },
+  {
+    "name": "Invalid building postcode uses valid locality postcode",
+    "status": "PASS"
+  }
+]

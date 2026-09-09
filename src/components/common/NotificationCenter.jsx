@@ -4,10 +4,13 @@ import { useAuth } from '../../context/AuthContext';
 import { enablePushNotifications, isStandalonePwa, trackPwaInstallation } from '../../pwa';
 
 const STORAGE_KEY = 'kamlesh_notifications';
+const PROMPT_SEEN_KEY = 'kamlesh_notification_prompt_seen';
 
-const NotificationCenter = () => {
+const NotificationCenter = ({ loaderComplete = false, popupBlocked = false }) => {
   const { user } = useAuth();
-  const [open, setOpen] = useState(() => isStandalonePwa() && globalThis.Notification?.permission === 'default');
+  const [open, setOpen] = useState(false);
+  const [promptDue, setPromptDue] = useState(false);
+  const [promptDismissed, setPromptDismissed] = useState(() => sessionStorage.getItem(PROMPT_SEEN_KEY) === 'true');
   const [permission, setPermission] = useState(() => globalThis.Notification?.permission || 'unsupported');
   const [notifications, setNotifications] = useState(() => {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
@@ -15,6 +18,17 @@ const NotificationCenter = () => {
   const [isMobile, setIsMobile] = useState(() => globalThis.matchMedia?.('(max-width: 767px)').matches ?? false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    if (!loaderComplete || promptDismissed || permission !== 'default') return;
+    const timer = window.setTimeout(() => setPromptDue(true), 25000);
+    return () => window.clearTimeout(timer);
+  }, [loaderComplete, promptDismissed, permission]);
+
+  const dismissPrompt = () => {
+    sessionStorage.setItem(PROMPT_SEEN_KEY, 'true');
+    setPromptDismissed(true);
+  };
 
   useEffect(() => {
     const mobileQuery = window.matchMedia('(max-width: 767px)');
@@ -32,12 +46,9 @@ const NotificationCenter = () => {
   }, [user?.id]);
 
   useEffect(() => {
-    const showOptIn = () => setOpen(true);
     const togglePanel = () => setOpen(current => !current);
-    window.addEventListener('kamlesh:pwa-installed', showOptIn);
     window.addEventListener('kamlesh:notifications-toggle', togglePanel);
     return () => {
-      window.removeEventListener('kamlesh:pwa-installed', showOptIn);
       window.removeEventListener('kamlesh:notifications-toggle', togglePanel);
     };
   }, []);
@@ -62,6 +73,7 @@ const NotificationCenter = () => {
       setBusy(true);
       await enablePushNotifications();
       setPermission('granted');
+      dismissPrompt();
       setMessage('Notifications enabled');
     } catch (error) {
       setPermission(globalThis.Notification?.permission || 'unsupported');
@@ -71,6 +83,19 @@ const NotificationCenter = () => {
 
   return (
     <div className="fixed right-2 top-14 z-[110] md:bottom-8 md:right-8 md:top-auto md:z-[80]">
+      {loaderComplete && promptDue && !promptDismissed && permission === 'default' && !popupBlocked && !open && (
+        <section role="dialog" aria-labelledby="notification-permission-title" className="fixed left-1/2 top-20 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-2xl border border-amber-200 bg-white p-5 shadow-2xl">
+          <div className="flex items-start gap-3">
+            <HiOutlineBell className="shrink-0 text-2xl text-amber-700" aria-hidden="true" />
+            <div><h2 id="notification-permission-title" className="text-base font-bold text-primary">Allow notifications?</h2><p className="mt-1 text-sm text-stone-600">Get order updates and new arrivals from Kamlesh Suits.</p></div>
+          </div>
+          {message && <p role="status" className="mt-3 text-xs text-stone-600">{message}</p>}
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <button type="button" onClick={dismissPrompt} disabled={busy} className="min-h-11 rounded-xl bg-stone-100 text-sm font-bold text-stone-600 disabled:opacity-50">Later</button>
+            <button type="button" onClick={enable} disabled={busy} className="min-h-11 rounded-xl bg-primary text-sm font-bold text-white disabled:opacity-50">{busy ? 'Enabling…' : 'Allow'}</button>
+          </div>
+        </section>
+      )}
       {open && (
         <section className="absolute right-0 top-2 w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-3xl border border-amber-100 bg-white shadow-2xl md:bottom-16 md:top-auto md:w-[min(22rem,calc(100vw-2rem))]">
           <header className="flex items-center justify-between bg-gradient-to-r from-[#3B1F12] to-[#6B3A21] px-5 py-4 text-white">

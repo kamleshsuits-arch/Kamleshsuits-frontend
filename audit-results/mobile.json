@@ -1,0 +1,99 @@
+[
+  {
+    "name": "Home and mobile category active state",
+    "status": "PASS"
+  },
+  {
+    "name": "Product page, colour selection and Order Now",
+    "status": "PASS"
+  },
+  {
+    "name": "Checkout tax inclusive price and mocked order submission",
+    "status": "PASS"
+  },
+  {
+    "name": "Location recovers PIN from locality after building omits it",
+    "status": "PASS"
+  },
+  {
+    "name": "Missing product recovers with an error instead of endless loader",
+    "status": "PASS"
+  },
+  {
+    "name": "Product swipe selects next colour and does not open lightbox",
+    "status": "PASS"
+  },
+  {
+    "name": "Wishlist saves a product across navigation",
+    "status": "PASS"
+  },
+  {
+    "name": "Invalid tracking phone is rejected",
+    "status": "PASS"
+  },
+  {
+    "name": "Denied delivery cannot submit; failed lookup exposes retry",
+    "status": "PASS"
+  },
+  {
+    "name": "Location denial opens manual PIN without IP lookup",
+    "status": "PASS"
+  },
+  {
+    "name": "Mobile route and overflow: /new-arrivals",
+    "status": "PASS"
+  },
+  {
+    "name": "Mobile route and overflow: /sale",
+    "status": "PASS"
+  },
+  {
+    "name": "Mobile route and overflow: /wishlist",
+    "status": "PASS"
+  },
+  {
+    "name": "Mobile route and overflow: /track-order",
+    "status": "PASS"
+  },
+  {
+    "name": "Mobile route and overflow: /login",
+    "status": "PASS"
+  },
+  {
+    "name": "Mobile route and overflow: /signup",
+    "status": "PASS"
+  },
+  {
+    "name": "Mobile route and overflow: /terms",
+    "status": "PASS"
+  },
+  {
+    "name": "Mobile route and overflow: /does-not-exist",
+    "status": "PASS"
+  },
+  {
+    "name": "Mobile route and overflow: /account",
+    "status": "PASS"
+  },
+  {
+    "name": "Mobile route and overflow: /admin",
+    "status": "PASS"
+  },
+  {
+    "name": "Small-screen layout 320px",
+    "status": "PASS"
+  },
+  {
+    "name": "Small-screen layout 360px",
+    "status": "PASS"
+  },
+  {
+    "name": "Small-screen layout 430px",
+    "status": "PASS"
+  },
+  {
+    "name": "Uncaught browser exceptions",
+    "status": "PASS",
+    "errors": []
+  }
+]

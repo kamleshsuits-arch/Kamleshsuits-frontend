@@ -8,8 +8,8 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import AuthTest from './pages/AuthTest';
 import AccountPage from './pages/AccountPage';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminBanners from './pages/AdminBanners';
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+const AdminBanners = React.lazy(() => import('./pages/AdminBanners'));
 import NewArrivals from './pages/NewArrivals';
 import Sale from './pages/Sale';
 import TermsAndConditions from './pages/TermsAndConditions';
@@ -34,6 +34,13 @@ function App() {
   });
   const [initialCollectionReady, setInitialCollectionReady] = React.useState(false);
   const [showLocationWelcome, setShowLocationWelcome] = React.useState(false);
+  const [locationStepComplete, setLocationStepComplete] = React.useState(false);
+
+  const closeLocationWelcome = React.useCallback(() => {
+    sessionStorage.setItem('kamlesh_location_prompt_seen', 'true');
+    setShowLocationWelcome(false);
+    setLocationStepComplete(true);
+  }, []);
 
   const handleLaunchComplete = React.useCallback(() => {
     sessionStorage.setItem('hasSeenLaunch', 'true');
@@ -45,11 +52,15 @@ function App() {
   }, []);
 
   React.useEffect(() => {
-    const isPublicPage = !location.pathname.startsWith('/admin') && !['/login', '/signup', '/auth-test'].includes(location.pathname);
-    if (showLaunch || deliveryLocation || !isPublicPage || sessionStorage.getItem('kamlesh_location_prompt_seen')) return;
-    sessionStorage.setItem('kamlesh_location_prompt_seen', 'true');
-    setShowLocationWelcome(true);
-  }, [showLaunch, deliveryLocation, location.pathname]);
+    if (showLaunch || location.pathname !== '/' || showLocationWelcome || locationStepComplete) return;
+    // A saved location or a completed welcome step needs no second location prompt.
+    if (deliveryLocation || sessionStorage.getItem('kamlesh_location_prompt_seen')) {
+      setLocationStepComplete(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setShowLocationWelcome(true), 6000);
+    return () => window.clearTimeout(timer);
+  }, [showLaunch, deliveryLocation, location.pathname, showLocationWelcome, locationStepComplete]);
 
   const isAuthPage = ['/login', '/signup', '/auth-test'].includes(location.pathname);
   const isHome = location.pathname === '/';
@@ -59,9 +70,9 @@ function App() {
   return (
     <div className={`flex flex-col min-h-screen ${!isAuthPage ? 'pb-16 md:pb-0' : ''}`}>
       {showLaunch && <LaunchScreen ready={!isHome || initialCollectionReady} onComplete={handleLaunchComplete} />}
-      <LocationModal isOpen={showLocationWelcome} onClose={() => setShowLocationWelcome(false)} welcome />
-      {!isAuthPage && !location.pathname.startsWith('/admin') && <InstallPrompt />}
-      {!isAuthPage && <NotificationCenter />}
+      <LocationModal isOpen={showLocationWelcome && isHome} onClose={closeLocationWelcome} welcome />
+      {isHome && !showLaunch && locationStepComplete && !showLocationWelcome && <InstallPrompt delayMs={6000} />}
+      {!isAuthPage && <NotificationCenter loaderComplete={!showLaunch} popupBlocked={showLocationWelcome && isHome} />}
       {!isAuthPage && <Navbar />}
       <Toast 
         show={toast.show} 
@@ -83,8 +94,8 @@ function App() {
           <Route path="/new-arrivals" element={<NewArrivals />} />
           <Route path="/sale" element={<Sale />} />
           <Route path="/account" element={<AccountPage />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/banners" element={<AdminBanners />} />
+          <Route path="/admin" element={<React.Suspense fallback={<p role="status" className="p-8 text-center">Loading dashboard…</p>}><AdminDashboard /></React.Suspense>} />
+          <Route path="/admin/banners" element={<React.Suspense fallback={<p role="status" className="p-8 text-center">Loading banners…</p>}><AdminBanners /></React.Suspense>} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/auth-test" element={<AuthTest />} />

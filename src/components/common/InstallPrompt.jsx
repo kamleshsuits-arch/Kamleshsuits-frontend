@@ -5,7 +5,7 @@ import { canInstallPwa, isStandalonePwa, promptPwaInstall } from '../../pwa';
 const DISMISSED_KEY = 'kamlesh_install_prompt_dismissed';
 const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
 
-const InstallPrompt = () => {
+const InstallPrompt = ({ delayMs = 6000 }) => {
   const [delayFinished, setDelayFinished] = useState(false);
   const [installAvailable, setInstallAvailable] = useState(() => canInstallPwa());
   const [installing, setInstalling] = useState(false);
@@ -13,7 +13,7 @@ const InstallPrompt = () => {
   const [dismissed, setDismissed] = useState(() => sessionStorage.getItem(DISMISSED_KEY) === 'true');
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setDelayFinished(true), 12000);
+    const timer = window.setTimeout(() => setDelayFinished(true), delayMs);
     const onReady = () => setInstallAvailable(true);
     const onInstalled = () => setDismissed(true);
     const onState = event => {
@@ -29,7 +29,7 @@ const InstallPrompt = () => {
       window.removeEventListener('kamlesh:pwa-installed', onInstalled);
       window.removeEventListener('kamlesh:pwa-install-state', onState);
     };
-  }, []);
+  }, [delayMs]);
 
   const dismiss = () => {
     sessionStorage.setItem(DISMISSED_KEY, 'true');
@@ -78,7 +78,7 @@ const InstallPrompt = () => {
         disabled={installing}
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-black uppercase tracking-wide text-white disabled:cursor-wait disabled:opacity-70"
       >
-        <HiDownload className="text-lg" /> {installing ? 'Opening installer…' : 'Download PWA'}
+        <HiDownload className="text-lg" /> {installing ? 'Opening installer…' : 'Install app'}
       </button>
     </aside>
   );

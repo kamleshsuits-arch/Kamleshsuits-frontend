@@ -144,15 +144,18 @@ export const CartProvider = ({ children }) => {
   };
 
   // --- CART ACTIONS ---
-  const addToCart = (product) => {
+  const addToCart = (product, { checkout = false } = {}) => {
     if (!product || !product.suitId) return;
     setCartItems((prev) => {
       const existing = prev.find((item) => String(item.suitId) === String(product.suitId));
       if (existing) {
+        // Checkout keeps the current quantity and applies the colour just selected.
+        if (checkout) return prev.map(item => String(item.suitId) === String(product.suitId)
+          ? { ...item, ...product, quantity: item.quantity || 1 } : item);
         showToast(`Quantity updated`, product.image || (product.images && product.images[0]), 'success');
         return prev.map((item) =>
           String(item.suitId) === String(product.suitId)
-            ? { ...item, quantity: Math.min((item.quantity || 1) + 1, 2) }
+            ? { ...item, ...product, quantity: Math.min((item.quantity || 1) + 1, 2) }
             : item
         );
       }

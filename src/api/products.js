@@ -29,7 +29,7 @@ export const fetchProducts = async (filters = {}) => {
 
 export const fetchProductById = async (id) => {
   try {
-    const response = await axios.get(`${API_URL}/products/${id}`);
+    const response = await axios.get(`${API_URL}/products/${id}`, { timeout: 12000 });
     return response.data;
   } catch (err) {
     console.error("Fetch product error:", err);
@@ -178,7 +178,7 @@ export const fetchAllOrders = async () => {
 
 export const validateDelivery = async (pincode) => {
   try {
-    const response = await axios.get(`${API_URL}/delivery/validate/${pincode}`);
+    const response = await axios.get(`${API_URL}/delivery/validate/${pincode}`, { timeout: 6000 });
     return response.data;
   } catch (err) {
     // Do NOT return isAllowed:false on network errors — this wrongly blocks valid pincodes.
@@ -244,11 +244,11 @@ export const fetchOrdersByPhone = async phone => {
   return response.data;
 };
 
-export const updateOrderStatus = async (orderId, status, paymentStatus, paymentMethod) => {
+export const updateOrderStatus = async (orderId, status, paymentStatus, paymentMethod, notifyCustomer = true) => {
   try {
     const response = await axios.patch(
       `${API_URL}/admin/orders/${encodeURIComponent(orderId)}/status`,
-      { status, paymentStatus, paymentMethod },
+      { status, paymentStatus, paymentMethod, notifyCustomer },
       { headers: getAuthHeader() }
     );
     return response.data;

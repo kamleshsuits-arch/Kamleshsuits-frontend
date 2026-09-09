@@ -49,10 +49,11 @@ const ProductColorSelector = ({ product, colors, selectedColor, colorError, onSe
   </div>
 );
 
-const ProductDetails = () => {
-  const { id } = useParams();
+const ProductDetailsContent = ({ id }) => {
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const [loadError, setLoadError] = useState('');
+  const [retryLoad, setRetryLoad] = useState(0);
   const [allProducts, setAllProducts] = useState([]);
   const [selectedImage, setSelectedImage] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
@@ -62,18 +63,24 @@ const ProductDetails = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { addToCart, toggleWishlist, isInWishlist, isInCart, removeFromCart } = useCart();
   const containerRef = useRef();
+  const touchStartRef = useRef(null);
+  const suppressImageClickRef = useRef(false);
 
   useEffect(() => {
+    let cancelled = false;
+    document.body.style.overflow = '';
     // Scroll to top on ID change to prevent blur/sticky header issues
     window.scrollTo(0, 0);
 
     const load = async () => {
+      try {
       const data = await fetchProductById(id);
+      if (cancelled) return;
+      setLoadError('');
       setProduct(data);
       
       // Fetch all products for recommendations
-      const all = await fetchProducts();
-      setAllProducts(all);
+      fetchProducts().then(all => { if (!cancelled) setAllProducts(all); }).catch(() => {});
 
       const primaryVariant = Array.isArray(data?.variants)
         ? data.variants.find(variant => variant.images?.includes(data.image)) || data.variants[0]
@@ -90,9 +97,13 @@ const ProductDetails = () => {
       setSelectedColor(primaryVariant?.colorName || data?.colors?.[0] || '');
       setColorError('');
       setShareStatus('');
+      } catch (error) {
+        if (!cancelled) setLoadError(error.response?.status === 404 ? 'This product is no longer available.' : 'Could not load this product. Please try again.');
+      }
     };
     load();
-  }, [id]);
+    return () => { cancelled = true; document.body.style.overflow = ''; };
+  }, [id, retryLoad]);
 
   useEffect(() => {
     if (product) {
@@ -114,25 +125,45 @@ const ProductDetails = () => {
   const getGalleryItems = () => {
     if (!product) return [];
     const items = [];
-    const activeVariant = Array.isArray(product.variants)
-      ? product.variants.find(variant => variant.colorName === selectedColor) || product.variants[0]
-      : null;
-    const images = activeVariant?.images?.length ? activeVariant.images : (product.images || []);
-
-    // Add main image if not in images array
-    if (!activeVariant && product.image && !images.includes(product.image)) {
-      items.push({ type: 'image', src: product.image, id: 'main' });
-    }
-
-    // Add all gallery images
-    images.forEach((img, idx) => {
-      items.push({ type: 'image', src: img, id: `gallery-${idx}` });
-    });
+    const variants = Array.isArray(product.variants) ? product.variants : [];
+    const addImage = (src, color) => {
+      if (!src || items.some(item => item.src === src)) return;
+      items.push({ type: 'image', src, color, id: `gallery-${items.length}` });
+    };
+    const owner = src => variants.find(variant => variant.images?.includes(src))?.colorName;
+    addImage(product.image, owner(product.image));
+    (product.images || []).forEach(src => addImage(src, owner(src)));
+    variants.forEach(variant => (variant.images || []).forEach(src => addImage(src, variant.colorName)));
 
     return items;
   };
 
   const galleryItems = getGalleryItems();
+  const selectGalleryImage = index => {
+    const item = galleryItems[index];
+    if (!item) return;
+    setSelectedImage(item.src);
+    setCurrentImageIndex(index);
+    if (item.color) setSelectedColor(item.color);
+    setColorError('');
+  };
+  const onImageTouchStart = event => {
+    suppressImageClickRef.current = false;
+    const touch = event.touches[0];
+    touchStartRef.current = event.touches.length === 1 ? { x: touch.clientX, y: touch.clientY } : null;
+  };
+  const onImageTouchEnd = event => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start || galleryItems.length < 2) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+    suppressImageClickRef.current = true;
+    const index = isLightboxOpen ? currentImageIndex : Math.max(0, galleryItems.findIndex(item => item.src === selectedImage));
+    selectGalleryImage((index + (dx < 0 ? 1 : -1) + galleryItems.length) % galleryItems.length);
+  };
   const availableColors = Array.isArray(product?.variants) && product.variants.length
     ? product.variants.map(variant => variant.colorName).filter(Boolean)
     : (Array.isArray(product?.colors) ? product.colors : []);
@@ -142,6 +173,23 @@ const ProductDetails = () => {
     setSelectedColor(color);
     if (variant?.images?.[0]) setSelectedImage(variant.images[0]);
     setColorError('');
+  };
+
+  const purchase = (checkout = false) => {
+    if (availableColors.length && !selectedColor) {
+      setColorError('Choose a colour before continuing.');
+      return;
+    }
+    const variant = product.variants?.find(item => item.colorName === selectedColor);
+    const stock = variant?.stock ?? product.stock;
+    if (stock != null && Number(stock) <= 0) {
+      setColorError('This colour is sold out. Please choose another colour.');
+      return;
+    }
+    addToCart({ ...product, selectedColor, selectedVariantId: variant?.id,
+      image: variant?.images?.[0] || product.image,
+      images: variant?.images?.length ? variant.images : product.images }, { checkout });
+    if (checkout) navigate('/cart');
   };
 
   // Price Logic
@@ -228,6 +276,7 @@ const ProductDetails = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isLightboxOpen, nextImage, prevImage]);
 
+  if (loadError) return <div className="min-h-screen px-6 py-24 text-center"><p role="alert">{loadError}</p><button onClick={() => setRetryLoad(value => value + 1)} className="m-3 min-h-11 rounded-xl bg-primary px-6 text-white">Try again</button><button onClick={() => navigate('/')} className="min-h-11 px-4 underline">Browse products</button></div>;
   if (!product) return (
     <Loader message="Retrieving Product Specification..." />
   );
@@ -295,7 +344,11 @@ const ProductDetails = () => {
             {/* Main View Container */}
             <div 
               className="relative overflow-hidden bg-muted cursor-zoom-in aspect-[3/4] rounded-2xl shadow-sm group max-h-[700px] w-full mx-auto"
-              onClick={() => openLightbox(galleryItems.findIndex(i => i.src === selectedImage))}
+              style={{ touchAction: 'pan-y pinch-zoom' }}
+              onTouchStart={onImageTouchStart}
+              onTouchEnd={onImageTouchEnd}
+              onTouchCancel={() => { touchStartRef.current = null; }}
+              onClick={() => { if (!suppressImageClickRef.current && galleryItems.length) openLightbox(Math.max(0, galleryItems.findIndex(i => i.src === selectedImage))); }}
             >
               <img
                 src={selectedImage || product.image || product.images?.[0]}
@@ -308,6 +361,13 @@ const ProductDetails = () => {
                  </div>
               </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-3 md:hidden">
+              <button type="button" onClick={() => purchase(true)} className="min-h-12 rounded-xl bg-primary px-3 py-3 text-sm font-bold text-white">Order Now</button>
+              <button type="button" onClick={() => purchase()} className="min-h-12 rounded-xl border-2 border-primary px-3 py-3 text-sm font-bold text-primary">Add to cart</button>
+            </div>
+            {galleryItems.length > 1 && <p className="-mt-3 text-center text-xs text-stone-500 md:hidden">Swipe to explore photos & colours · {Math.max(0, galleryItems.findIndex(item => item.src === selectedImage)) + 1}/{galleryItems.length}</p>}
+            {colorError && !availableColors.length && <p role="alert" className="text-sm text-red-600">{colorError}</p>}
 
             {availableColors.length > 0 && (
               <ProductColorSelector
@@ -332,7 +392,7 @@ const ProductDetails = () => {
                       if (isLast) {
                         openLightbox(2);
                       } else if (item.src) {
-                        setSelectedImage(item.src);
+                        selectGalleryImage(index);
                       }
                     }}
                     className={`relative aspect-[3/4] cursor-pointer overflow-hidden rounded-xl border-2 transition-all ${
@@ -499,6 +559,10 @@ const ProductDetails = () => {
             <img 
               src={galleryItems[currentImageIndex].src} 
               alt="" 
+              onTouchStart={onImageTouchStart}
+              onTouchEnd={onImageTouchEnd}
+              onTouchCancel={() => { touchStartRef.current = null; }}
+              style={{ touchAction: 'pan-y pinch-zoom' }}
               className="max-w-full max-h-[85vh] object-contain shadow-2xl"
             />
 
@@ -528,6 +592,11 @@ const ProductDetails = () => {
       )}
     </div>
   );
+};
+
+const ProductDetails = () => {
+  const { id } = useParams();
+  return <ProductDetailsContent key={id} id={id} />;
 };
 
 export default ProductDetails;
