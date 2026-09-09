@@ -33,6 +33,24 @@ const ProductList = ({ onInitialReady }) => {
   const [showMobileSort, setShowMobileSort] = useState(false);
   const [searchParams] = useSearchParams();
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const toolbarMarkerRef = useRef(null);
+  const [toolbarPinned, setToolbarPinned] = useState(false);
+
+  useEffect(() => {
+    if (loading || !toolbarMarkerRef.current) return;
+    let observer;
+    const observe = () => {
+      observer?.disconnect();
+      const offset = window.matchMedia('(min-width: 768px)').matches ? 80 : 56;
+      observer = new IntersectionObserver(([entry]) => {
+        setToolbarPinned(!entry.isIntersecting && entry.boundingClientRect.top <= offset);
+      }, { rootMargin: `-${offset}px 0px 0px 0px`, threshold: 0 });
+      observer.observe(toolbarMarkerRef.current);
+    };
+    observe();
+    window.addEventListener('resize', observe);
+    return () => { observer?.disconnect(); window.removeEventListener('resize', observe); };
+  }, [loading]);
 
   // Show scroll top button after 800px (roughly 8 items)
   useEffect(() => {
@@ -232,13 +250,14 @@ const ProductList = ({ onInitialReady }) => {
   return (
     <div className="bg-background min-h-screen relative pb-20 md:pb-0">
       
-      {/* Mobile Sticky Filter & Sort Bar — pill style. top is sum(Navbar 56px + CategoryBar 84px) = 140px = 8.75rem */}
-      <div className="lg:hidden sticky top-[8.75rem] z-30 bg-white border-b border-stone-100 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
-        <div className="flex gap-2 px-3 py-2">
+      {/* The marker stays in normal flow so shrinking the toolbar cannot toggle itself. */}
+      <div ref={toolbarMarkerRef} className="h-px lg:hidden" aria-hidden="true" />
+      <div data-pinned={toolbarPinned} className="lg:hidden sticky top-14 md:top-20 z-30 bg-white border-b border-stone-100 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+        <div className={`flex gap-2 px-3 transition-[padding] duration-200 motion-reduce:transition-none ${toolbarPinned ? 'py-1' : 'py-2'}`}>
           {/* Filter button with active count badge */}
           <button
             onClick={() => setShowMobileFilter(true)}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider border-2 border-accent/30 text-accent bg-accent/5 hover:bg-accent/10 transition relative"
+            className={`flex-1 flex items-center justify-center gap-2 rounded-full font-bold uppercase tracking-wider border-2 border-accent/30 text-accent bg-accent/5 hover:bg-accent/10 transition relative ${toolbarPinned ? 'min-h-11 py-1 text-[10px]' : 'min-h-12 py-2.5 text-xs'}`}
           >
             <HiFilter size={15} /> Filter
             {/* Active filter count */}
@@ -251,7 +270,7 @@ const ProductList = ({ onInitialReady }) => {
           {/* Sort button showing current sort */}
           <button
             onClick={() => setShowMobileSort(true)}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider border-2 border-stone-200 text-stone-600 bg-white hover:border-accent/40 hover:text-accent transition"
+            className={`flex-1 flex items-center justify-center gap-2 rounded-full font-bold uppercase tracking-wider border-2 border-stone-200 text-stone-600 bg-white hover:border-accent/40 hover:text-accent transition ${toolbarPinned ? 'min-h-11 py-1 text-[10px]' : 'min-h-12 py-2.5 text-xs'}`}
           >
             <HiSortAscending size={15} />
             {filters.sort

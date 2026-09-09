@@ -337,13 +337,22 @@ const ProductDetailsContent = ({ id }) => {
       </div>
 
       {/* Main Content - transform-gpu to help with rendering crispness */}
-      <div ref={containerRef} className="container mx-auto px-4 py-3 md:py-12 transform-gpu filter-none">
+      <div ref={containerRef} className="container mx-auto px-3 py-3 md:px-4 md:py-12 transform-gpu filter-none">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12">
           {/* Left Column: Gallery */}
           <div className="flex flex-col gap-6">
             {/* Main View Container */}
             <div 
-              className="relative flex items-center justify-center overflow-hidden bg-muted cursor-zoom-in h-[min(58svh,520px)] md:h-auto md:aspect-[3/4] rounded-2xl shadow-sm group max-h-[700px] w-full mx-auto"
+              className="relative flex items-center justify-center overflow-hidden bg-white cursor-zoom-in h-[min(72svh,640px)] md:h-auto md:aspect-[3/4] rounded-2xl border border-stone-200 shadow-[0_8px_30px_rgba(59,31,18,0.08)] max-h-[700px] w-full mx-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+              role="button"
+              tabIndex={0}
+              aria-label={`Enlarge image of ${product.title}`}
+              onKeyDown={event => {
+                if ((event.key === 'Enter' || event.key === ' ') && galleryItems.length) {
+                  event.preventDefault();
+                  openLightbox(Math.max(0, galleryItems.findIndex(item => item.src === selectedImage)));
+                }
+              }}
               style={{ touchAction: 'pan-y pinch-zoom' }}
               onTouchStart={onImageTouchStart}
               onTouchEnd={onImageTouchEnd}
@@ -353,13 +362,11 @@ const ProductDetailsContent = ({ id }) => {
               <img
                 src={selectedImage || product.image || product.images?.[0]}
                 alt={product.title}
-                className="w-full h-full object-contain object-center md:object-cover transition-transform duration-700 md:group-hover:scale-105"
+                className="w-full h-full object-contain object-center"
+                loading="eager"
+                fetchPriority="high"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 flex items-center justify-center">
-                 <div className="bg-white/90 backdrop-blur-md p-3 rounded-full opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-xl">
-                   <HiOutlineShoppingBag className="text-primary text-xl" />
-                 </div>
-              </div>
+              <span className="pointer-events-none absolute bottom-3 right-3 rounded-full border border-stone-200 bg-white/90 px-3 py-1.5 text-[10px] font-medium text-stone-600 shadow-sm">Tap to enlarge</span>
             </div>
 
             <div className="grid grid-cols-2 gap-3 md:hidden">
