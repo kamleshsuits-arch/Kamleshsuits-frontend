@@ -1,5 +1,7 @@
 param(
-    [string]$SourceDirectory = 'E:\Dasktop\AAAks'
+    [string]$SourceDirectory = 'E:\Dasktop\AAAks',
+    [string]$PwaSourcePath,
+    [switch]$PwaOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -67,6 +69,7 @@ function Export-SquareIcon(
     $canvas.Dispose()
 }
 
+if (-not $PwaOnly) {
 $faviconSource = [System.Drawing.Image]::FromFile((Join-Path $SourceDirectory 'Favicon.png'))
 $faviconSquareSize = [Math]::Min($faviconSource.Width, $faviconSource.Height)
 $faviconCropX = [int](($faviconSource.Width - $faviconSquareSize) / 2)
@@ -90,12 +93,14 @@ Export-SquareIcon $faviconMaster 32 'favicon-32.png'
 Export-SquareIcon $faviconMaster 48 'favicon-48.png'
 $faviconMaster.Dispose()
 $faviconSource.Dispose()
+}
 
-$pwaSource = [System.Drawing.Image]::FromFile((Join-Path $SourceDirectory 'Pwa_logo.png'))
-Export-SquareIcon $pwaSource 180 'apple-touch-icon.png' 1 ([System.Drawing.Color]::Transparent) $true
-Export-SquareIcon $pwaSource 192 'pwa-192.png' 1 ([System.Drawing.Color]::Transparent) $true
-Export-SquareIcon $pwaSource 512 'pwa-512.png' 1 ([System.Drawing.Color]::Transparent) $true
-Export-SquareIcon $pwaSource 512 'pwa-maskable-512.png' 0.8 ([System.Drawing.Color]::FromArgb(255, 250, 240)) $true
+if (-not $PwaSourcePath) { $PwaSourcePath = Join-Path $SourceDirectory 'Pwa_logo.png' }
+$pwaSource = [System.Drawing.Image]::FromFile($PwaSourcePath)
+Export-SquareIcon $pwaSource 180 'apple-touch-icon.png' 1 ([System.Drawing.Color]::White)
+Export-SquareIcon $pwaSource 192 'pwa-192.png' 1 ([System.Drawing.Color]::White)
+Export-SquareIcon $pwaSource 512 'pwa-512.png' 1 ([System.Drawing.Color]::White)
+Export-SquareIcon $pwaSource 512 'pwa-maskable-512.png' 0.66 ([System.Drawing.Color]::White)
 $pwaSource.Dispose()
 
 Get-ChildItem -LiteralPath $iconDirectory -File | Select-Object Name, Length
