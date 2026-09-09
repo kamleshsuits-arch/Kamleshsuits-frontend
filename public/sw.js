@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'kamlesh-suits-v4';
+const CACHE_VERSION = 'kamlesh-suits-v5';
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const APP_SHELL = [

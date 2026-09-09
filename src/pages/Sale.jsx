@@ -92,10 +92,6 @@ const Sale = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 min-[380px]:gap-3 sm:gap-6">
           {products.map((product) => (
             <div key={product.suitId} className="relative group/sale">
-              {/* Extra discount badge for sale page */}
-              <div className="absolute -top-2 -right-2 z-[30] bg-highlight text-white text-[9px] font-black px-2 py-1 rounded-full shadow-lg transform rotate-12 group-hover/sale:rotate-0 transition-transform">
-                -{product.discount}%
-              </div>
               <ProductCard 
                 product={product} 
                 onView={(p) => navigate(`/product/${p.suitId}`)} 

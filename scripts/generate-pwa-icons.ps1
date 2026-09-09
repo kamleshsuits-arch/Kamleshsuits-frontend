@@ -1,7 +1,8 @@
 param(
     [string]$SourceDirectory = 'E:\Dasktop\AAAks',
     [string]$PwaSourcePath,
-    [switch]$PwaOnly
+    [switch]$PwaOnly,
+    [switch]$CircularFavicon
 )
 
 $ErrorActionPreference = 'Stop'
@@ -42,7 +43,8 @@ function Export-SquareIcon(
     [string]$fileName,
     [double]$contentScale = 1,
     [System.Drawing.Color]$background = [System.Drawing.Color]::Transparent,
-    [bool]$clipRoundedCorners = $false
+    [bool]$clipRoundedCorners = $false,
+    [bool]$clipCircle = $false
 ) {
     $canvas = New-Canvas $size
     $graphics = [System.Drawing.Graphics]::FromImage($canvas)
@@ -53,12 +55,16 @@ function Export-SquareIcon(
     $x = [int](($size - $targetSize) / 2)
     $y = $x
     $targetRectangle = New-Object System.Drawing.Rectangle $x, $y, $targetSize, $targetSize
-    if ($clipRoundedCorners) {
+    if ($clipCircle) {
+        $clipPath = New-Object System.Drawing.Drawing2D.GraphicsPath
+        $clipPath.AddEllipse($targetRectangle)
+        $graphics.SetClip($clipPath)
+    } elseif ($clipRoundedCorners) {
         $clipPath = New-RoundedRectanglePath $targetRectangle ([int][Math]::Round($targetSize * 0.16))
         $graphics.SetClip($clipPath)
     }
     $graphics.DrawImage($source, $targetRectangle)
-    if ($clipRoundedCorners) {
+    if ($clipRoundedCorners -or $clipCircle) {
         $graphics.ResetClip()
         $clipPath.Dispose()
     }
@@ -101,6 +107,10 @@ Export-SquareIcon $pwaSource 180 'apple-touch-icon.png' 1 ([System.Drawing.Color
 Export-SquareIcon $pwaSource 192 'pwa-192.png' 1 ([System.Drawing.Color]::White)
 Export-SquareIcon $pwaSource 512 'pwa-512.png' 1 ([System.Drawing.Color]::White)
 Export-SquareIcon $pwaSource 512 'pwa-maskable-512.png' 0.66 ([System.Drawing.Color]::White)
+if ($CircularFavicon) {
+    Export-SquareIcon $pwaSource 32 'favicon-32.png' 1 ([System.Drawing.Color]::Transparent) $false $true
+    Export-SquareIcon $pwaSource 48 'favicon-48.png' 1 ([System.Drawing.Color]::Transparent) $false $true
+}
 $pwaSource.Dispose()
 
 Get-ChildItem -LiteralPath $iconDirectory -File | Select-Object Name, Length
