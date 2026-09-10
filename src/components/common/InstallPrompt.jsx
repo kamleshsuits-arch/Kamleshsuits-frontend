@@ -5,7 +5,7 @@ import { canInstallPwa, isStandalonePwa, promptPwaInstall } from '../../pwa';
 const DISMISSED_KEY = 'kamlesh_install_prompt_dismissed';
 const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
 
-const InstallPrompt = ({ delayMs = 6000 }) => {
+const InstallPrompt = ({ delayMs = 6000, onVisibilityChange }) => {
   const [delayFinished, setDelayFinished] = useState(false);
   const [installAvailable, setInstallAvailable] = useState(() => canInstallPwa());
   const [installing, setInstalling] = useState(false);
@@ -62,10 +62,16 @@ const InstallPrompt = ({ delayMs = 6000 }) => {
     }
   };
 
-  if (!delayFinished || dismissed || isStandalonePwa() || (!installAvailable && !isIos())) return null;
+  const visible = delayFinished && !dismissed && !isStandalonePwa() && (installAvailable || isIos());
+  useEffect(() => {
+    onVisibilityChange?.(visible);
+    return () => onVisibilityChange?.(false);
+  }, [visible, onVisibilityChange]);
+
+  if (!visible) return null;
 
   return (
-    <aside className="fixed bottom-40 left-1/2 z-[75] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-3xl border border-amber-200 bg-white p-4 shadow-2xl md:bottom-6" role="dialog" aria-label="Install Kamlesh Suits app">
+    <aside className="bottom-app-prompt fixed left-1/2 z-[115] w-[calc(100%-1.5rem)] max-w-sm -translate-x-1/2 rounded-3xl border border-amber-200 bg-white p-4 shadow-2xl" role="dialog" aria-label="Install Kamlesh Suits app">
       <button onClick={dismiss} className="absolute right-3 top-3 rounded-full p-1.5 text-stone-400 hover:bg-stone-100" aria-label="Dismiss install option"><HiX /></button>
       <div className="flex items-start gap-3 pr-7">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-50 text-2xl text-amber-700"><HiOutlineDeviceMobile /></span>

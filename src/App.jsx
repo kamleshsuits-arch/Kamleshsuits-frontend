@@ -42,6 +42,7 @@ function App() {
   const [initialCollectionReady, setInitialCollectionReady] = React.useState(false);
   const [showLocationWelcome, setShowLocationWelcome] = React.useState(false);
   const [locationStepComplete, setLocationStepComplete] = React.useState(false);
+  const [installPromptVisible, setInstallPromptVisible] = React.useState(false);
 
   const closeLocationWelcome = React.useCallback(() => {
     sessionStorage.setItem('kamlesh_location_prompt_seen', 'true');
@@ -80,8 +81,8 @@ function App() {
       <AsyncBoundary optional>
       <React.Suspense fallback={null}>
         <LocationModal isOpen={showLocationWelcome && isHome} onClose={closeLocationWelcome} welcome />
-        {isHome && !showLaunch && locationStepComplete && !showLocationWelcome && <InstallPrompt delayMs={6000} />}
-        {!isAuthPage && <NotificationCenter loaderComplete={!showLaunch} popupBlocked={showLocationWelcome && isHome} />}
+        {isHome && !showLaunch && locationStepComplete && !showLocationWelcome && <InstallPrompt delayMs={6000} onVisibilityChange={setInstallPromptVisible} />}
+        {!isAuthPage && <NotificationCenter loaderComplete={!showLaunch} popupBlocked={(showLocationWelcome && isHome) || installPromptVisible} />}
       </React.Suspense>
       </AsyncBoundary>
       {!isAuthPage && <Navbar />}

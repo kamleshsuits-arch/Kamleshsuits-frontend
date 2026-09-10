@@ -84,13 +84,13 @@ const NotificationCenter = ({ loaderComplete = false, popupBlocked = false }) =>
   return (
     <div className="fixed right-2 top-14 z-[110] md:bottom-8 md:right-8 md:top-auto md:z-[80]">
       {loaderComplete && promptDue && !promptDismissed && permission === 'default' && !popupBlocked && !open && (
-        <section role="dialog" aria-labelledby="notification-permission-title" className="fixed left-1/2 top-20 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-2xl border border-amber-200 bg-white p-5 shadow-2xl">
+        <section role="dialog" aria-labelledby="notification-permission-title" className="bottom-app-prompt fixed left-1/2 w-[calc(100%-1.5rem)] max-w-xs -translate-x-1/2 rounded-2xl border border-amber-200 bg-white p-3 shadow-2xl">
           <div className="flex items-start gap-3">
             <HiOutlineBell className="shrink-0 text-2xl text-amber-700" aria-hidden="true" />
-            <div><h2 id="notification-permission-title" className="text-base font-bold text-primary">Allow notifications?</h2><p className="mt-1 text-sm text-stone-600">Get order updates and new arrivals from Kamlesh Suits.</p></div>
+            <div><h2 id="notification-permission-title" className="text-sm font-bold text-primary">Allow notifications?</h2><p className="mt-1 text-xs leading-relaxed text-stone-600">Get order updates and new arrivals.</p></div>
           </div>
           {message && <p role="status" className="mt-3 text-xs text-stone-600">{message}</p>}
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="mt-3 grid grid-cols-2 gap-2">
             <button type="button" onClick={dismissPrompt} disabled={busy} className="min-h-11 rounded-xl bg-stone-100 text-sm font-bold text-stone-600 disabled:opacity-50">Later</button>
             <button type="button" onClick={enable} disabled={busy} className="min-h-11 rounded-xl bg-primary text-sm font-bold text-white disabled:opacity-50">{busy ? 'Enabling…' : 'Allow'}</button>
           </div>
