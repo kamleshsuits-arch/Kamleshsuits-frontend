@@ -99,4 +99,5 @@ const address = { id: 1, name: 'QA Test', phone: '9999999999', pincode: '122504'
   fs.writeFileSync('audit-results/mobile.json', JSON.stringify(results, null, 2));
   console.log(JSON.stringify(results, null, 2));
   await browser.close();
+  if (results.some(result => result.status === 'FAIL')) process.exitCode = 1;
 })().catch(e => { console.error(e); process.exitCode = 1; });

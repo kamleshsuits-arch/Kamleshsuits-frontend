@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }) => {
           resolve(userObj);
         },
         onFailure: (err) => reject(err),
-        newPasswordRequired: (userAttributes, requiredAttributes) => {
+        newPasswordRequired: (userAttributes) => {
           // Filter out attributes that are system-managed or read-only
           const challengeAttributes = { ...userAttributes };
           delete challengeAttributes.email_verified;
@@ -207,6 +207,8 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
 };
 
+// The provider and hook intentionally form one public authentication API.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   return useContext(AuthContext);
 };

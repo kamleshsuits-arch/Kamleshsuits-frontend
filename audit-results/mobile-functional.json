@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Cart quantity is capped at two and persists",
+    "status": "PASS"
+  },
+  {
+    "name": "Manual address can be added, edited and removed",
+    "status": "PASS"
+  },
+  {
+    "name": "Eligible coupon changes the submitted total",
+    "status": "PASS"
+  },
+  {
+    "name": "Rejected coupon shows an error and preserves the full total",
+    "status": "PASS"
+  },
+  {
+    "name": "Wishlist item can be removed",
+    "status": "PASS"
+  }
+]

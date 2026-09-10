@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Manifest is installable and every declared icon is available",
+    "status": "PASS"
+  },
+  {
+    "name": "Service worker installs and controls the application",
+    "status": "PASS"
+  },
+  {
+    "name": "Installed app shell opens while completely offline",
+    "status": "PASS"
+  },
+  {
+    "name": "Source inspection: push and notification-click handlers exist",
+    "status": "PASS"
+  }
+]

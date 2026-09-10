@@ -9,7 +9,7 @@ export const COLOR_MAP = {
     "#FFFFF0": "Ivory", "#FFFDD0": "Cream", "#F0E68C": "Khaki", "#87CEEB": "Sky Blue",
     "#008080": "Teal", "#722F37": "Wine", "#7b3f00": "Chocolate", "#e6e6fa": "Lavender",
     "#00ffff": "Cyan", "#ff00ff": "Magenta", "#40e0d0": "Turquoise", "#faf0e6": "Linen",
-    "#ffdab9": "Peach", "#a52a2a": "Brown", "#000000": "Black", "#ffffff": "White"
+    "#ffdab9": "Peach", "#a52a2a": "Brown"
 };
 
 export const getColorName = (hex) => {
@@ -41,13 +41,13 @@ export const getColorDisplay = (name) => {
     if (name.startsWith("#")) return name;
     
     const lowerName = name.toLowerCase();
-    const entry = Object.entries(COLOR_MAP).find(([h, n]) => n.toLowerCase() === lowerName);
+    const entry = Object.entries(COLOR_MAP).find(([, n]) => n.toLowerCase() === lowerName);
     if (entry) return entry[0];
     
     // Fallback if not found in map
     try {
         return name.toLowerCase().replace(/\s+/g, '');
-    } catch(e) {
+    } catch {
         return "#E5E7EB";
     }
 };

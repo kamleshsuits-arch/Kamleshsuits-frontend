@@ -80,7 +80,6 @@ const AdminDashboard = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [inventoryCategory, setInventoryCategory] = useState('all');
     const [sortConfig, setSortConfig] = useState({ key: 'title', direction: 'asc' });
-    const coverInputRef = useRef(null);
     const galleryInputRef = useRef(null);
     const cameraInputRef = useRef(null);
     const [uploading, setUploading] = useState(false);
@@ -127,7 +126,7 @@ const AdminDashboard = () => {
                 setFormData(prev => ({...prev, colors: [...prev.colors, colorName]}));
                 showToast(`Color Captured: Shade ${colorName} registered in asset DNA.`, null, 'success');
             }
-        } catch (e) {
+        } catch {
             console.log('Color picker cancelled');
         }
     };
@@ -222,22 +221,6 @@ const AdminDashboard = () => {
         <Loader message="Establishing Asset Relay..." />
     );
 
-    const uploadImage = async (file) => {
-        setUploading(true);
-        try {
-            const fileUrl = await uploadProductImage(file);
-            console.log("Successfully uploaded image to S3:", fileUrl);
-            return fileUrl;
-        } catch (err) {
-            console.error("Upload exception details:", err.response?.data || err.message);
-            const backendMsg = err.response?.data?.message || err.response?.data?.error || 'An unexpected error occurred during asset relay.';
-            showToast('System Error: ' + backendMsg, null, 'error');
-            return null;
-        } finally {
-            setUploading(false);
-        }
-    };
-
     const handleSort = (key) => {
         let direction = 'asc';
         if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
@@ -314,7 +297,7 @@ const AdminDashboard = () => {
                 await deleteProduct(id);
                 showToast('Asset removed', null, 'success');
                 loadProducts();
-            } catch (error) {
+            } catch {
                 showToast('Deletion failed', null, 'error');
             }
         }
@@ -462,17 +445,6 @@ const AdminDashboard = () => {
             showToast('Sync Failure: ' + errorMsg, null, 'error');
         } finally {
             setIsSaving(false);
-        }
-    };
-
-    const handleCoverUpload = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const url = await uploadImage(file);
-            if (url) {
-                setFormData({ ...formData, image: url });
-                showToast('Primary Visual Updated: New cover asset synchronized.', null, 'success');
-            }
         }
     };
 
@@ -746,7 +718,7 @@ const AdminDashboard = () => {
                                                                     src={
                                                                         Array.isArray(product.images) && product.images[0]
                                                                         ? product.images[0]
-                                                                        : String(product.images || product.image || '').replace(/[\[\]"]/g, '').split(',')[0] || 'https://via.placeholder.com/100x130'
+                                                                        : String(product.images || product.image || '').replace(/[[\]"]/g, '').split(',')[0] || 'https://via.placeholder.com/100x130'
                                                                     } 
                                                                     alt="" 
                                                                     className="w-20 h-28 object-cover rounded-xl bg-stone-100 shadow-sm border border-stone-200" 

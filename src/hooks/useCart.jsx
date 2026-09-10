@@ -139,9 +139,9 @@ export const CartProvider = ({ children }) => {
     setToast({ show: true, message, image, type });
   };
 
-  const hideToast = () => {
+  const hideToast = useCallback(() => {
     setToast((prev) => ({ ...prev, show: false }));
-  };
+  }, []);
 
   // --- CART ACTIONS ---
   const addToCart = (product, { checkout = false } = {}) => {
@@ -260,6 +260,8 @@ export const CartProvider = ({ children }) => {
   );
 };
 
+// This module intentionally colocates the provider and hook as one public state API.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) throw new Error('useCart must be used within a CartProvider');

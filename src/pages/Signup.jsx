@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { HiUser, HiMail, HiLockClosed, HiEye, HiEyeOff, HiHome, HiCheckCircle, HiXCircle } from 'react-icons/hi';
@@ -126,6 +126,12 @@ const Signup = () => {
     // Update password strength in real-time
     if (name === 'password') {
       setPasswordStrength(calculatePasswordStrength(value));
+      if (touched.confirmPassword && formData.confirmPassword) {
+        setErrors(prev => ({
+          ...prev,
+          confirmPassword: validateConfirmPassword(formData.confirmPassword, value)
+        }));
+      }
     }
     
     // Real-time validation if field was touched
@@ -160,13 +166,6 @@ const Signup = () => {
     
     setErrors(prev => ({ ...prev, [name]: error }));
   };
-
-  // Update confirm password validation when password changes
-  useEffect(() => {
-    if (touched.confirmPassword && formData.confirmPassword) {
-      validateField('confirmPassword', formData.confirmPassword);
-    }
-  }, [formData.password]);
 
   // Handle field blur
   const handleBlur = (field) => {

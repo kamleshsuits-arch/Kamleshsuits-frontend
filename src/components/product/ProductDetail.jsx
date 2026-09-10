@@ -1,5 +1,5 @@
 // src/components/ProductDetail.jsx
-import React, { useState, useRef, useEffect } from "react";
+import React, { useCallback, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   HiOutlineShoppingBag, 
@@ -15,29 +15,19 @@ import {
 import { useCart } from "../../hooks/useCart.jsx";
 import YouMayAlsoLike from "../home/YouMayAlsoLike";
 import { gsap } from "gsap";
-import { useCallback } from "react";
 import { formatPrice } from "../../utils/currency";
 import { getColorDisplay } from "../../utils/colors";
 
 export default function ProductDetail({ product, onBack, allProducts = [], onProductSelect }) {
-  console.log("Rendering ProductDetail", { product });
   const navigate = useNavigate();
   const { addToCart, toggleWishlist, isInWishlist, isInCart, removeFromCart } = useCart();
   const [isLiked, setIsLiked] = useState(isInWishlist(product.suitId));
   const heartRefs = useRef([]);
   
-  const [selectedImage, setSelectedImage] = useState('');
+  const initialImage = product?.images?.[0] || product?.image || '';
+  const [selectedImage, setSelectedImage] = useState(initialImage);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  // Initialize selected image
-  useEffect(() => {
-    if (product?.images?.length > 0) {
-      setSelectedImage(product.images[0]);
-    } else if (product?.image) {
-      setSelectedImage(product.image);
-    }
-  }, [product]);
 
   const availableColors = Array.isArray(product.colors)
     ? product.colors
@@ -112,6 +102,10 @@ export default function ProductDetail({ product, onBack, allProducts = [], onPro
     setIsLightboxOpen(false);
     document.body.style.overflow = 'auto';
   };
+
+  useEffect(() => () => {
+    document.body.style.overflow = 'auto';
+  }, []);
 
   const nextImage = useCallback(() => {
     setCurrentImageIndex((prev) => (prev + 1) % galleryItems.length);

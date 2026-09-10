@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 export default function AuthTest() {
-  const { user, login, signup, logout } = useAuth();
+  const { user, login, logout } = useAuth();
   const [testResults, setTestResults] = useState([]);
   const [testing, setTesting] = useState(false);
   const [email, setEmail] = useState('test@example.com');

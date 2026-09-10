@@ -1,20 +1,19 @@
 // src/components/ProductCard.jsx
-import React, { useState, useRef } from "react";
-import { HiOutlineHeart, HiHeart, HiStar, HiShoppingBag, HiCheck, HiPlus } from "react-icons/hi";
+import React, { useRef } from "react";
+import { HiOutlineHeart, HiHeart, HiStar, HiCheck, HiPlus } from "react-icons/hi";
 import { useCart } from "../../hooks/useCart.jsx";
 import { gsap } from "gsap";
 import { formatPrice } from "../../utils/currency";
 
 export default function ProductCard({ product, onView }) {
   const { toggleWishlist, isInWishlist, addToCart, isInCart, removeFromCart } = useCart();
-  const [isLiked, setIsLiked] = useState(isInWishlist(product.suitId));
   const heartRef = useRef(null);
 
   // Robust image parsing
   const getSafeImageUrl = (images, fallback) => {
     if (Array.isArray(images) && images.length > 0) return images[0];
     if (typeof images === 'string' && images.length > 0) {
-      return images.replace(/[\[\]"]/g, '').split(',')[0] || fallback;
+      return images.replace(/[[\]"]/g, '').split(',')[0] || fallback;
     }
     return fallback;
   };
@@ -26,9 +25,9 @@ export default function ProductCard({ product, onView }) {
 
   const handleWishlistToggle = (e) => {
     e.stopPropagation();
+    const willAdd = !isInWishlist(product.suitId);
     toggleWishlist(product);
-    setIsLiked(!isLiked);
-    if (!isLiked) {
+    if (willAdd) {
       gsap.fromTo(heartRef.current,
         { scale: 0.5, opacity: 0 },
         { scale: 1.5, opacity: 1, duration: 0.3, yoyo: true, repeat: 1 }
@@ -58,6 +57,8 @@ export default function ProductCard({ product, onView }) {
         <img
           src={mainImage}
           alt={product.title}
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
 
@@ -77,6 +78,7 @@ export default function ProductCard({ product, onView }) {
         <button
           onClick={handleWishlistToggle}
           title={inWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+          aria-label={inWishlist ? `Remove ${product.title} from wishlist` : `Add ${product.title} to wishlist`}
           className={`absolute top-2 right-2 p-2 rounded-full shadow-md transition-all duration-300 z-20 md:opacity-0 md:translate-y-2 md:group-hover:opacity-100 md:group-hover:translate-y-0 ${
             inWishlist
               ? "bg-red-50 text-red-500"
@@ -98,6 +100,7 @@ export default function ProductCard({ product, onView }) {
         {/* Quick Add Button - Aligned with Rating Along X-Axis */}
         <button
           onClick={handleAddToCart}
+          aria-label={inCart ? `Remove ${product.title} from cart` : `Add ${product.title} to cart`}
           className={`absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shadow-md border-2 z-20 ${
             inCart 
               ? "bg-white text-stone-700 border-stone-200" 

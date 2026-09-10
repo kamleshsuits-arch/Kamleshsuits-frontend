@@ -47,7 +47,7 @@ const Cart = () => {
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
-  const [showConfetti, setShowConfetti] = useState(false);
+  const freeShippingCelebratedRef = useRef(false);
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const summaryRef = useRef(null);
   const postalRequestRef = useRef(0);
@@ -66,7 +66,7 @@ const Cart = () => {
   const [locationError, setLocationError] = useState('');
   const [showManualAddress, setShowManualAddress] = useState(false);
   const [addressChoice, setAddressChoice] = useState(null);
-  const [lastAddrCount, setLastAddrCount] = useState(addresses.length);
+  const lastAddressCountRef = useRef(addresses.length);
 
   const getCouponEligibleSubtotal = (coupon) => {
     const categoryIds = Array.isArray(coupon?.category_ids) ? coupon.category_ids : [];
@@ -85,13 +85,13 @@ const Cart = () => {
 
   // Auto-select most recently added address
   useEffect(() => {
-    if (addresses.length > lastAddrCount) {
+    if (addresses.length > lastAddressCountRef.current) {
       // Find latest by ID (Date.now())
       const sorted = [...addresses].sort((a, b) => b.id - a.id);
       if (sorted[0]) setSelectedAddressId(sorted[0].id);
     }
-    setLastAddrCount(addresses.length);
-  }, [addresses.length]);
+    lastAddressCountRef.current = addresses.length;
+  }, [addresses]);
 
   // Product prices are GST-inclusive. Split the embedded 5% tax equally without
   // adding tax on top of the price entered by the admin.
@@ -125,11 +125,11 @@ const Cart = () => {
   const discountOnMrp = mrpTotal - subtotal;
 
   useEffect(() => {
-    if (total >= 5000 && !showConfetti) {
-      setShowConfetti(true);
+    if (total >= 5000 && !freeShippingCelebratedRef.current) {
+      freeShippingCelebratedRef.current = true;
       triggerConfetti();
     } else if (total < 5000) {
-      setShowConfetti(false);
+      freeShippingCelebratedRef.current = false;
     }
   }, [total]);
 
@@ -1432,6 +1432,16 @@ const Cart = () => {
                                 return (
                                   <div 
                                     key={coupon.code}
+                                    role="button"
+                                    tabIndex={isEligible ? 0 : -1}
+                                    aria-label={`Apply coupon ${coupon.code}`}
+                                    aria-disabled={!isEligible}
+                                    onKeyDown={event => {
+                                      if (isEligible && (event.key === 'Enter' || event.key === ' ')) {
+                                        event.preventDefault();
+                                        handleSelectCoupon(coupon);
+                                      }
+                                    }}
                                     onClick={() => isEligible && handleSelectCoupon(coupon)}
                                     className={`relative flex-none w-[190px] snap-start pt-1 ${isEligible ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                                   >

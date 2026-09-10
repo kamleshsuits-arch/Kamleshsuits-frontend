@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useProductTaxonomy } from "../../hooks/useProductTaxonomy";
 
 const ProductFilter = ({ filters, setFilters, products }) => {
