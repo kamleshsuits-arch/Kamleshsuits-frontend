@@ -107,10 +107,16 @@ $faviconSource.Dispose()
 }
 
 $pwaSource = [System.Drawing.Image]::FromFile($PwaSourcePath)
-Export-SquareIcon $pwaSource 180 'apple-touch-icon.png' 1 ([System.Drawing.Color]::White) $false $true
-Export-SquareIcon $pwaSource 192 'pwa-192.png' 1 ([System.Drawing.Color]::White) $false $true
-Export-SquareIcon $pwaSource 512 'pwa-512.png' 1 ([System.Drawing.Color]::White) $false $true
-Export-SquareIcon $pwaSource 512 'pwa-maskable-512.png' 0.66 ([System.Drawing.Color]::White) $false $true
+# Standard install icons match the circular favicon: the artwork reaches the
+# edge and the area outside the mark stays transparent instead of turning white.
+Export-SquareIcon $pwaSource 180 'apple-touch-icon.png' 1 ([System.Drawing.Color]::Transparent) $false $true
+Export-SquareIcon $pwaSource 192 'pwa-192.png' 1 ([System.Drawing.Color]::Transparent) $false $true
+Export-SquareIcon $pwaSource 512 'pwa-512.png' 1 ([System.Drawing.Color]::Transparent) $false $true
+
+# Maskable icons must cover the complete launcher tile. Use the brand maroon
+# beneath the full-size logo so Android never adds a white ring around it.
+$maskableBackground = [System.Drawing.Color]::FromArgb(255, 92, 15, 15)
+Export-SquareIcon $pwaSource 512 'pwa-maskable-512.png' 1 $maskableBackground $false $true
 if ($CircularFavicon) {
     Export-SquareIcon $pwaSource 32 'favicon-32.png' 1 ([System.Drawing.Color]::Transparent) $false $true
     Export-SquareIcon $pwaSource 48 'favicon-48.png' 1 ([System.Drawing.Color]::Transparent) $false $true
