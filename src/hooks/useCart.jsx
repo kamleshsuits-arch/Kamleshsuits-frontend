@@ -204,7 +204,7 @@ export const CartProvider = ({ children }) => {
     setWishlistItems((prev) => {
       const itemToRemove = prev.find(item => String(item.suitId) === String(id));
       if (itemToRemove) {
-        showToast(`Removed from wishlist`, itemToRemove.image || (itemToRemove.images && itemToRemove.images[0]), 'error');
+        showToast(`Removed from wishlist`, itemToRemove.image || (itemToRemove.images && itemToRemove.images[0]), 'success');
       }
       return prev.filter((item) => String(item.suitId) !== String(id));
     });
