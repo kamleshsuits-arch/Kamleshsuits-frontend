@@ -12,4 +12,5 @@ const getAuthHeader = () => {
 
 export const fetchPwaInstalls = async () => (await axios.get(`${API_URL}/admin/pwa/installs`, { headers: getAuthHeader() })).data;
 export const fetchAdminNotifications = async () => (await axios.get(`${API_URL}/admin/notifications`, { headers: getAuthHeader() })).data;
+export const fetchNotificationRecipients = async () => (await axios.get(`${API_URL}/admin/notifications/recipients`, { headers: getAuthHeader() })).data;
 export const sendAdminNotification = async notification => (await axios.post(`${API_URL}/admin/notifications`, notification, { headers: getAuthHeader() })).data;
