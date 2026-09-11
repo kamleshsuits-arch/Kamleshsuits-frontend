@@ -8,7 +8,7 @@
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#FFFAF0",
-  "theme_color": "#3B1F12",
+  "theme_color": "#681F3B",
   "categories": ["shopping", "fashion", "lifestyle"],
   "icons": [
     {

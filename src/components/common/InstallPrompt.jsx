@@ -3,7 +3,7 @@ import { HiDownload, HiOutlineDeviceMobile, HiX } from 'react-icons/hi';
 import { canInstallPwa, isStandalonePwa, promptPwaInstall } from '../../pwa';
 
 const DISMISSED_KEY = 'kamlesh_install_prompt_dismissed';
-const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 const InstallPrompt = ({ delayMs = 6000, onVisibilityChange }) => {
   const [delayFinished, setDelayFinished] = useState(false);
@@ -39,7 +39,7 @@ const InstallPrompt = ({ delayMs = 6000, onVisibilityChange }) => {
   const install = async () => {
     if (!installAvailable) {
       setInstallHelp(isIos()
-        ? 'Tap the browser Share button, then choose “Add to Home Screen”.'
+        ? 'Open this page in Safari. Tap Share (the square with an upward arrow), choose “Add to Home Screen”, then tap “Add”. If shown, keep “Open as Web App” switched on. If the option is missing, look under “Edit Actions”.'
         : 'Open this website in Chrome or Edge and choose “Install app” from the browser menu.');
       return;
     }
@@ -77,14 +77,15 @@ const InstallPrompt = ({ delayMs = 6000, onVisibilityChange }) => {
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-50 text-2xl text-amber-700"><HiOutlineDeviceMobile /></span>
         <div><p className="font-serif text-lg font-black text-primary">Install Kamlesh Suits</p><p className="mt-1 text-xs leading-relaxed text-stone-600">Shop faster and receive order updates directly on your device.</p></div>
       </div>
-      {installHelp && <p className="mt-3 rounded-xl bg-amber-50 p-3 text-xs font-bold text-stone-700">{installHelp}</p>}
+      {isIos() && !installHelp && <p className="mt-3 text-xs text-stone-600">On iPhone and iPad, add the app through Safari’s Share menu.</p>}
+      {installHelp && <p role="status" className="mt-3 rounded-xl bg-amber-50 p-3 text-xs font-bold text-stone-700">{installHelp}</p>}
       <button
         type="button"
         onClick={install}
         disabled={installing}
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-black uppercase tracking-wide text-white disabled:cursor-wait disabled:opacity-70"
       >
-        <HiDownload className="text-lg" /> {installing ? 'Opening installer…' : 'Install app'}
+        <HiDownload className="text-lg" /> {installing ? 'Opening installer…' : isIos() && !installAvailable ? 'How to install on iPhone / iPad' : 'Install app'}
       </button>
     </aside>
   );

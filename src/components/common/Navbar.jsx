@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { HiMenu, HiX, HiOutlineHeart, HiOutlineShoppingBag, HiChevronDown, HiUserCircle, HiLogout, HiShoppingBag, HiHeart, HiCollection, HiShieldCheck, HiGift, HiCheck, HiClipboard, HiOutlineUser, HiPhotograph, HiOutlineBell } from 'react-icons/hi';
 import { gsap } from 'gsap';
 import logo from "../../assets/K_suit.png";
+import { isStandalonePwa } from '../../pwa';
 
 const Navbar = () => {
   const { cartItems, wishlistItems } = useCart();
@@ -61,7 +62,7 @@ const Navbar = () => {
 
   const location = useLocation();
   const isSpecialPage = ['/', '/new-arrivals', '/sale', '/wishlist'].includes(location.pathname);
-  const useDarkMobileHeader = !isScrolled && ['/new-arrivals', '/sale'].includes(location.pathname);
+  const useDarkMobileHeader = !isStandalonePwa() && !isScrolled && ['/new-arrivals', '/sale'].includes(location.pathname);
   const mobileHeaderIcon = useDarkMobileHeader ? 'text-[#4b2118]' : 'text-white/90';
 
   return (

@@ -85,6 +85,9 @@ export const enablePushNotifications = async () => {
 };
 
 export const registerServiceWorker = () => {
+  const syncDisplayMode = () => document.documentElement.classList.toggle('pwa-standalone', isStandalonePwa());
+  syncDisplayMode();
+  window.matchMedia('(display-mode: standalone)').addEventListener('change', syncDisplayMode);
   if (!('serviceWorker' in navigator) || !import.meta.env.PROD) return;
 
   window.addEventListener('beforeinstallprompt', event => {

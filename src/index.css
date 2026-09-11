@@ -1,6 +1,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
 @import "tailwindcss";
 
+/* Installed mobile apps draw beneath the status bar on iOS. Reserve its
+   inset for controls and paint one continuous surface beneath both bars. */
+@media (max-width: 767px) {
+  html.pwa-standalone {
+    --app-safe-top: env(safe-area-inset-top, 0px);
+    background: #681F3B;
+  }
+  .pwa-standalone #root nav {
+    padding-top: var(--app-safe-top);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    background: #681F3B !important;
+    transition-property: box-shadow;
+  }
+  .pwa-standalone #root main {
+    padding-top: var(--app-safe-top);
+  }
+  .pwa-standalone #root main.pt-14 {
+    padding-top: calc(3.5rem + var(--app-safe-top));
+  }
+  .pwa-standalone #toast-notification {
+    top: calc(5rem + var(--app-safe-top));
+  }
+}
+
 @theme {
   --color-primary: #1C1917;
   --color-secondary: #57534E;
