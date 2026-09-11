@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   HiCash, HiCheckCircle, HiClock, HiCreditCard, HiRefresh,
@@ -90,36 +90,87 @@ const TrackOrder = () => {
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState('');
+  const [refreshMessage, setRefreshMessage] = useState('');
+  const lookupGeneration = useRef(0);
+  const selectedOrderId = selectedOrder?.orderId;
 
   const loadSavedOrders = useCallback(async () => {
     const references = getGuestOrderReferences();
     try {
       const results = await Promise.allSettled(references.map(reference => trackGuestOrder(reference)));
-      setSavedOrders(results.filter(result => result.status === 'fulfilled').map(result => result.value).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+      const fresh = results.filter(result => result.status === 'fulfilled').map(result => result.value);
+      setSavedOrders(current => [...fresh, ...current.filter(order => !fresh.some(next => next.orderId === order.orderId))].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
     } finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
     loadSavedOrders();
-    const interval = setInterval(loadSavedOrders, 30000);
-    return () => clearInterval(interval);
   }, [loadSavedOrders]);
+
+  useEffect(() => {
+    let busy = false;
+    let cancelled = false;
+    const refresh = async () => {
+      if (busy || document.hidden || searching) return;
+      busy = true;
+      try {
+        if (lookupPhone) {
+          const results = await fetchOrdersByPhone(lookupPhone);
+          if (!cancelled) {
+            setMatches(results || []);
+            setSavedOrders(current => current.map(order => ({ ...order, ...(results || []).find(item => item.orderId === order.orderId) })));
+            setError('');
+          }
+        }
+        const reference = selectedOrderId
+          ? getGuestOrderReferences().find(item => item.orderId === selectedOrderId)
+          : getGuestOrderReferences()[0];
+        if (reference) {
+          const updated = await trackGuestOrder(reference);
+          if (!cancelled) {
+            setSavedOrders(current => [updated, ...current.filter(item => item.orderId !== updated.orderId)]);
+            setSelectedOrder(current => current?.orderId === updated.orderId ? updated : current);
+          }
+        }
+        if (!cancelled) setRefreshMessage('');
+      } catch {
+        if (!cancelled) setRefreshMessage('Updates are temporarily unavailable. Showing the last loaded details; we will retry automatically.');
+      } finally { busy = false; }
+    };
+    const timer = window.setInterval(refresh, 30000);
+    window.addEventListener('focus', refresh);
+    window.addEventListener('online', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('online', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [lookupPhone, selectedOrderId, searching]);
 
   const handlePhoneLookup = async event => {
     event.preventDefault();
+    const generation = ++lookupGeneration.current;
     const cleanPhone = phone.replace(/\D/g, '').slice(-10);
     setError('');
     setSelectedOrder(null);
     setMatches([]);
+    setLookupPhone('');
+    setRefreshMessage('');
     if (!/^\d{10}$/.test(cleanPhone)) { setError('Enter the 10-digit mobile number used for delivery.'); return; }
     try {
       setSearching(true);
       const results = await fetchOrdersByPhone(cleanPhone);
+      if (generation !== lookupGeneration.current) return;
       setMatches(results || []);
       setLookupPhone(cleanPhone);
       if (!results?.length) setError('No orders were found for this mobile number.');
     } catch (lookupError) {
-      setError(lookupError.response?.data?.message || 'Could not find orders. Please try again.');
+      setError(lookupError.response?.status === 429
+        ? lookupError.response.data.message
+        : 'Search is temporarily unavailable. Any saved orders below are from this device. Please try again.');
     } finally { setSearching(false); }
   };
 
@@ -147,6 +198,7 @@ const TrackOrder = () => {
 
     {matches.length > 0 && <section className="mb-7 rounded-3xl border border-stone-200 bg-white p-4 shadow-sm sm:p-6"><h2 className="font-black text-primary">Select an order</h2><p className="mt-1 text-xs text-stone-500">{matches.length} order{matches.length === 1 ? '' : 's'} found</p><div className="mt-4 grid gap-3 sm:grid-cols-2">{matches.map(summary => <button key={summary.orderId} onClick={() => selectOrder(summary)} disabled={searching} className={`rounded-2xl border p-4 text-left transition hover:border-primary hover:bg-stone-50 disabled:opacity-60 ${selectedOrder?.orderId === summary.orderId ? 'border-primary bg-stone-50 ring-2 ring-primary/10' : 'border-stone-200'}`}><span className="block break-all text-sm font-black text-primary">{summary.orderId}</span><span className="mt-2 block text-xs font-semibold text-stone-600">{new Date(summary.created_at).toLocaleString('en-IN')}</span><span className="mt-2 flex items-center justify-between text-xs"><span className="rounded-full bg-amber-50 px-2 py-1 font-bold text-amber-700">{summary.status}</span><strong className="text-primary">{formatPrice(summary.total)}</strong></span></button>)}</div></section>}
 
+    {refreshMessage && <p role="status" className="mb-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">{refreshMessage}</p>}
     {selectedOrder && <div className="mb-8"><OrderCard order={selectedOrder} /></div>}
 
     <div className="mb-5 flex flex-col gap-3 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between"><div><h2 className="text-xl font-black text-primary">Saved on this device</h2><p className="text-xs text-stone-500">These orders refresh automatically every 30 seconds.</p></div><button onClick={loadSavedOrders} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-4 text-sm font-bold text-primary"><HiRefresh /> Refresh</button></div>
