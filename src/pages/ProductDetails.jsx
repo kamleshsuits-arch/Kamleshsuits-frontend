@@ -139,6 +139,7 @@ const ProductDetailsContent = ({ id }) => {
   };
 
   const galleryItems = getGalleryItems();
+  const activeGalleryIndex = Math.max(0, galleryItems.findIndex(item => item.src === selectedImage));
   const selectGalleryImage = index => {
     const item = galleryItems[index];
     if (!item) return;
@@ -171,7 +172,11 @@ const ProductDetailsContent = ({ id }) => {
   const handleColorSelect = color => {
     const variant = product?.variants?.find(item => item.colorName === color);
     setSelectedColor(color);
-    if (variant?.images?.[0]) setSelectedImage(variant.images[0]);
+    if (variant?.images?.[0]) {
+      const index = galleryItems.findIndex(item => item.src === variant.images[0]);
+      setSelectedImage(variant.images[0]);
+      if (index >= 0) setCurrentImageIndex(index);
+    }
     setColorError('');
   };
 
@@ -319,7 +324,7 @@ const ProductDetailsContent = ({ id }) => {
       {/* --- Top Navigation --- */}
       <div className="relative md:sticky md:top-20 z-30 bg-white/90 backdrop-blur-sm border-b border-stone-100 flex flex-col transition-all">
         <LocationBar className="!bg-transparent border-b border-stone-100/30" />
-        <div className="w-full max-w-7xl mx-auto flex justify-between items-center px-4 py-1 md:py-4">
+        <div className="hidden w-full max-w-7xl mx-auto justify-between items-center px-4 py-4 md:flex">
           <button 
             onClick={() => navigate(-1)} 
             className="flex min-h-11 items-center gap-1.5 text-[11px] md:text-xs font-bold uppercase tracking-wide md:tracking-widest text-secondary hover:text-primary transition-colors"
@@ -343,7 +348,7 @@ const ProductDetailsContent = ({ id }) => {
           <div className="flex flex-col gap-6">
             {/* Main View Container */}
             <div 
-              className="relative flex items-center justify-center overflow-hidden bg-white cursor-zoom-in h-[min(72svh,640px)] md:h-auto md:aspect-[3/4] rounded-2xl border border-stone-200 shadow-[0_8px_30px_rgba(59,31,18,0.08)] max-h-[700px] w-full mx-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+              className="relative flex aspect-[3/4] h-auto items-center justify-center overflow-hidden bg-stone-100 cursor-zoom-in md:aspect-[3/4] rounded-2xl border border-stone-200 shadow-[0_8px_30px_rgba(59,31,18,0.08)] max-h-[700px] w-full mx-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
               role="button"
               tabIndex={0}
               aria-label={`Enlarge image of ${product.title}`}
@@ -362,18 +367,61 @@ const ProductDetailsContent = ({ id }) => {
               <img
                 src={selectedImage || product.image || product.images?.[0]}
                 alt={product.title}
-                className="w-full h-full object-contain object-center"
+                className="h-full w-full object-cover object-center"
                 loading="eager"
                 fetchPriority="high"
               />
+              <div className="absolute right-3 top-3 z-10 flex items-center gap-2 md:hidden">
+                {shareStatus && <span className="rounded-full bg-black/65 px-2.5 py-1.5 text-[10px] font-bold text-white backdrop-blur-md" role="status" aria-live="polite">{shareStatus}</span>}
+                <button
+                  type="button"
+                  onClick={event => { event.stopPropagation(); handleShare(); }}
+                  className="grid min-h-11 min-w-11 place-items-center rounded-full border border-white/70 bg-white/90 text-primary shadow-lg backdrop-blur-md"
+                  aria-label={`Share ${product.title}`}
+                  title="Share product"
+                >
+                  <HiOutlineShare className="text-xl" />
+                </button>
+              </div>
+              {galleryItems.length > 1 && (
+                <div className="absolute left-3 top-1/2 z-10 flex max-h-[78%] -translate-y-1/2 flex-col gap-2 overflow-y-auto rounded-xl bg-black/20 p-1.5 backdrop-blur-sm md:hidden" aria-label="Product photos">
+                  {galleryItems.slice(0, 5).map((item, index) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={event => { event.stopPropagation(); selectGalleryImage(index); }}
+                      className={`relative h-14 w-11 shrink-0 overflow-hidden rounded-lg border-2 shadow-md transition ${activeGalleryIndex === index ? 'border-white ring-2 ring-primary/70' : 'border-white/60 opacity-80'}`}
+                      aria-label={`Show product photo ${index + 1} of ${galleryItems.length}`}
+                      aria-current={activeGalleryIndex === index ? 'true' : undefined}
+                    >
+                      <img src={item.src} alt="" className="h-full w-full object-cover" />
+                      {index === 4 && galleryItems.length > 5 && <span className="absolute inset-0 grid place-items-center bg-black/55 text-xs font-black text-white">+{galleryItems.length - 5}</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
               <span className="pointer-events-none absolute bottom-3 right-3 rounded-full border border-stone-200 bg-white/90 px-3 py-1.5 text-[10px] font-medium text-stone-600 shadow-sm">Tap to enlarge</span>
             </div>
+
+            {galleryItems.length > 1 && (
+              <div className="-mt-3 flex items-center justify-center gap-1.5 md:hidden" aria-label={`Product photo ${activeGalleryIndex + 1} of ${galleryItems.length}`}>
+                {galleryItems.map((item, index) => (
+                  <button
+                    key={`dot-${item.id}`}
+                    type="button"
+                    onClick={() => selectGalleryImage(index)}
+                    className={`h-1.5 rounded-full transition-all ${activeGalleryIndex === index ? 'w-5 bg-primary' : 'w-1.5 bg-stone-300'}`}
+                    aria-label={`Show product photo ${index + 1}`}
+                    aria-current={activeGalleryIndex === index ? 'true' : undefined}
+                  />
+                ))}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3 md:hidden">
               <button type="button" onClick={() => purchase(true)} className="min-h-12 rounded-xl bg-primary px-3 py-3 text-sm font-bold text-white">Order Now</button>
               <button type="button" onClick={() => purchase()} className="min-h-12 rounded-xl border-2 border-primary px-3 py-3 text-sm font-bold text-primary">Add to cart</button>
             </div>
-            {galleryItems.length > 1 && <p className="-mt-3 text-center text-xs text-stone-500 md:hidden">Swipe to explore photos & colours · {Math.max(0, galleryItems.findIndex(item => item.src === selectedImage)) + 1}/{galleryItems.length}</p>}
             {colorError && !availableColors.length && <p role="alert" className="text-sm text-red-600">{colorError}</p>}
 
             {availableColors.length > 0 && (
@@ -389,7 +437,7 @@ const ProductDetailsContent = ({ id }) => {
             )}
 
             {/* Thumbnails Grid (3 Boxes) */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="hidden grid-cols-3 gap-2 sm:gap-4 md:grid">
               {galleryItems.slice(0, 3).map((item, index) => {
                 const isLast = index === 2 && galleryItems.length > 3;
                 return (

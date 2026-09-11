@@ -1,6 +1,7 @@
 param(
-    [string]$SourceDirectory = 'E:\Dasktop\AAAks',
+    [string]$SourceDirectory,
     [string]$PwaSourcePath,
+    [string]$NotificationSourcePath,
     [switch]$PwaOnly,
     [switch]$CircularFavicon
 )
@@ -11,6 +12,10 @@ Add-Type -AssemblyName System.Drawing
 $projectDirectory = Split-Path -Parent $PSScriptRoot
 $iconDirectory = Join-Path $projectDirectory 'public\icons'
 New-Item -ItemType Directory -Force -Path $iconDirectory | Out-Null
+
+if (-not $SourceDirectory) { $SourceDirectory = Join-Path $projectDirectory 'public\images' }
+if (-not $PwaSourcePath) { $PwaSourcePath = Join-Path $SourceDirectory 'Kamlesh_logo.png' }
+if (-not $NotificationSourcePath) { $NotificationSourcePath = Join-Path $SourceDirectory 'notification-monogram-source.png' }
 
 function New-Canvas([int]$size) {
     $bitmap = New-Object System.Drawing.Bitmap $size, $size, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
@@ -101,16 +106,34 @@ $faviconMaster.Dispose()
 $faviconSource.Dispose()
 }
 
-if (-not $PwaSourcePath) { $PwaSourcePath = Join-Path $SourceDirectory 'Pwa_logo.png' }
 $pwaSource = [System.Drawing.Image]::FromFile($PwaSourcePath)
-Export-SquareIcon $pwaSource 180 'apple-touch-icon.png' 1 ([System.Drawing.Color]::White)
-Export-SquareIcon $pwaSource 192 'pwa-192.png' 1 ([System.Drawing.Color]::White)
-Export-SquareIcon $pwaSource 512 'pwa-512.png' 1 ([System.Drawing.Color]::White)
-Export-SquareIcon $pwaSource 512 'pwa-maskable-512.png' 0.66 ([System.Drawing.Color]::White)
+Export-SquareIcon $pwaSource 180 'apple-touch-icon.png' 1 ([System.Drawing.Color]::White) $false $true
+Export-SquareIcon $pwaSource 192 'pwa-192.png' 1 ([System.Drawing.Color]::White) $false $true
+Export-SquareIcon $pwaSource 512 'pwa-512.png' 1 ([System.Drawing.Color]::White) $false $true
+Export-SquareIcon $pwaSource 512 'pwa-maskable-512.png' 0.66 ([System.Drawing.Color]::White) $false $true
 if ($CircularFavicon) {
     Export-SquareIcon $pwaSource 32 'favicon-32.png' 1 ([System.Drawing.Color]::Transparent) $false $true
     Export-SquareIcon $pwaSource 48 'favicon-48.png' 1 ([System.Drawing.Color]::Transparent) $false $true
 }
 $pwaSource.Dispose()
+
+# Android/Web Push status-bar badges are alpha masks. Reduce the generated
+# monogram to a single white silhouette so the OS can tint it correctly.
+if (Test-Path -LiteralPath $NotificationSourcePath) {
+    $notificationSource = [System.Drawing.Bitmap]::FromFile($NotificationSourcePath)
+    $notificationMask = New-Canvas $notificationSource.Width
+    for ($y = 0; $y -lt $notificationSource.Height; $y++) {
+        for ($x = 0; $x -lt $notificationSource.Width; $x++) {
+            $pixel = $notificationSource.GetPixel($x, $y)
+            $brightness = [Math]::Min($pixel.R, [Math]::Min($pixel.G, $pixel.B))
+            if ($brightness -ge 245) {
+                $notificationMask.SetPixel($x, $y, [System.Drawing.Color]::White)
+            }
+        }
+    }
+    Export-SquareIcon $notificationMask 96 'notification-badge-96.png'
+    $notificationMask.Dispose()
+    $notificationSource.Dispose()
+}
 
 Get-ChildItem -LiteralPath $iconDirectory -File | Select-Object Name, Length

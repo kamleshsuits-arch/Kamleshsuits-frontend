@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'kamlesh-suits-v7';
+const CACHE_VERSION = 'kamlesh-suits-v8';
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const APP_SHELL = [
@@ -11,10 +11,11 @@ const APP_SHELL = [
   '/icons/pwa-192.png',
   '/icons/pwa-512.png',
   '/icons/pwa-maskable-512.png',
-  '/icons/apple-touch-icon.png?v=20260910',
-  '/icons/pwa-192.png?v=20260910',
-  '/icons/pwa-512.png?v=20260910',
-  '/icons/pwa-maskable-512.png?v=20260910',
+  '/icons/notification-badge-96.png',
+  '/icons/apple-touch-icon.png?v=20260911',
+  '/icons/pwa-192.png?v=20260911',
+  '/icons/pwa-512.png?v=20260911',
+  '/icons/pwa-maskable-512.png?v=20260911',
 ];
 
 self.addEventListener('install', event => {
@@ -82,8 +83,8 @@ self.addEventListener('push', event => {
   const title = payload.title || 'Kamlesh Suits';
   const options = {
     body: payload.body || 'There is a new update from Kamlesh Suits.',
-    icon: '/icons/pwa-192.png',
-    badge: '/icons/favicon-48.png',
+    icon: '/icons/pwa-192.png?v=20260911',
+    badge: '/icons/notification-badge-96.png',
     image: payload.image || undefined,
     vibrate: [300, 120, 300, 120, 600],
     tag: payload.tag || 'kamlesh-suits',
