@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { fetchProducts } from '../api/products';
 import ProductCard from '../components/product/ProductCard';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { fetchPublicCoupons } from '../api/coupons';
+import { getProductCategoryLabel } from '../utils/productTaxonomy';
 import Loader from '../components/common/Loader';
 import { HiSparkles } from 'react-icons/hi';
 import SEO from '../components/common/SEO';
@@ -11,6 +13,11 @@ import PremiumHeroMotion from '../components/common/PremiumHeroMotion';
 const NewArrivals = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [coupons, setCoupons] = useState([]);
+  const [couponError, setCouponError] = useState(false);
+  const [checkedVoucherCode, setCheckedVoucherCode] = useState('');
+  const [searchParams] = useSearchParams();
+  const voucherCode = searchParams.get('voucher') || '';
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,6 +35,23 @@ const NewArrivals = () => {
     };
     getProducts();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (voucherCode) fetchPublicCoupons().then(data => {
+      if (!cancelled) { setCoupons(data || []); setCouponError(false); setCheckedVoucherCode(voucherCode); }
+    }).catch(() => { if (!cancelled) { setCouponError(true); setCheckedVoucherCode(voucherCode); } });
+    return () => { cancelled = true; };
+  }, [voucherCode]);
+
+  const voucher = coupons.find(item => item.code === voucherCode
+    && (!item.expires_at || Date.parse(item.expires_at) > Date.now())
+    && (!item.usage_limit || Number(item.used_count) < Number(item.usage_limit)));
+  // Use the current voucher's eligibility, not editable URL parameters.
+  const categoryIds = voucher ? (voucher.category_ids || []) : searchParams.getAll('category');
+  const visibleProducts = products.filter(product => !categoryIds.length
+    || categoryIds.includes(product.product_category || 'suits'));
+  const scope = categoryIds.length ? categoryIds.map(id => getProductCategoryLabel({ product_category: id })).join(', ') : 'All collections';
 
   if (loading) return <Loader message="Curating New Arrivals..." />;
 
@@ -79,8 +103,18 @@ const NewArrivals = () => {
 
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 mt-4 md:-mt-8 relative z-20">
+        {(categoryIds.length > 0 || voucherCode) && <section className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-5" aria-label="Notification collection">
+          <h1 className="text-xl font-bold text-primary">{scope}</h1>
+          {voucherCode && (voucher ? <div className="mt-2 text-sm text-stone-700">
+            <p>Use <strong className="select-all">{voucher.code}</strong> at checkout for {voucher.discount_type === 'percent' ? `${voucher.discount}%` : `₹${Number(voucher.discount).toLocaleString('en-IN')}`} off eligible products.</p>
+            {Number(voucher.min_purchase) > 0 && <p className="mt-1">Minimum eligible spend: ₹{Number(voucher.min_purchase).toLocaleString('en-IN')}.</p>}
+            {voucher.expires_at && <p className="mt-1">Valid until {new Date(voucher.expires_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST.</p>}
+            <p className="mt-1">Availability and voucher limits are checked at checkout.</p>
+          </div> : <p role="status" className="mt-2 text-sm">{checkedVoucherCode !== voucherCode ? 'Checking this voucher…' : couponError ? 'Unable to check this voucher. Please retry when online.' : 'This voucher is no longer available. Check current offers at checkout.'}</p>)}
+          <Link to="/new-arrivals" className="mt-3 inline-block text-sm font-bold underline">View all collections</Link>
+        </section>}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 min-[380px]:gap-3 sm:gap-6">
-          {products.slice(0, 20).map((product) => (
+          {visibleProducts.map((product) => (
             <ProductCard 
               key={product.suitId} 
               product={product} 
@@ -89,7 +123,7 @@ const NewArrivals = () => {
           ))}
         </div>
         
-        {products.length === 0 && (
+        {visibleProducts.length === 0 && (
           <div className="py-20 text-center">
             <p className="text-secondary font-light">Fresh collection coming soon.</p>
           </div>
