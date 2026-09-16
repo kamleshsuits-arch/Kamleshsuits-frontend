@@ -12,40 +12,62 @@ export default function MobileCollectionControls({ products, filters, setFilters
   const activeFilterCount = countActiveFilters(filters);
   const selectedSort = SORT_OPTIONS.find(option => option.value === (filters.sort || ''));
   const toolbarMarkerRef = useRef(null);
+  const toolbarRef = useRef(null);
   const [toolbarPinned, setToolbarPinned] = useState(false);
 
   useEffect(() => {
-    if (!toolbarMarkerRef.current || !("IntersectionObserver" in window)) return;
-    let observer;
-    const observe = () => {
-      observer?.disconnect();
-      const offset = window.matchMedia('(min-width: 768px)').matches ? 80 : 56;
-      observer = new IntersectionObserver(([entry]) => {
-        setToolbarPinned(!entry.isIntersecting && entry.boundingClientRect.top <= offset);
-      }, { rootMargin: `-${offset}px 0px 0px 0px`, threshold: 0 });
-      observer.observe(toolbarMarkerRef.current);
+    const marker = toolbarMarkerRef.current;
+    const toolbar = toolbarRef.current;
+    if (!marker || !toolbar) return;
+    let frame = 0;
+    let pinned = false;
+    let offset = 0;
+    const update = () => {
+      frame = 0;
+      const top = marker.getBoundingClientRect().top;
+      // A small release margin avoids flickering at the sticky boundary.
+      const nextPinned = toolbar.getClientRects().length > 0 && top <= offset + (pinned ? 8 : 0);
+      if (nextPinned !== pinned) {
+        pinned = nextPinned;
+        setToolbarPinned(pinned);
+      }
     };
-    observe();
-    window.addEventListener('resize', observe);
-    return () => { observer?.disconnect(); window.removeEventListener('resize', observe); };
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
+    const measure = () => {
+      // Use the same resolved offset as CSS, including the installed app's safe area.
+      offset = parseFloat(getComputedStyle(toolbar).top) || 0;
+      schedule();
+    };
+    measure();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', measure);
+    window.visualViewport?.addEventListener('resize', measure);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', measure);
+      window.visualViewport?.removeEventListener('resize', measure);
+    };
   }, []);
 
 
   return <>
-      {/* The marker stays in normal flow so shrinking the toolbar cannot toggle itself. */}
+      {/* Reserve the expanded height so compacting never moves products or the scroll anchor. */}
       <div ref={toolbarMarkerRef} className="h-px lg:hidden" aria-hidden="true" />
-      <div data-pinned={toolbarPinned} className="lg:hidden sticky top-[calc(3.5rem+var(--app-safe-top,0px))] md:top-20 z-30 border-b border-stone-200 bg-white/95 backdrop-blur-lg shadow-sm">
-        <div className={`mx-auto flex max-w-3xl gap-3 px-3 transition-[padding] duration-200 motion-reduce:transition-none ${toolbarPinned ? 'py-2' : 'py-3'}`}>
+      <div ref={toolbarRef} data-pinned={toolbarPinned} className="pointer-events-none h-[73px] lg:hidden sticky top-[calc(3.5rem+var(--app-safe-top,0px))] md:top-20 z-30">
+        <div data-collection-surface className="pointer-events-auto border-b border-stone-200 bg-white shadow-sm">
+        <div className={`mx-auto flex max-w-3xl gap-3 px-3 transition-[padding] duration-150 motion-reduce:transition-none ${toolbarPinned ? 'py-1.5' : 'py-3'}`}>
           <button type="button" onClick={() => setShowMobileFilter(true)} aria-haspopup="dialog" aria-expanded={showMobileFilter}
-            className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#681f3b] px-3 text-sm font-bold text-white transition hover:bg-[#51172e] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#681f3b]">
-            <HiFilter size={18} aria-hidden="true" /> Filters
+            className={`flex flex-1 items-center justify-center gap-2 bg-[#681f3b] px-3 font-bold text-white transition-[height,background-color,border-radius] duration-150 motion-reduce:transition-none hover:bg-[#51172e] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#681f3b] ${toolbarPinned ? 'h-11 rounded-lg text-xs' : 'h-12 rounded-xl text-sm'}`}>
+            <HiFilter size={toolbarPinned ? 16 : 18} aria-hidden="true" /> Filters
             {activeFilterCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-xs text-[#681f3b]">{activeFilterCount}</span>}
           </button>
-          <button type="button" onClick={() => setShowMobileSort(true)} aria-haspopup="dialog" aria-expanded={showMobileSort} aria-label={`Sort by: ${selectedSort?.label}`}
-            className="flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-3 text-primary transition hover:bg-stone-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#681f3b]">
-            <HiSortAscending size={18} className="shrink-0" aria-hidden="true" />
-            <span className="min-w-0 text-left"><span className="block text-sm font-bold">Sort by</span><span className="block truncate text-[11px] text-stone-500">{selectedSort?.label}</span></span>
+          <button type="button" onClick={() => setShowMobileSort(true)} aria-haspopup="dialog" aria-expanded={showMobileSort} aria-label={`Sort by: ${selectedSort?.label}`} title={`Sort by: ${selectedSort?.label}`}
+            className={`flex min-w-0 flex-1 items-center justify-center gap-2 border border-stone-200 bg-white px-3 text-primary transition-[height,background-color,border-radius] duration-150 motion-reduce:transition-none hover:bg-stone-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#681f3b] ${toolbarPinned ? 'h-11 rounded-lg text-xs' : 'h-12 rounded-xl text-sm'}`}>
+            <HiSortAscending size={toolbarPinned ? 16 : 18} className="shrink-0" aria-hidden="true" />
+            <span className="min-w-0 text-left"><span className="block font-bold">Sort by</span><span className={`${toolbarPinned ? 'hidden' : 'block'} truncate text-[11px] text-stone-500`}>{selectedSort?.label}</span></span>
           </button>
+        </div>
         </div>
       </div>
 
