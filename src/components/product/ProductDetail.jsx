@@ -379,14 +379,14 @@ export default function ProductDetail({ product, onBack, allProducts = [], onPro
       </div>
 
       {/* --- Related products --- */}
-      <div className="mt-20 border-t border-stone-200 pt-16">
         <YouMayAlsoLike
+          className="mt-20 border-t border-stone-200 pt-16"
           currentProduct={product}
+          selectedColor={selectedColor}
           allProducts={allProducts}
           onProductSelect={handleRelatedClick}
           maxResults={4}
         />
-      </div>
 
       {/* --- Lightbox Gallery Popup --- */}
       {isLightboxOpen && (

@@ -578,14 +578,14 @@ const ProductDetailsContent = ({ id }) => {
       </div>
 
       {/* --- Related products --- */}
-      <div className="mt-20 border-t border-stone-200 pt-16 max-w-7xl mx-auto px-4 lg:px-8">
         <YouMayAlsoLike
+          className="mt-20 border-t border-stone-200 pt-16 max-w-7xl mx-auto px-4 lg:px-8"
           currentProduct={product}
+          selectedColor={selectedColor}
           allProducts={allProducts}
           onProductSelect={handleRelatedClick}
           maxResults={4}
         />
-      </div>
 
       {/* --- Lightbox Gallery Popup --- */}
       {isLightboxOpen && (

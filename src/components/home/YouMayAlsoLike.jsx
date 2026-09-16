@@ -1,44 +1,15 @@
+import { useMemo } from 'react';
 import ProductCard from "../product/ProductCard";
+import { getRelatedProducts } from '../../utils/productRecommendations';
 
-const YouMayAlsoLike = ({ currentProduct, allProducts, onProductSelect, maxResults = 8 }) => {
-  if (!allProducts) return null;
-
-  // Recommendation logic: 
-  // If currentProduct exists: same type or brand, excluding current.
-  // If no currentProduct (e.g. Wishlist page): just show top items (first N).
-  let recommendations = [];
-
-  if (currentProduct) {
-    recommendations = allProducts
-      .filter((p) => {
-        if (p.suitId === currentProduct.suitId) return false;
-        
-        // Match based on multiple criteria for "Related" feel
-        const matchesType = p.type === currentProduct.type;
-        const matchesFabric = p.fabric_family === currentProduct.fabric_family;
-        const matchesCategory = p.fabric_category === currentProduct.fabric_category;
-        const matchesBrand = p.brand === currentProduct.brand;
-        
-        return matchesType && (matchesFabric || matchesCategory || matchesBrand);
-      })
-      .slice(0, maxResults);
-      
-    // If we don't have enough matches, add some generic ones
-    if (recommendations.length < 2) {
-      const extra = allProducts
-        .filter(p => p.suitId !== currentProduct.suitId && !recommendations.find(r => r.suitId === p.suitId))
-        .slice(0, maxResults - recommendations.length);
-      recommendations = [...recommendations, ...extra];
-    }
-  } else {
-    // Fallback / Trending logic
-    recommendations = allProducts.slice(0, maxResults);
-  }
+const YouMayAlsoLike = ({ currentProduct, allProducts, onProductSelect, maxResults = 8, selectedColor, className = '' }) => {
+  const recommendations = useMemo(() => getRelatedProducts(currentProduct, allProducts, { selectedColor, limit: maxResults }),
+    [currentProduct, allProducts, selectedColor, maxResults]);
 
   if (recommendations.length === 0) return null;
 
   return (
-    <div className="w-full">
+    <section aria-label="You May Also Like" className={`w-full ${className}`}>
       <div className="flex flex-col items-center mb-6 sm:mb-12">
         <span className="text-accent text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2">Recommended Products</span>
         <h2 className="text-xl sm:text-2xl md:text-4xl font-serif text-primary text-center">You May Also Like</h2>
@@ -56,7 +27,7 @@ const YouMayAlsoLike = ({ currentProduct, allProducts, onProductSelect, maxResul
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 };
 
