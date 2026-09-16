@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import AsyncBoundary from './components/common/AsyncBoundary';
 const ProductDetails = React.lazy(() => import('./pages/ProductDetails'));
+const Products = React.lazy(() => import('./pages/Products'));
 const CartPage = React.lazy(() => import('./pages/CartPage'));
 const WishlistPage = React.lazy(() => import('./pages/WishlistPage'));
 const Login = React.lazy(() => import('./pages/Login'));
@@ -101,6 +102,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home onInitialCollectionReady={handleInitialCollectionReady} />} />
           <Route path="/product/:id" element={<ProductDetails />} />
+          <Route path="/product" element={<Products />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/track-order" element={<TrackOrder />} />
           <Route path="/wishlist" element={<WishlistPage />} />

@@ -9,9 +9,12 @@ import { HiSparkles } from 'react-icons/hi';
 import SEO from '../components/common/SEO';
 import LocationBar from '../components/common/LocationBar';
 import PremiumHeroMotion from '../components/common/PremiumHeroMotion';
+import MobileCollectionControls from '../components/product/MobileCollectionControls';
+import { clearCollectionFilters, countActiveFilters, filterCollectionProducts } from '../utils/collectionFilters';
 
 const NewArrivals = () => {
   const [products, setProducts] = useState([]);
+  const [filters, setFilters] = useState({ sort: 'newest' });
   const [loading, setLoading] = useState(true);
   const [coupons, setCoupons] = useState([]);
   const [couponError, setCouponError] = useState(false);
@@ -49,14 +52,15 @@ const NewArrivals = () => {
     && (!item.usage_limit || Number(item.used_count) < Number(item.usage_limit)));
   // Use the current voucher's eligibility, not editable URL parameters.
   const categoryIds = voucher ? (voucher.category_ids || []) : searchParams.getAll('category');
-  const visibleProducts = products.filter(product => !categoryIds.length
+  const scopedProducts = products.filter(product => !categoryIds.length
     || categoryIds.includes(product.product_category || 'suits'));
+  const visibleProducts = filterCollectionProducts(scopedProducts, filters);
   const scope = categoryIds.length ? categoryIds.map(id => getProductCategoryLabel({ product_category: id })).join(', ') : 'All collections';
 
   if (loading) return <Loader message="Curating New Arrivals..." />;
 
   return (
-    <div className="min-h-screen bg-white pb-28 overflow-x-hidden page-new">
+    <div className="min-h-screen bg-white pb-28 overflow-x-clip page-new">
       <SEO 
         title="New Arrivals"
         description={`Explore the latest ${new Date().getFullYear()} collection of Indian style suits at Kamlesh Suits. Exquisitely crafted ethnic wear, fresh designs, and premium fabrics.`}
@@ -99,10 +103,9 @@ const NewArrivals = () => {
       <div className="md:hidden relative z-50 -mt-1">
         <LocationBar className="!border-none" />
       </div>
+      <MobileCollectionControls products={scopedProducts} filters={filters} setFilters={setFilters} resultCount={visibleProducts.length} />
 
-
-
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 mt-4 md:-mt-8 relative z-20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 mt-4 lg:-mt-8 relative z-20">
         {(categoryIds.length > 0 || voucherCode) && <section className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-5" aria-label="Notification collection">
           <h1 className="text-xl font-bold text-primary">{scope}</h1>
           {voucherCode && (voucher ? <div className="mt-2 text-sm text-stone-700">
@@ -125,7 +128,8 @@ const NewArrivals = () => {
         
         {visibleProducts.length === 0 && (
           <div className="py-20 text-center">
-            <p className="text-secondary font-light">Fresh collection coming soon.</p>
+            <p className="text-secondary font-light">{countActiveFilters(filters) ? 'No products match these filters.' : 'Fresh collection coming soon.'}</p>
+            {countActiveFilters(filters) > 0 && <button type="button" onClick={() => setFilters(clearCollectionFilters)} className="mt-4 min-h-12 px-4 font-bold text-[#681f3b] underline">Reset Filters</button>}
           </div>
         )}
       </div>

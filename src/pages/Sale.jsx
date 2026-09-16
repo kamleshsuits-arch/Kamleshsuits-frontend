@@ -7,9 +7,12 @@ import { HiTag } from 'react-icons/hi';
 import SEO from '../components/common/SEO';
 import LocationBar from '../components/common/LocationBar';
 import PremiumHeroMotion from '../components/common/PremiumHeroMotion';
+import MobileCollectionControls from '../components/product/MobileCollectionControls';
+import { clearCollectionFilters, countActiveFilters, filterCollectionProducts } from '../utils/collectionFilters';
 
 const Sale = () => {
   const [products, setProducts] = useState([]);
+  const [filters, setFilters] = useState({ sort: 'discount' });
   const [loading, setLoading] = useState(true);
   const [maxDiscount, setMaxDiscount] = useState(0);
   const navigate = useNavigate();
@@ -36,10 +39,12 @@ const Sale = () => {
     getProducts();
   }, []);
 
+  const visibleProducts = filterCollectionProducts(products, filters);
+
   if (loading) return <Loader message="Scouring Best Deals..." />;
 
   return (
-    <div className="min-h-screen bg-white pb-28 overflow-x-hidden page-sale">
+    <div className="min-h-screen bg-white pb-28 overflow-x-clip page-sale">
       <SEO 
         title="Exclusive Sale"
         description={`Get up to ${maxDiscount}% off on premium Indian ladies suits and ethnic wear. Shop the clearance sale at Kamlesh Suits, Gurugram for the best deals on silk and festive wear.`}
@@ -85,12 +90,11 @@ const Sale = () => {
       <div className="md:hidden relative z-50 -mt-1">
         <LocationBar className="!border-none" />
       </div>
+      <MobileCollectionControls products={products} filters={filters} setFilters={setFilters} resultCount={visibleProducts.length} />
 
-
-
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 mt-4 md:-mt-10 relative z-20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 mt-4 lg:-mt-10 relative z-20">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 min-[380px]:gap-3 sm:gap-6">
-          {products.map((product) => (
+          {visibleProducts.map((product) => (
             <div key={product.suitId} className="relative group/sale">
               <ProductCard 
                 product={product} 
@@ -100,9 +104,10 @@ const Sale = () => {
           ))}
         </div>
         
-        {products.length === 0 && (
+        {visibleProducts.length === 0 && (
           <div className="py-20 text-center bg-white rounded-3xl shadow-sm border border-stone-100 mx-4">
-            <p className="text-secondary font-light">No active offers at this moment. Stay tuned!</p>
+            <p className="text-secondary font-light">{countActiveFilters(filters) ? 'No products match these filters.' : 'No active offers at this moment. Stay tuned!'}</p>
+            {countActiveFilters(filters) > 0 && <button type="button" onClick={() => setFilters(clearCollectionFilters)} className="mt-4 min-h-12 px-4 font-bold text-[#681f3b] underline">Reset Filters</button>}
           </div>
         )}
       </div>

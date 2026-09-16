@@ -1,18 +1,24 @@
 
 // src/components/ProductList.jsx
-import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import React, { useEffect, useEffectEvent, useState, useMemo, useRef, useCallback } from "react";
 import { fetchProducts } from "../../api/products";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ProductCard from "./ProductCard";
 import ProductFilter from "./ProductFilter";
-import { HiFilter, HiSortAscending, HiX, HiCheck, HiChevronUp } from "react-icons/hi";
+import MobileCollectionControls from "./MobileCollectionControls";
+import { clearCollectionFilters, filterCollectionProducts } from "../../utils/collectionFilters";
+import { HiChevronUp } from "react-icons/hi";
 import Loader from "../common/Loader";
 import { useProductTaxonomy } from "../../hooks/useProductTaxonomy";
-import { DEFAULT_PRODUCT_CATEGORY } from "../../utils/productTaxonomy";
+
+const PAGE_SIZE = 12;
 
 const ProductList = ({ onInitialReady }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [requestAttempt, setRequestAttempt] = useState(0);
+  const notifyInitialReady = useEffectEvent(() => onInitialReady?.());
   const navigate = useNavigate();
   const { taxonomy } = useProductTaxonomy();
 
@@ -25,33 +31,10 @@ const ProductList = ({ onInitialReady }) => {
     color: [],
     sort: "",
     minDiscount: 0,
-    showAllTypes: false,
-    showAllColors: false,
   });
 
-  const [showMobileFilter, setShowMobileFilter] = useState(false);
-  const [showMobileSort, setShowMobileSort] = useState(false);
   const [searchParams] = useSearchParams();
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const toolbarMarkerRef = useRef(null);
-  const [toolbarPinned, setToolbarPinned] = useState(false);
-
-  useEffect(() => {
-    if (loading || !toolbarMarkerRef.current) return;
-    let observer;
-    const observe = () => {
-      observer?.disconnect();
-      const offset = window.matchMedia('(min-width: 768px)').matches ? 80 : 56;
-      observer = new IntersectionObserver(([entry]) => {
-        setToolbarPinned(!entry.isIntersecting && entry.boundingClientRect.top <= offset);
-      }, { rootMargin: `-${offset}px 0px 0px 0px`, threshold: 0 });
-      observer.observe(toolbarMarkerRef.current);
-    };
-    observe();
-    window.addEventListener('resize', observe);
-    return () => { observer?.disconnect(); window.removeEventListener('resize', observe); };
-  }, [loading]);
-
   // Show scroll top button after 800px (roughly 8 items)
   useEffect(() => {
     const handleScroll = () => {
@@ -61,7 +44,7 @@ const ProductList = ({ onInitialReady }) => {
         setShowScrollTop(false);
       }
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -84,147 +67,60 @@ const ProductList = ({ onInitialReady }) => {
     }
   }, [searchParams, taxonomy]);
 
-  // --- Lazy loading / paging state ---
-  const PAGE_SIZE = 12; // items per "page" loaded
-  const [, setPage] = useState(1); // current page (1-indexed)
-  const [displayed, setDisplayed] = useState([]); // currently displayed products (subset)
+  // Keep the browsing session stable: only an explicit retry fetches again.
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef(null);
-  const observerRef = useRef(null);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   useEffect(() => {
-    const loadProducts = async (showLoader = true) => {
-      if (showLoader) setLoading(true);
+    let active = true;
+    const loadProducts = async () => {
+      setLoading(true);
+      setError(false);
       try {
         const data = await fetchProducts();
-        setProducts(data || []);
+        if (active) setProducts(data || []);
       } catch (err) {
         console.error("Error fetching products:", err);
+        if (active) setError(true);
       } finally {
-        if (showLoader) {
+        if (active) {
           setLoading(false);
-          onInitialReady?.();
+          notifyInitialReady();
         }
       }
     };
 
     loadProducts();
 
-    // Focus-based re-fetch for "real-time" feel
-    const handleFocus = () => loadProducts(false);
-    window.addEventListener('focus', handleFocus);
-
-    // Poll every 30s so badge/price changes from admin reflect automatically
-    const pollInterval = setInterval(() => loadProducts(false), 30000);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      clearInterval(pollInterval);
-    };
-  }, [onInitialReady]);
+    return () => { active = false; };
+  }, [requestAttempt]);
 
   // compute filtered and sorted list
-  const filteredAndSorted = useMemo(() => {
-    let result = (products || [])
-      .filter((p) => {
-      if (!p) return false;
+  const filteredAndSorted = useMemo(() => filterCollectionProducts(products, filters), [products, filters]);
 
-      const price = Number(p.price ?? 0);
-      const min = filters.minPrice ?? 0;
-      const max = filters.maxPrice ?? Infinity;
-      if (price < min || price > max) return false;
-
-      if (filters.productCategory && filters.productCategory.length > 0) {
-        const categoryId = p.product_category || DEFAULT_PRODUCT_CATEGORY;
-        if (!filters.productCategory.includes(categoryId)) return false;
-      }
-
-      if (filters.type && filters.type.length > 0) {
-        const pCategories = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []);
-        const pTags = [p.type, p.session, ...pCategories].filter(Boolean);
-        const hasMatch = pTags.some(tag => filters.type.includes(tag));
-        if (!hasMatch) return false;
-      }
-
-      if (filters.color && filters.color.length > 0) {
-        const pColors = Array.isArray(p.colors)
-          ? p.colors
-          : String(p.colors || "")
-              .split(",")
-              .map((x) => x.trim());
-        const hasMatch = pColors.some((c) => filters.color.includes(c));
-        if (!hasMatch) return false;
-      }
-
-      const discount = Number(p.discount ?? 0);
-      if (filters.minDiscount && discount < filters.minDiscount) return false;
-
-      return true;
-    });
-
-    if (filters.sort) {
-      result.sort((a, b) => {
-        switch (filters.sort) {
-          case "price_asc":
-            return (a.price || 0) - (b.price || 0);
-          case "price_desc":
-            return (b.price || 0) - (a.price || 0);
-          case "discount":
-            return (b.discount || 0) - (a.discount || 0);
-          case "rating":
-            return (b.rating || 0) - (a.rating || 0);
-          case "newest":
-            return new Date(b.created_at || 0) - new Date(a.created_at || 0);
-          default:
-            return 0;
-        }
-      });
-    }
-
-    return result;
-  }, [products, filters]);
-
-  // Reset paging when filters or product list change
+  // Reset only for a meaningful filter/sort change, never a new data reference.
+  const filterKey = JSON.stringify(filters);
   useEffect(() => {
-    setPage(1);
-    setDisplayed(filteredAndSorted.slice(0, PAGE_SIZE));
-  }, [filteredAndSorted]);
+    setVisibleCount(PAGE_SIZE);
+  }, [filterKey]);
+
+  const displayed = filteredAndSorted.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredAndSorted.length;
 
   const loadMore = useCallback(() => {
-    if (isLoadingMore) return;
-    setIsLoadingMore(true);
-    // A short transition keeps appended cards feeling deliberate without
-    // making users wait once the next batch is near the viewport.
-    setTimeout(() => {
-      setPage((prev) => {
-        const next = prev + 1;
-        const nextItems = filteredAndSorted.slice(0, next * PAGE_SIZE);
-        setDisplayed(nextItems);
-        return next;
-      });
-      setIsLoadingMore(false);
-    }, 120);
-  }, [filteredAndSorted, isLoadingMore]);
+    setVisibleCount(count => Math.min(count + PAGE_SIZE, filteredAndSorted.length));
+  }, [filteredAndSorted.length]);
 
-  // IntersectionObserver to auto-load when sentinel is visible
+  // Append before the next rows enter view; existing keyed cards stay mounted.
   useEffect(() => {
-    if (!("IntersectionObserver" in window)) return; // fallback: user can click "Load more"
-    // disconnect previous observer
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-      observerRef.current = null;
-    }
-
-    observerRef.current = new IntersectionObserver(
+    if (loading || !hasMore || !sentinelRef.current || !("IntersectionObserver" in window)) return;
+    let triggered = false;
+    const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            // Only load more if there are more items to show
-            const currentlyShown = displayed.length;
-            if (currentlyShown < filteredAndSorted.length) {
-              loadMore();
-            }
-          }
-        });
+        if (!triggered && entries.some(entry => entry.isIntersecting)) {
+          triggered = true;
+          observer.disconnect();
+          loadMore();
+        }
       },
       {
         root: null,
@@ -233,13 +129,9 @@ const ProductList = ({ onInitialReady }) => {
       }
     );
 
-    const el = sentinelRef.current;
-    if (el) observerRef.current.observe(el);
-
-    return () => {
-      if (observerRef.current) observerRef.current.disconnect();
-    };
-  }, [displayed.length, filteredAndSorted.length, loadMore]);
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [loading, hasMore, displayed.length, filterKey, loadMore]);
 
   if (loading) return (
     <Loader message="Fetching Silk Collection..." />
@@ -250,35 +142,7 @@ const ProductList = ({ onInitialReady }) => {
   return (
     <div className="bg-background min-h-screen relative pb-20 md:pb-0">
       
-      {/* The marker stays in normal flow so shrinking the toolbar cannot toggle itself. */}
-      <div ref={toolbarMarkerRef} className="h-px lg:hidden" aria-hidden="true" />
-      <div data-pinned={toolbarPinned} className="lg:hidden sticky top-14 md:top-20 z-30 bg-white border-b border-stone-100 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
-        <div className={`flex gap-2 px-3 transition-[padding] duration-200 motion-reduce:transition-none ${toolbarPinned ? 'py-1' : 'py-2'}`}>
-          {/* Filter button with active count badge */}
-          <button
-            onClick={() => setShowMobileFilter(true)}
-            className={`flex-1 flex items-center justify-center gap-2 rounded-full font-bold uppercase tracking-wider border-2 border-accent/30 text-accent bg-accent/5 hover:bg-accent/10 transition relative ${toolbarPinned ? 'min-h-11 py-1 text-[10px]' : 'min-h-12 py-2.5 text-xs'}`}
-          >
-            <HiFilter size={15} /> Filter
-            {/* Active filter count */}
-            {(filters.productCategory?.length > 0 || filters.type?.length > 0 || filters.color?.length > 0 || filters.minDiscount > 0) && (
-              <span className="absolute -top-1.5 -right-1 bg-gradient-to-r from-accent to-highlight text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                {(filters.productCategory?.length || 0) + (filters.type?.length || 0) + (filters.color?.length || 0) + (filters.minDiscount > 0 ? 1 : 0)}
-              </span>
-            )}
-          </button>
-          {/* Sort button showing current sort */}
-          <button
-            onClick={() => setShowMobileSort(true)}
-            className={`flex-1 flex items-center justify-center gap-2 rounded-full font-bold uppercase tracking-wider border-2 border-stone-200 text-stone-600 bg-white hover:border-accent/40 hover:text-accent transition ${toolbarPinned ? 'min-h-11 py-1 text-[10px]' : 'min-h-12 py-2.5 text-xs'}`}
-          >
-            <HiSortAscending size={15} />
-            {filters.sort
-              ? { price_asc: 'Low→High', price_desc: 'High→Low', discount: 'Discount', rating: 'Rating', newest: 'Newest' }[filters.sort] || 'Sort'
-              : 'Sort By'}
-          </button>
-        </div>
-      </div>
+      <MobileCollectionControls products={products} filters={filters} setFilters={setFilters} resultCount={filteredAndSorted.length} />
 
       <div className="px-3 sm:px-4 py-6 sm:py-8 lg:py-12 max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
         {/* Sidebar - Desktop Only */}
@@ -296,11 +160,19 @@ const ProductList = ({ onInitialReady }) => {
             </h2>
           </div>
 
-          {filteredAndSorted.length === 0 ? (
+          {error ? (
+            <div role="alert" className="py-20 text-center">
+              <p className="text-secondary">We couldn't load the collection. Please try again.</p>
+              <button type="button" onClick={() => setRequestAttempt(attempt => attempt + 1)}
+                className="mt-4 min-h-12 rounded-xl bg-[#681f3b] px-6 font-bold text-white">
+                Try again
+              </button>
+            </div>
+          ) : filteredAndSorted.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-32 bg-white border border-stone-100 rounded-sm">
               <p className="text-secondary text-lg font-light">No products match these filters.</p>
               <button 
-                onClick={() => setFilters({})} 
+                onClick={() => setFilters(clearCollectionFilters)}
                 className="mt-6 text-primary border-b border-primary hover:text-accent hover:border-accent transition pb-1"
               >
                 Reset Filters
@@ -320,21 +192,18 @@ const ProductList = ({ onInitialReady }) => {
               </div>
 
               {/* Sentinel that triggers loading more when visible */}
-              <div ref={sentinelRef} className="h-10" />
+              {hasMore && <div ref={sentinelRef} className="h-10" aria-hidden="true" />}
 
-              {/* Loading indicator or "Load more" fallback */}
+              {/* Manual fallback also supports keyboard-only browsing. */}
               <div className="mt-12 flex justify-center items-center">
-                {displayed.length < filteredAndSorted.length ? (
-                  isLoadingMore ? (
-                    <div className="py-3 px-8 bg-white border border-stone-200 text-secondary text-sm tracking-widest uppercase animate-pulse">Loading...</div>
-                  ) : (
+                {hasMore ? (
                     <button
+                      type="button"
                       onClick={loadMore}
                       className="py-3 px-8 bg-white border border-stone-300 text-primary text-sm uppercase tracking-widest hover:bg-primary hover:text-white transition duration-300"
                     >
                       Load More
                     </button>
-                  )
                 ) : (
                   <div className="py-3 text-sm text-secondary italic font-serif">You've reached the end of the collection</div>
                 )}
@@ -343,71 +212,6 @@ const ProductList = ({ onInitialReady }) => {
           )}
         </div>
       </div>
-
-      {/* Mobile Filter Drawer */}
-      {showMobileFilter && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowMobileFilter(false)} />
-          <div className="absolute inset-y-0 right-0 w-full max-w-xs bg-white shadow-xl transform transition-transform duration-300 overflow-y-auto">
-            <div className="p-4 flex items-center justify-between border-b border-stone-100 sticky top-0 bg-white z-10">
-              <h3 className="font-serif text-lg text-primary">Filter</h3>
-              <button onClick={() => setShowMobileFilter(false)} className="p-1 text-secondary">
-                <HiX size={24} />
-              </button>
-            </div>
-            <div className="p-4">
-              <ProductFilter products={products} filters={filters} setFilters={setFilters} isMobile={true} />
-            </div>
-            <div className="p-4 border-t border-stone-100 sticky bottom-0 bg-white">
-              <button 
-                onClick={() => setShowMobileFilter(false)}
-                className="w-full py-3 bg-primary text-white uppercase tracking-widest text-sm font-bold"
-              >
-                Apply Filters
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Sort Drawer */}
-      {showMobileSort && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowMobileSort(false)} />
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-xl shadow-xl transform transition-transform duration-300 max-h-[50vh] overflow-y-auto">
-            <div className="p-4 flex items-center justify-between border-b border-stone-100">
-              <h3 className="font-serif text-lg text-primary">Sort By</h3>
-              <button onClick={() => setShowMobileSort(false)} className="p-1 text-secondary">
-                <HiX size={24} />
-              </button>
-            </div>
-            <div className="p-4 space-y-2">
-              {[
-                { label: "Featured", value: "" },
-                { label: "Newest First", value: "newest" },
-                { label: "Price: Low to High", value: "price_asc" },
-                { label: "Price: High to Low", value: "price_desc" },
-                { label: "Better Discount", value: "discount" },
-                { label: "Customer Rating", value: "rating" },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => {
-                    setFilters(prev => ({ ...prev, sort: option.value }));
-                    setShowMobileSort(false);
-                  }}
-                  className={`w-full flex items-center justify-between p-3 rounded-sm text-left ${
-                    filters.sort === option.value ? "bg-muted text-primary font-bold" : "text-secondary"
-                  }`}
-                >
-                  <span>{option.label}</span>
-                  {filters.sort === option.value && <HiCheck size={20} className="text-primary" />}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Scroll Top Button */}
       {showScrollTop && (
