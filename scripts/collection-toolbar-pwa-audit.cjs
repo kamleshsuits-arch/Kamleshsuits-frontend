@@ -36,7 +36,6 @@ const products = Array.from({ length: 40 }, (_, index) => ({
         if (profile.standalone) {
           await page.waitForFunction(() => document.documentElement.classList.contains('pwa-standalone'));
           await page.addStyleTag({ content: `html.pwa-standalone { --app-safe-top: ${profile.inset}px !important; }` });
-          await page.evaluate(() => window.dispatchEvent(new Event('resize')));
         }
         const toolbar = page.locator('[data-collection-toolbar]');
         const slot = page.locator('[data-collection-slot]');

@@ -44,7 +44,8 @@ export default function MobileCollectionControls({ products, filters, setFilters
       schedule();
     };
     const headerObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
-    if (header) headerObserver?.observe(header);
+    // Safe-area padding changes the border box even when content height is unchanged.
+    if (header) headerObserver?.observe(header, { box: 'border-box' });
     measure();
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', measure);
