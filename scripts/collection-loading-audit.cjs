@@ -79,7 +79,7 @@ const products = Array.from({ length: 53 }, (_, index) => ({
 
       await collection.getByRole('heading', { level: 2, name: /Collection/ }).scrollIntoViewIfNeeded();
       if (width < 768) {
-        await collection.getByRole('button', { name: 'Sort by: Featured' }).click();
+        await page.getByRole('button', { name: 'Sort by: Featured' }).click();
         await page.getByRole('button', { name: 'Price: High to low', exact: true }).click();
       } else {
         await page.getByRole('combobox', { name: 'Sort by', exact: true }).selectOption('price_desc');

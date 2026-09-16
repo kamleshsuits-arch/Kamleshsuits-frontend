@@ -38,23 +38,25 @@ const products = Array.from({ length: 40 }, (_, index) => ({
           await page.addStyleTag({ content: `html.pwa-standalone { --app-safe-top: ${profile.inset}px !important; }` });
           await page.evaluate(() => window.dispatchEvent(new Event('resize')));
         }
-        const toolbar = page.locator('[data-pinned]');
+        const toolbar = page.locator('[data-collection-toolbar]');
+        const slot = page.locator('[data-collection-slot]');
         const filter = page.getByRole('button', { name: /^Filters/ });
         await toolbar.waitFor();
         await page.evaluate(() => document.fonts.ready);
         await page.waitForTimeout(250);
-        const layout = await toolbar.evaluate(el => {
+        const layout = await slot.evaluate(el => {
           const card = el.parentElement.querySelector('h3.line-clamp-2');
+          const offset = document.querySelector('[data-store-header]').getBoundingClientRect().height;
           return {
-            offset: parseFloat(getComputedStyle(el).top),
-            threshold: el.previousElementSibling.getBoundingClientRect().top + scrollY - parseFloat(getComputedStyle(el).top),
+            offset,
+            threshold: el.previousElementSibling.getBoundingClientRect().top + scrollY - offset,
             cardTop: card.getBoundingClientRect().top + scrollY,
             slotHeight: el.getBoundingClientRect().height,
           };
         });
         assert.equal(layout.offset, 56 + profile.inset);
         assert.equal((await filter.boundingBox()).height, 48);
-        const samples = await toolbar.evaluate(async (el, target) => {
+        const samples = await slot.evaluate(async (el, target) => {
           window.scrollTo({ top: target, behavior: 'instant' });
           const frames = [];
           const start = performance.now();
@@ -70,6 +72,8 @@ const products = Array.from({ length: 40 }, (_, index) => ({
         assert.ok(samples.every(sample => Math.abs(sample.scroll - (layout.threshold + 3)) < 1), 'Scroll anchoring must not move the page');
         assert.equal(await toolbar.getAttribute('data-pinned'), 'true');
         await page.waitForTimeout(250);
+        assert.equal(await toolbar.evaluate(el => getComputedStyle(el).position), 'fixed');
+        assert.ok(await toolbar.evaluate(el => el.parentElement === document.body), 'Pinned controls are outside page clipping/transform ancestors');
         assert.equal((await filter.boundingBox()).height, 44, `Pinned buttons are compact but remain touch-friendly: ${JSON.stringify(await filter.evaluate(el => ({ height: getComputedStyle(el).height, minHeight: getComputedStyle(el).minHeight, font: getComputedStyle(document.documentElement).fontSize, styles: [...document.querySelectorAll('link[rel=stylesheet]')].map(el => el.href) })))}`);
         assert.equal((await page.locator('[data-collection-surface]').boundingBox()).height, 57);
 
@@ -79,6 +83,36 @@ const products = Array.from({ length: 40 }, (_, index) => ({
           assert.equal(await toolbar.getAttribute('data-pinned'), 'true', 'Small reversals near the boundary must not toggle compact mode');
           if (delta > 0) assert.ok(Math.abs((await toolbar.boundingBox()).y - layout.offset) < 1);
         }
+
+        // Exercise real touch-scroll events and sample every painted frame, not just scrollTo endpoints.
+        await page.evaluate(top => window.scrollTo({ top, behavior: 'instant' }), layout.threshold + 300);
+        await page.waitForTimeout(100);
+        await page.evaluate(() => {
+          window.toolbarFrames = [];
+          window.recordToolbar = true;
+          const record = () => {
+            if (!window.recordToolbar) return;
+            const el = document.querySelector('[data-collection-toolbar]');
+            window.toolbarFrames.push({ top: el.getBoundingClientRect().top, height: el.getBoundingClientRect().height, pinned: el.dataset.pinned });
+            requestAnimationFrame(record);
+          };
+          requestAnimationFrame(record);
+        });
+        const touch = await context.newCDPSession(page);
+        await touch.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 280, y: 640 }] });
+        for (let y = 610; y >= 190; y -= 30) {
+          await touch.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 280, y }] });
+          await page.waitForTimeout(16);
+        }
+        await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+        await page.waitForTimeout(350);
+        const touchFrames = await page.evaluate(() => { window.recordToolbar = false; return window.toolbarFrames; });
+        await touch.detach();
+        assert.ok(touchFrames.length > 5);
+        assert.ok(touchFrames.every(frame => frame.pinned === 'true' && Math.abs(frame.top - layout.offset) < 1 && frame.height === 57), 'Touch and momentum scrolling cannot move or resize pinned controls');
+        await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+        await page.waitForTimeout(100);
+        assert.ok(Math.abs((await toolbar.boundingBox()).y - layout.offset) < 1, 'Toolbar remains fixed even when the page footer enters view');
         await page.setViewportSize({ width: 390, height: 760 });
         await page.waitForTimeout(100);
         assert.equal(await toolbar.getAttribute('data-pinned'), 'true');
@@ -99,7 +133,7 @@ const products = Array.from({ length: 40 }, (_, index) => ({
         assert.equal(await toolbar.getAttribute('data-pinned'), 'false');
         assert.equal((await filter.boundingBox()).height, 48);
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-        console.log(`PASS ${path} ${profile.standalone ? 'standalone' : 'browser'} inset=${profile.inset}: no layout/scroll jumps, compact controls, boundary stability, resize and dialogs`);
+        console.log(`PASS ${path} ${profile.standalone ? 'standalone' : 'browser'} inset=${profile.inset}: fixed body layer, no touch/momentum jitter, footer, compact controls, boundary, resize and dialogs`);
       }
       assert.deepEqual(errors, []);
       await context.close();

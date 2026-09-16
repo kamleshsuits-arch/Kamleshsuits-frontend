@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { HiFilter, HiSortAscending, HiCheck } from 'react-icons/hi';
 import ProductFilter from './ProductFilter';
 import CollectionSheet from './CollectionSheet';
@@ -12,13 +13,15 @@ export default function MobileCollectionControls({ products, filters, setFilters
   const activeFilterCount = countActiveFilters(filters);
   const selectedSort = SORT_OPTIONS.find(option => option.value === (filters.sort || ''));
   const toolbarMarkerRef = useRef(null);
-  const toolbarRef = useRef(null);
+  const slotRef = useRef(null);
   const [toolbarPinned, setToolbarPinned] = useState(false);
+  const [toolbarTop, setToolbarTop] = useState(56);
 
   useEffect(() => {
     const marker = toolbarMarkerRef.current;
-    const toolbar = toolbarRef.current;
-    if (!marker || !toolbar) return;
+    const slot = slotRef.current;
+    const header = document.querySelector('[data-store-header]');
+    if (!marker || !slot) return;
     let frame = 0;
     let pinned = false;
     let offset = 0;
@@ -26,7 +29,7 @@ export default function MobileCollectionControls({ products, filters, setFilters
       frame = 0;
       const top = marker.getBoundingClientRect().top;
       // A small release margin avoids flickering at the sticky boundary.
-      const nextPinned = toolbar.getClientRects().length > 0 && top <= offset + (pinned ? 8 : 0);
+      const nextPinned = slot.getClientRects().length > 0 && top <= offset + (pinned ? 8 : 0);
       if (nextPinned !== pinned) {
         pinned = nextPinned;
         setToolbarPinned(pinned);
@@ -34,16 +37,21 @@ export default function MobileCollectionControls({ products, filters, setFilters
     };
     const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
     const measure = () => {
-      // Use the same resolved offset as CSS, including the installed app's safe area.
-      offset = parseFloat(getComputedStyle(toolbar).top) || 0;
+      // Measure the header once per resize, including PWA safe-area padding.
+      // Never derive the fixed layer's position from moving page content.
+      offset = header?.getBoundingClientRect().height || (window.matchMedia('(min-width: 768px)').matches ? 80 : 56);
+      setToolbarTop(previous => previous === offset ? previous : offset);
       schedule();
     };
+    const headerObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    if (header) headerObserver?.observe(header);
     measure();
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', measure);
     window.visualViewport?.addEventListener('resize', measure);
     return () => {
       cancelAnimationFrame(frame);
+      headerObserver?.disconnect();
       window.removeEventListener('scroll', schedule);
       window.removeEventListener('resize', measure);
       window.visualViewport?.removeEventListener('resize', measure);
@@ -51,25 +59,35 @@ export default function MobileCollectionControls({ products, filters, setFilters
   }, []);
 
 
-  return <>
-      {/* Reserve the expanded height so compacting never moves products or the scroll anchor. */}
-      <div ref={toolbarMarkerRef} className="h-px lg:hidden" aria-hidden="true" />
-      <div ref={toolbarRef} data-pinned={toolbarPinned} className="pointer-events-none h-[73px] lg:hidden sticky top-[calc(3.5rem+var(--app-safe-top,0px))] md:top-20 z-30">
-        <div data-collection-surface className="pointer-events-auto border-b border-stone-200 bg-white shadow-sm">
-        <div className={`mx-auto flex max-w-3xl gap-3 px-3 transition-[padding] duration-150 motion-reduce:transition-none ${toolbarPinned ? 'py-1.5' : 'py-3'}`}>
+  const controls = (
+      <div data-pinned={toolbarPinned} data-collection-toolbar
+        style={toolbarPinned ? { top: toolbarTop } : undefined}
+        className={`lg:hidden ${toolbarPinned ? 'fixed inset-x-0 z-[90] isolate [transform:translateZ(0)]' : ''}`}>
+        <div data-collection-surface className="border-b border-stone-200 bg-white shadow-sm">
+        <div className={`mx-auto flex max-w-3xl gap-3 px-3 ${toolbarPinned ? 'py-1.5' : 'py-3'}`}>
           <button type="button" onClick={() => setShowMobileFilter(true)} aria-haspopup="dialog" aria-expanded={showMobileFilter}
-            className={`flex flex-1 items-center justify-center gap-2 bg-[#681f3b] px-3 font-bold text-white transition-[height,background-color,border-radius] duration-150 motion-reduce:transition-none hover:bg-[#51172e] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#681f3b] ${toolbarPinned ? 'h-11 rounded-lg text-xs' : 'h-12 rounded-xl text-sm'}`}>
+            className={`flex flex-1 items-center justify-center gap-2 bg-[#681f3b] px-3 font-bold text-white transition-colors hover:bg-[#51172e] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#681f3b] ${toolbarPinned ? 'h-11 rounded-lg text-xs' : 'h-12 rounded-xl text-sm'}`}>
             <HiFilter size={toolbarPinned ? 16 : 18} aria-hidden="true" /> Filters
             {activeFilterCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-xs text-[#681f3b]">{activeFilterCount}</span>}
           </button>
           <button type="button" onClick={() => setShowMobileSort(true)} aria-haspopup="dialog" aria-expanded={showMobileSort} aria-label={`Sort by: ${selectedSort?.label}`} title={`Sort by: ${selectedSort?.label}`}
-            className={`flex min-w-0 flex-1 items-center justify-center gap-2 border border-stone-200 bg-white px-3 text-primary transition-[height,background-color,border-radius] duration-150 motion-reduce:transition-none hover:bg-stone-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#681f3b] ${toolbarPinned ? 'h-11 rounded-lg text-xs' : 'h-12 rounded-xl text-sm'}`}>
+            className={`flex min-w-0 flex-1 items-center justify-center gap-2 border border-stone-200 bg-white px-3 text-primary transition-colors hover:bg-stone-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#681f3b] ${toolbarPinned ? 'h-11 rounded-lg text-xs' : 'h-12 rounded-xl text-sm'}`}>
             <HiSortAscending size={toolbarPinned ? 16 : 18} className="shrink-0" aria-hidden="true" />
             <span className="min-w-0 text-left"><span className="block font-bold">Sort by</span><span className={`${toolbarPinned ? 'hidden' : 'block'} truncate text-[11px] text-stone-500`}>{selectedSort?.label}</span></span>
           </button>
         </div>
         </div>
       </div>
+
+  );
+
+  return <>
+      {/* The fixed-height slot keeps products and the scroll anchor stationary. */}
+      <div ref={toolbarMarkerRef} className="h-px lg:hidden" aria-hidden="true" />
+      <div ref={slotRef} data-collection-slot className="h-[73px] lg:hidden">
+        {!toolbarPinned && controls}
+      </div>
+      {toolbarPinned && createPortal(controls, document.body)}
 
       {showMobileFilter && (
         <CollectionSheet title="Filters" subtitle={activeFilterCount ? `${activeFilterCount} selected · Refine your collection` : 'Find your perfect style'} onClose={closeMobileFilter}
