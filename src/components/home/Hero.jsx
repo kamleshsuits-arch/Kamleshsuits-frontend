@@ -6,7 +6,10 @@ import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
 import { HiArrowRight, HiSparkles, HiTag, HiTruck } from "react-icons/hi";
 import LocationBar from "../common/LocationBar";
-import { fetchPublicBanners, fetchPublicHeroImages } from "../../api/banners";
+import { fetchPublicBanners } from "../../api/banners";
+import { fetchProducts } from "../../api/products";
+import { fetchPublicCoupons } from "../../api/coupons";
+import { describeHeroCoupon, selectHeroSuits, selectLatestCoupon } from "../../utils/homeHero";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -45,6 +48,10 @@ const Hero = () => {
   const [bannerIdx, setBannerIdx] = useState(0);
   const [images, setImages] = useState([]);
   const [heroImagesLoaded, setHeroImagesLoaded] = useState(false);
+  const [coupons, setCoupons] = useState([]);
+  const [couponTime, setCouponTime] = useState(Date.now);
+  const latestCoupon = selectLatestCoupon(coupons, couponTime);
+  const offer = latestCoupon ? describeHeroCoupon(latestCoupon) : null;
 
   const startSwipe = event => {
     suppressClick.current = false;
@@ -123,17 +130,9 @@ const Hero = () => {
     let active = true;
     const loadHeroImages = async () => {
       try {
-        const data = await fetchPublicHeroImages();
+        const data = await fetchProducts();
         if (!active || !Array.isArray(data)) return;
-        const uploaded = data.map(item => ({
-          src: item.image,
-          alt: cleanBannerText(item.alt_text) || cleanBannerText(item.line_two) || 'Featured suit',
-          lineOne: cleanBannerText(item.line_one),
-          lineTwo: cleanBannerText(item.line_two),
-          lineOneColor: item.line_one_color || '#FDE68A',
-          lineTwoColor: item.line_two_color || '#FFFFFF',
-          productPath: cleanBannerText(item.product_path),
-        })).filter(item => item.src);
+        const uploaded = selectHeroSuits(data);
         setImages(uploaded);
         setCurrentIdx(current => uploaded.length ? current % uploaded.length : 0);
         setPrevIdx(current => uploaded.length ? current % uploaded.length : 0);
@@ -144,8 +143,16 @@ const Hero = () => {
       }
     };
     loadHeroImages();
-    const refresh = setInterval(loadHeroImages, 60000);
-    return () => { active = false; clearInterval(refresh); };
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetchPublicCoupons().then(data => {
+      if (active) { setCoupons(data); setCouponTime(Date.now()); }
+    }).catch(() => {}); // Keep complimentary shipping when offers are unavailable.
+    const timer = setInterval(() => setCouponTime(Date.now()), 60000);
+    return () => { active = false; clearInterval(timer); };
   }, []);
 
   useEffect(() => {
@@ -300,13 +307,14 @@ const Hero = () => {
             </Link>
           </div>
 
-          <div className="mt-3 flex items-center gap-3 rounded-2xl border border-white/15 bg-black/10 px-3 py-2.5 text-white/90 backdrop-blur-sm">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-amber-200/15 text-amber-200"><HiTruck size={18} /></span>
+          <div data-hero-offer className="mt-3 flex items-center gap-3 rounded-2xl border border-white/15 bg-black/10 px-3 py-2.5 text-white/90 backdrop-blur-sm">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-amber-200/15 text-amber-200">{offer ? <HiTag size={18} /> : <HiTruck size={18} />}</span>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-black uppercase tracking-wide">Complimentary shipping</p>
-              <p className="text-[9px] text-amber-100/75">Automatically applied on orders above ₹5,000</p>
+              <p className="break-words text-[10px] font-black uppercase tracking-wide">{offer?.title || 'Complimentary shipping'}</p>
+              <p className="text-[9px] text-amber-100/75">{offer?.detail || 'Automatically applied on orders above ₹5,000'}</p>
             </div>
-            <span className="rounded-full bg-white/10 px-2 py-1 text-[8px] font-black uppercase tracking-wider">Auto</span>
+            {offer ? <Link to="/sale" className="shrink-0 rounded-full bg-white/10 px-3 py-3 text-[9px] font-black uppercase tracking-wider" aria-label={`Shop offers with coupon ${latestCoupon.code}`}>Shop <HiArrowRight className="inline" /></Link>
+              : <span className="rounded-full bg-white/10 px-2 py-1 text-[8px] font-black uppercase tracking-wider">Auto</span>}
           </div>
         </div>
 
