@@ -11,7 +11,7 @@ const firstImage = product => {
     || product.image || '';
 };
 
-export const selectHeroSuits = products => {
+export const selectHeroSuits = (products, { preserveOrder = false } = {}) => {
   const seen = new Set();
   return (Array.isArray(products) ? products : [])
     .filter(product => product?.suitId
@@ -19,7 +19,7 @@ export const selectHeroSuits = products => {
       && Number.isFinite(Number(product.price)) && Number(product.price) > 900
       && product.active !== false && (product.stock == null || Number(product.stock) > 0)
       && typeof firstImage(product) === 'string' && firstImage(product).trim())
-    .sort((a, b) => timestamp(b.created_at) - timestamp(a.created_at)
+    .sort((a, b) => preserveOrder ? 0 : timestamp(b.created_at) - timestamp(a.created_at)
       || String(a.suitId).localeCompare(String(b.suitId)))
     .filter(product => {
       if (seen.has(product.suitId)) return false;
@@ -28,7 +28,7 @@ export const selectHeroSuits = products => {
     })
     .slice(0, 6)
     .map(product => ({
-      src: firstImage(product).trim(),
+      src: (product.festivalImage || firstImage(product)).trim(),
       alt: product.title || 'Featured suit',
       lineOne: `Latest suits · ${formatPrice(product.price)}`,
       lineTwo: product.title || 'Explore this suit',

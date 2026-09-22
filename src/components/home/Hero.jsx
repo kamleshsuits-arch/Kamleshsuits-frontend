@@ -10,6 +10,7 @@ import { fetchPublicBanners } from "../../api/banners";
 import { fetchProducts } from "../../api/products";
 import { fetchPublicCoupons } from "../../api/coupons";
 import { describeHeroCoupon, selectHeroSuits, selectLatestCoupon } from "../../utils/homeHero";
+import { selectKarwaChauthSuits, selectKarwaCoupon } from "../../utils/karwaChauth";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -47,11 +48,20 @@ const Hero = () => {
   const [liveBanners, setLiveBanners] = useState([]);
   const [bannerIdx, setBannerIdx] = useState(0);
   const [images, setImages] = useState([]);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 767px)').matches);
   const [heroImagesLoaded, setHeroImagesLoaded] = useState(false);
   const [coupons, setCoupons] = useState([]);
   const [couponTime, setCouponTime] = useState(Date.now);
-  const latestCoupon = selectLatestCoupon(coupons, couponTime);
+  const karwaCoupon = selectKarwaCoupon(coupons, couponTime);
+  const latestCoupon = (isMobile && karwaCoupon) || selectLatestCoupon(coupons, couponTime);
   const offer = latestCoupon ? describeHeroCoupon(latestCoupon) : null;
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
 
   const startSwipe = event => {
     suppressClick.current = false;
@@ -132,7 +142,9 @@ const Hero = () => {
       try {
         const data = await fetchProducts();
         if (!active || !Array.isArray(data)) return;
-        const uploaded = selectHeroSuits(data);
+        const uploaded = isMobile
+          ? selectHeroSuits(selectKarwaChauthSuits(data), { preserveOrder: true })
+          : selectHeroSuits(data);
         setImages(uploaded);
         setCurrentIdx(current => uploaded.length ? current % uploaded.length : 0);
         setPrevIdx(current => uploaded.length ? current % uploaded.length : 0);
@@ -144,7 +156,7 @@ const Hero = () => {
     };
     loadHeroImages();
     return () => { active = false; };
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     let active = true;
@@ -257,7 +269,7 @@ const Hero = () => {
           <div className="text-center">
             <div className="min-w-0">
               <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200/25 bg-white/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-amber-100 backdrop-blur-md">
-                <HiSparkles size={13} /> New season edit
+                <HiSparkles size={13} /> Karwa Chauth Special
               </div>
               {user && (
                 <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-amber-100/80">
@@ -265,8 +277,8 @@ const Hero = () => {
                 </p>
               )}
               <h1 className="font-serif text-[clamp(1.75rem,8vw,3rem)] leading-[1.1] text-white drop-shadow-sm">
-                <span className="block">Timeless suits.</span>
-                <span className="mt-1 block italic text-amber-200">Made for you.</span>
+                <span className="block">Celebrate in Red.</span>
+                <span className="mt-1 block italic text-amber-200">Made for your moment.</span>
               </h1>
             </div>
           </div>
@@ -310,10 +322,11 @@ const Hero = () => {
           <div data-hero-offer className="mt-3 flex items-center gap-3 rounded-2xl border border-white/15 bg-black/10 px-3 py-2.5 text-white/90 backdrop-blur-sm">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-amber-200/15 text-amber-200">{offer ? <HiTag size={18} /> : <HiTruck size={18} />}</span>
             <div className="min-w-0 flex-1">
-              <p className="break-words text-[10px] font-black uppercase tracking-wide">{offer?.title || 'Complimentary shipping'}</p>
-              <p className="text-[9px] text-amber-100/75">{offer?.detail || 'Automatically applied on orders above ₹5,000'}</p>
+              <p className="break-words text-[13px] font-black leading-snug">{karwaCoupon ? 'Shop ₹3,000 · Pay ₹2,700' : offer?.title || 'Complimentary shipping'}</p>
+              <p className="mt-1 text-[11px] text-amber-100/90">{karwaCoupon ? 'Extra 10% off ₹3,000+ · Use KARWA10' : offer?.detail || 'Automatically applied on orders above ₹5,000'}</p>
+              {karwaCoupon && <p className="mt-1 text-[9px] text-amber-100/75">All products · Delivery charges, if applicable, extra.</p>}
             </div>
-            {offer ? <Link to="/sale" className="shrink-0 rounded-full bg-white/10 px-3 py-3 text-[9px] font-black uppercase tracking-wider" aria-label={`Shop offers with coupon ${latestCoupon.code}`}>Shop <HiArrowRight className="inline" /></Link>
+            {offer ? <Link to={karwaCoupon ? '/new-arrivals?voucher=KARWA10' : '/sale'} className="shrink-0 rounded-full bg-white/10 px-3 py-3 text-[9px] font-black uppercase tracking-wider" aria-label={`Shop offers with coupon ${latestCoupon.code}`}>Shop <HiArrowRight className="inline" /></Link>
               : <span className="rounded-full bg-white/10 px-2 py-1 text-[8px] font-black uppercase tracking-wider">Auto</span>}
           </div>
         </div>

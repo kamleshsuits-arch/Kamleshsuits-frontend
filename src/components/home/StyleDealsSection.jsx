@@ -5,8 +5,10 @@ import { HiHeart, HiOutlineHeart, HiShoppingBag, HiChevronRight, HiCheck, HiPlus
 import { fetchProducts } from '../../api/products';
 import { useCart } from '../../hooks/useCart';
 import { formatPrice } from '../../utils/currency';
+import { selectKarwaChauthSuits } from '../../utils/karwaChauth';
 
 const PRICE_BANDS = [
+  { label: 'Festive picks', max: Infinity },
   { label: 'Under ₹2K',  max: 2000 },
   { label: 'Under ₹5K',  max: 5000 },
   { label: 'Under ₹8K',  max: 8000 },
@@ -23,11 +25,10 @@ const StyleDealsSection = () => {
     fetchProducts().then(data => setProducts(data || [])).catch(() => {});
   }, []);
 
-  const filtered = products
-    .filter(p => p.price <= PRICE_BANDS[activeBand].max)
-    .slice(0, 10);
+  const filtered = selectKarwaChauthSuits(products, PRICE_BANDS[activeBand].max).slice(0, 10);
 
   const getSafeImage = (p) => {
+    if (p.festivalImage) return p.festivalImage;
     const imgs = p.images || p.image;
     if (Array.isArray(imgs) && imgs.length > 0) return imgs[0];
     if (typeof imgs === 'string' && imgs.length > 0) return imgs.replace(/[[\]"]/g, '').split(',')[0];
@@ -37,32 +38,32 @@ const StyleDealsSection = () => {
   if (products.length === 0) return null;
 
   return (
-    <div className="md:hidden bg-[#681F3B]/5 mt-1 pb-4">
+    <div data-karwa-collection className="md:hidden bg-[#681F3B]/5 mt-1 pb-4">
       {/* Section Header */}
       <div className="px-4 pt-4 pb-2 flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="font-serif text-2xl text-stone-900 leading-tight">
-              Style <span className="text-[#681F3B] italic">Collection</span>
+              The <span className="text-[#681F3B] italic">Festive Red Edit</span>
             </h2>
-            <span className="text-xl">🛍️</span>
           </div>
-          <p className="text-[10px] text-stone-500 uppercase tracking-widest mt-0.5">Curated suits, every budget</p>
+          <p className="text-[10px] text-stone-500 uppercase tracking-widest mt-0.5">Karwa Chauth · Reds, crimsons & maroons</p>
         </div>
         {/* "Everything Under" badge */}
-        <div className="bg-gradient-to-br from-[#4b1028] to-[#7d2949] text-white rounded-xl px-2.5 py-1.5 text-right shadow-md">
-          <p className="text-[8px] uppercase tracking-widest font-bold opacity-80">UPTO</p>
+        {activeBand > 0 && <div className="bg-gradient-to-br from-[#4b1028] to-[#7d2949] text-white rounded-xl px-2.5 py-1.5 text-right shadow-md">
+          <p className="text-[8px] uppercase tracking-widest font-bold opacity-80">{activeBand ? 'UPTO' : 'CURATED'}</p>
           <p className="text-sm font-black leading-none">{PRICE_BANDS[activeBand].label}</p>
-        </div>
+        </div>}
       </div>
 
       <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-3">
         {PRICE_BANDS.map((band, idx) => {
-          const count = products.filter(p => p.price <= band.max).length;
+          const count = selectKarwaChauthSuits(products, band.max).length;
           return (
             <button
               key={band.label}
               onClick={() => setActiveBand(idx)}
+              aria-pressed={activeBand === idx}
               className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-black border-2 transition-all duration-200 ${
                 activeBand === idx
                   ? 'bg-gradient-to-r from-[#4b1028] to-[#7d2949] text-white border-[#681F3B] shadow-md'
@@ -111,6 +112,7 @@ const StyleDealsSection = () => {
                     </div>
                   )}
                   <button
+                    aria-label={liked ? `Remove ${product.title} from wishlist` : `Save ${product.title}`}
                     onClick={e => { e.stopPropagation(); toggleWishlist(product); }}
                     className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 flex items-center justify-center shadow"
                   >
@@ -121,14 +123,15 @@ const StyleDealsSection = () => {
                   </button>
 
                   {/* Rating Chip - Bottom Left */}
-                  <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm px-1.5 py-0.5 flex items-center gap-0.5 text-[9px] text-stone-900 shadow-sm rounded-md z-20 border border-stone-100">
-                    <span className="font-bold">{(parseFloat(product.rating) || 4.2).toFixed(1)}</span>
+                  {Number(product.rating) > 0 && <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm px-1.5 py-0.5 flex items-center gap-0.5 text-[9px] text-stone-900 shadow-sm rounded-md z-20 border border-stone-100">
+                    <span className="font-bold">{Number(product.rating).toFixed(1)}</span>
                     <HiStar className="text-yellow-400" size={10} />
-                  </div>
+                  </div>}
 
                   {/* Quick Add Button - Bottom Right (Aligned with Rating Along X-Axis) */}
                   <button
-                    onClick={e => { e.stopPropagation(); inCart ? removeFromCart(product.suitId) : addToCart(product); }}
+                    aria-label={`Choose ${product.title}`}
+                    onClick={e => { e.stopPropagation(); product.variants?.length > 1 ? navigate(`/product/${product.suitId}`) : inCart ? removeFromCart(product.suitId) : addToCart(product); }}
                     className={`absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all border-2 z-20 ${
                       inCart
                         ? 'bg-white text-stone-600 border-stone-100'

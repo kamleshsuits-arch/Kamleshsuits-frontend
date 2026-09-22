@@ -5,6 +5,7 @@ const live = process.env.AUDIT_LIVE === '1';
 
 (async () => {
   const { selectHeroSuits, selectLatestCoupon, describeHeroCoupon } = await import('../src/utils/homeHero.js');
+  const { selectKarwaChauthSuits, selectKarwaCoupon } = await import('../src/utils/karwaChauth.js');
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
   try {
     for (const width of [390, 1440]) {
@@ -23,7 +24,7 @@ const live = process.env.AUDIT_LIVE === '1';
       const couponsResponse = page.waitForResponse(response => new URL(response.url()).pathname === '/api/coupons' && response.ok());
       await page.goto(baseUrl);
       const [products, coupons] = await Promise.all([productsResponse.then(response => response.json()), couponsResponse.then(response => response.json())]);
-      const expected = selectHeroSuits(products);
+      const expected = width < 768 ? selectHeroSuits(selectKarwaChauthSuits(products), { preserveOrder: true }) : selectHeroSuits(products);
       assert.ok(expected.length > 0, 'Live catalog contains eligible suits');
       const gallery = page.locator('[aria-roledescription="carousel"]');
       const main = width < 768 ? gallery.locator('a.z-10') : page.locator('section.hidden.md\\:flex a.z-20');
@@ -35,7 +36,7 @@ const live = process.env.AUDIT_LIVE === '1';
         const offer = page.locator('[data-hero-offer]');
         const latest = selectLatestCoupon(coupons);
         await offer.waitFor();
-        const expectedOffer = latest ? describeHeroCoupon(latest).title : 'Complimentary shipping';
+        const expectedOffer = selectKarwaCoupon(coupons) ? 'Shop ₹3,000 · Pay ₹2,700' : latest ? describeHeroCoupon(latest).title : 'Complimentary shipping';
         await page.waitForFunction(text => document.querySelector('[data-hero-offer]')?.textContent.includes(text), expectedOffer);
         const box = await gallery.boundingBox();
         const cdp = await context.newCDPSession(page);
