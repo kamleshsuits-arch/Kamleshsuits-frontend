@@ -1,11 +1,15 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
+import { SITE_URL, SOCIAL_IMAGE, SOCIAL_DESCRIPTION } from '../../utils/socialMetadata';
 
 const SEO = ({ 
   title, 
   description, 
   keywords, 
-  image, 
+  image,
+  imageWidth,
+  imageHeight,
+  imageType,
   url, 
   type = 'website',
   price,
@@ -15,12 +19,15 @@ const SEO = ({
 }) => {
   const siteName = "Kamlesh Suits";
   const fullTitle = title ? `${title} | ${siteName}` : `${siteName} | Premium Indian Ethnic Wear`;
-  const defaultDescription = "Discover the finest Indian ladies suits and ethnic wear in Gurugram. High-quality unstitched suits, silk collections, and festive wear at Kamlesh Suits.";
-  const siteUrl = globalThis.location?.origin || "https://kamleshsuits.vercel.app";
+  const defaultDescription = SOCIAL_DESCRIPTION;
+  const siteUrl = SITE_URL;
   const canonicalUrl = url?.startsWith('http') ? url : `${siteUrl}${url || ''}`;
   const socialImage = image
     ? (image.startsWith('http') ? image : `${siteUrl}${image.startsWith('/') ? '' : '/'}${image}`)
-    : `${siteUrl}/icons/pwa-512.png`;
+    : SOCIAL_IMAGE;
+  const width = imageWidth || (!image ? 1200 : undefined);
+  const height = imageHeight || (!image ? 630 : undefined);
+  const mimeType = imageType || (!image ? 'image/png' : undefined);
 
   // Base Schema for Organization
   const organizationSchema = {
@@ -66,6 +73,9 @@ const SEO = ({
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:image" content={socialImage} />
       <meta property="og:image:secure_url" content={socialImage} />
+      {width && <meta property="og:image:width" content={String(width)} />}
+      {height && <meta property="og:image:height" content={String(height)} />}
+      {mimeType && <meta property="og:image:type" content={mimeType} />}
       <meta property="og:image:alt" content={title ? `${title} by Kamlesh Suits` : 'Kamlesh Suits premium ethnic wear'} />
       {type === 'product' && price != null && <meta property="product:price:amount" content={String(price)} />}
       {type === 'product' && price != null && <meta property="product:price:currency" content={currency} />}

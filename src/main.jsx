@@ -18,6 +18,10 @@ import { registerServiceWorker } from './pwa';
 
 registerServiceWorker();
 
+// Crawlers receive the initial HTML tags. React 19 owns metadata after startup;
+// remove the marked server tags so navigation cannot leave duplicate previews.
+document.head.querySelectorAll('[data-rh="true"]').forEach(tag => tag.remove());
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>

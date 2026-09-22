@@ -1,4 +1,11 @@
 {
+  "functions": {
+    "api/product-page.js": { "includeFiles": "dist/index.html", "maxDuration": 30 },
+    "api/og.js": { "includeFiles": "social/fonts/**", "maxDuration": 30 }
+  },
+  "redirects": [
+    { "source": "/share/product/:id", "destination": "/product/:id", "permanent": false }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -13,21 +20,10 @@
   "rewrites": [
     {
       "source": "/product/:id",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": ".*(facebookexternalhit|Facebot|WhatsApp|Instagram|Twitterbot|LinkedInBot|TelegramBot|Slackbot|Discordbot|Pinterest).*"
-        }
-      ],
-      "destination": "https://kamleshsuits-backend.onrender.com/api/share/product/:id"
+      "destination": "/api/product-page?id=:id"
     },
     {
-      "source": "/share/product/:id",
-      "destination": "https://kamleshsuits-backend.onrender.com/api/share/product/:id"
-    },
-    {
-      "source": "/((?!.*\\.).*)",
+      "source": "/((?!api/|.*\\.).*)",
       "destination": "/index.html"
     }
   ]

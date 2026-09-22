@@ -11,6 +11,7 @@ import Loader from '../components/common/Loader';
 import SEO from '../components/common/SEO';
 import LocationBar from '../components/common/LocationBar';
 import { getProductCategoryLabel } from '../utils/productTaxonomy';
+import { productMetadata, SITE_URL } from '../utils/socialMetadata';
 
 const ProductColorSelector = ({ product, colors, selectedColor, colorError, onSelect, compact = false, className = '' }) => (
   <div className={className}>
@@ -231,10 +232,10 @@ const ProductDetailsContent = ({ id }) => {
   };
 
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/product/${encodeURIComponent(id)}`;
+    const shareUrl = `${SITE_URL}/product/${encodeURIComponent(id)}`;
     const shareData = {
       title: product.title,
-      text: `View ${product.title} at Kamlesh Suits`,
+      text: `${product.title} · ${formatPrice(product.price)} at Kamlesh Suits`,
       url: shareUrl,
     };
 
@@ -287,19 +288,23 @@ const ProductDetailsContent = ({ id }) => {
   );
 
   const productCategoryLabel = getProductCategoryLabel(product);
+  const social = productMetadata(product);
 
 
   return (
     <div className="bg-background min-h-screen font-sans text-secondary pb-20">
       <SEO 
-        title={product.title}
-        description={`Buy ${product.title} at Kamlesh Suits. ${product.product_subcategory || product.fabric_category || productCategoryLabel} for only ${formatPrice(product.price)}. Discover our collection in Gurugram.`}
-        image={product.image || product.images?.[0]}
+        title={`${product.title} — ${formatPrice(product.price)}`}
+        description={social.description}
+        image={social.image}
+        imageWidth={1200}
+        imageHeight={630}
+        imageType="image/png"
         url={`/product/${id}`}
         type="product"
         price={product.price}
         currency="INR"
-        availability={Number(product.stock) === 0 ? 'out of stock' : 'in stock'}
+        availability={social.availability}
         schemaData={{
           "@context": "https://schema.org",
           "@type": "Product",

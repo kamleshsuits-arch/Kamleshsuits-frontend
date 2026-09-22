@@ -6,13 +6,14 @@ import MobileCategoryBar from "../components/home/MobileCategoryBar";
 import StyleDealsSection from "../components/home/StyleDealsSection";
 import ProductList from "../components/product/ProductList";
 import SEO from "../components/common/SEO";
+import { SOCIAL_DESCRIPTION } from '../utils/socialMetadata';
 
 export default function Home({ onInitialCollectionReady }) {
   return (
     <div className="min-h-screen bg-gray-50 page-home">
       <SEO
-        title="Home"
-        description="Shop the latest Indian style ladies suits and ethnic wear at Kamlesh Suits, Gurugram. From festive silk to daily cotton suits, discover premium high-end fashion."
+        title="Beautiful Suits & Bedsheets"
+        description={SOCIAL_DESCRIPTION}
         keywords="ladies suits, ethnic wear, gurugram suits, cotton suits, silk suits, kamlesh suits home"
         url="/"
         schemaData={{

@@ -16,6 +16,7 @@ import { useCart } from "../../hooks/useCart.jsx";
 import YouMayAlsoLike from "../home/YouMayAlsoLike";
 import { gsap } from "gsap";
 import { formatPrice } from "../../utils/currency";
+import { SITE_URL } from '../../utils/socialMetadata';
 import { getColorDisplay } from "../../utils/colors";
 
 export default function ProductDetail({ product, onBack, allProducts = [], onProductSelect }) {
@@ -127,18 +128,19 @@ export default function ProductDetail({ product, onBack, allProducts = [], onPro
   }, [isLightboxOpen, nextImage, prevImage]);
 
   const handleShare = async () => {
+    const shareUrl = `${SITE_URL}/product/${encodeURIComponent(product.suitId)}`;
     if (navigator.share) {
       try {
         await navigator.share({
           title: product.title,
-          text: `Check out ${product.title} on Kamlesh Suits!`,
-          url: window.location.href,
+          text: `${product.title} · ${formatPrice(product.price)} at Kamlesh Suits`,
+          url: shareUrl,
         });
       } catch (error) {
         console.error('Error sharing:', error);
       }
     } else {
-      navigator.clipboard.writeText(window.location.href)
+      navigator.clipboard.writeText(shareUrl)
         .then(() => alert('Link copied to clipboard!'))
         .catch((err) => console.error('Failed to copy link: ', err));
     }
