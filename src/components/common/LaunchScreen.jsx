@@ -10,11 +10,19 @@ const PARTICLES = [
 const LaunchScreen = ({ ready, onComplete }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [introComplete, setIntroComplete] = useState(false);
+  const [introProgress, setIntroProgress] = useState(0);
   const exitStartedRef = useRef(false);
+  // Startup milestones: 40% for preparing the opening screen, 60% for the
+  // collection request settling. Never claim completion while data is pending.
+  const progress = Math.min(100, introProgress + (ready ? 60 : 0));
 
   useEffect(() => {
     const tl = gsap.timeline({
-      onComplete: () => setIntroComplete(true),
+      onUpdate: () => setIntroProgress(Math.round(tl.progress() * 40)),
+      onComplete: () => {
+        setIntroProgress(40);
+        setIntroComplete(true);
+      },
     });
 
     tl.fromTo('.vibrant-particle', 
@@ -42,6 +50,7 @@ const LaunchScreen = ({ ready, onComplete }) => {
     exitStartedRef.current = true;
 
     const tl = gsap.timeline({
+      delay: 0.35,
       onComplete: () => {
         setIsVisible(false);
         onComplete?.();
@@ -55,13 +64,16 @@ const LaunchScreen = ({ ready, onComplete }) => {
       ease: 'expo.inOut'
     }, '-=0.15');
 
-    return () => tl.kill();
+    return () => {
+      tl.kill();
+      exitStartedRef.current = false;
+    };
   }, [introComplete, onComplete, ready]);
 
   if (!isVisible) return null;
 
   return (
-    <div className="launch-screen fixed inset-0 z-[1000] flex flex-col items-center justify-center overflow-hidden bg-[#fffaf0] p-6 text-center" role="status" aria-live="polite" aria-label={ready ? 'Collection ready' : 'Loading collection'}>
+    <div className="launch-screen fixed inset-0 z-[1000] flex flex-col items-center justify-center overflow-hidden bg-[#fffaf0] p-6 text-center" aria-label="Loading collection" aria-busy={progress < 100}>
       {/* Dynamic Vibrant Background Gradient */}
       <div className="absolute inset-[-25%] launch-silk" aria-hidden="true" />
       
@@ -97,11 +109,11 @@ const LaunchScreen = ({ ready, onComplete }) => {
 
         <div className="launch-progress mt-12 w-full max-w-xs opacity-0">
           <div className="mb-2 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.18em] text-amber-900/70">
-            <span>{ready ? 'Collection ready' : 'Curating your collection'}</span>
-            <span>{ready ? '100%' : 'Loading'}</span>
+            <span role="status" aria-live="polite">{progress === 100 ? 'Collection ready' : 'Curating your collection'}</span>
+            <span data-loading-percentage className="min-w-10 text-right tabular-nums">{progress}%</span>
           </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-amber-900/10">
-            <div className={`h-full rounded-full bg-gradient-to-r from-[#8A4B20] via-[#CFB53B] to-[#8A4B20] transition-all duration-700 ${ready ? 'w-full' : 'w-2/3 animate-pulse'}`} />
+          <div className="h-1.5 overflow-hidden rounded-full bg-amber-900/10" role="progressbar" aria-label="Loading progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-valuetext={`${progress}% loaded`}>
+            <div data-loading-fill className="h-full rounded-full bg-gradient-to-r from-[#8A4B20] via-[#CFB53B] to-[#8A4B20]" style={{ width: `${progress}%` }} />
           </div>
           <p className="mt-5 font-serif text-base italic text-stone-600">Woven with care. Worn with love.</p>
         </div>
