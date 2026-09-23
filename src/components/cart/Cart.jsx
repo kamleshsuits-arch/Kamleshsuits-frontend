@@ -1,3 +1,4 @@
+import ProductImage from '../common/ProductImage';
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -769,8 +770,8 @@ const Cart = () => {
                         onClick={() => handleViewProduct(item)}
                         className="w-20 h-28 sm:w-40 sm:h-52 shrink-0 bg-stone-100 overflow-hidden relative rounded-xl shadow-sm cursor-pointer"
                       >
-                        <img 
-                          src={itemImage || "https://via.placeholder.com/150"} 
+                        <ProductImage compact sizes="(max-width: 639px) 80px, 160px" maxWidth={640}
+                          src={itemImage}
                           alt={item.title} 
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                         />

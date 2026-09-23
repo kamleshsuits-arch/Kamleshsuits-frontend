@@ -1,3 +1,4 @@
+import ProductImage from '../common/ProductImage';
 // StyleDealsSection.jsx — Fashion Deals inspired vibrant section (mobile-only)
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -105,7 +106,7 @@ const StyleDealsSection = () => {
                   className="relative w-full h-44 bg-stone-100 cursor-pointer"
                   onClick={() => { navigate(`/product/${product.suitId}`); window.scrollTo(0,0); }}
                 >
-                  <img src={img} alt={product.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                  <ProductImage sizes="144px" maxWidth={640} src={img} alt={product.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   {discount > 0 && (
                     <div className="absolute top-2 left-2 bg-[#681F3B] text-white text-[9px] font-black px-1.5 py-0.5 rounded-md">
                       {discount}% OFF

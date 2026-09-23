@@ -1,3 +1,4 @@
+import ProductImage from '../components/common/ProductImage';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { HiArrowLeft, HiOutlineShare, HiOutlineShoppingBag, HiHeart, HiOutlineHeart, HiChevronLeft, HiChevronRight, HiX } from "react-icons/hi";
@@ -369,8 +370,7 @@ const ProductDetailsContent = ({ id }) => {
               onTouchCancel={() => { touchStartRef.current = null; }}
               onClick={() => { if (!suppressImageClickRef.current && galleryItems.length) openLightbox(Math.max(0, galleryItems.findIndex(i => i.src === selectedImage))); }}
             >
-              <img
-                src={selectedImage || product.image || product.images?.[0]}
+              <ProductImage sizes="(max-width: 767px) 100vw, 50vw" maxWidth={1600} src={selectedImage || product.image || product.images?.[0]}
                 alt={product.title}
                 className="h-full w-full object-cover object-center"
                 loading="eager"
@@ -399,7 +399,7 @@ const ProductDetailsContent = ({ id }) => {
                       aria-label={`Show product photo ${index + 1} of ${galleryItems.length}`}
                       aria-current={activeGalleryIndex === index ? 'true' : undefined}
                     >
-                      <img src={item.src} alt="" className="h-full w-full object-cover" />
+                      <ProductImage compact sizes="80px" maxWidth={320} src={item.src} alt="" className="h-full w-full object-cover" />
                       {index === 4 && galleryItems.length > 5 && <span className="absolute inset-0 grid place-items-center bg-black/55 text-xs font-black text-white">+{galleryItems.length - 5}</span>}
                     </button>
                   ))}
@@ -459,8 +459,7 @@ const ProductDetailsContent = ({ id }) => {
                       (selectedImage === item.src && !isLast) ? 'border-primary ring-1 ring-primary/20' : 'border-transparent hover:border-gray-300'
                     }`}
                   >
-                    <img 
-                      src={item.src} 
+                    <ProductImage compact sizes="80px" maxWidth={320} src={item.src}
                       alt="" 
                       className="w-full h-full object-cover"
                     />
@@ -616,8 +615,7 @@ const ProductDetailsContent = ({ id }) => {
               <HiChevronLeft size={48} />
             </button>
 
-            <img 
-              src={galleryItems[currentImageIndex].src} 
+            <ProductImage loading="eager" sizes="100vw" maxWidth={1600} wrapperClassName="relative flex h-full w-full items-center justify-center" src={galleryItems[currentImageIndex].src}
               alt="" 
               onTouchStart={onImageTouchStart}
               onTouchEnd={onImageTouchEnd}
@@ -644,7 +642,7 @@ const ProductDetailsContent = ({ id }) => {
                   currentImageIndex === idx ? 'border-primary ring-4 ring-primary/20 scale-110 shadow-lg' : 'border-white/10 opacity-40 hover:opacity-100'
                 }`}
               >
-                <img src={item.src} alt="" className="w-full h-full object-cover" />
+                <ProductImage compact sizes="80px" maxWidth={320} src={item.src} alt="" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>

@@ -30,7 +30,7 @@ const live = process.env.AUDIT_LIVE === '1';
       const main = width < 768 ? gallery.locator('a.z-10') : page.locator('section.hidden.md\\:flex a.z-20');
       await main.waitFor({ state: 'visible' });
       assert.equal(await main.getAttribute('href'), expected[0].productPath);
-      await page.waitForFunction(() => [...document.querySelectorAll('.image-overlay')].filter(el => el.getBoundingClientRect().width > 0).every(el => el.complete && el.naturalWidth > 0));
+      await page.waitForFunction(() => [...document.querySelectorAll('.image-overlay img')].filter(el => el.getBoundingClientRect().width > 0).every(el => el.complete && el.naturalWidth > 0));
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       if (width < 768) {
         const offer = page.locator('[data-hero-offer]');

@@ -1,10 +1,20 @@
 {
   "functions": {
-    "api/product-page.js": { "includeFiles": "dist/index.html", "maxDuration": 30 },
-    "api/og.js": { "includeFiles": "social/fonts/**", "maxDuration": 30 }
+    "api/product-page.js": {
+      "includeFiles": "dist/index.html",
+      "maxDuration": 30
+    },
+    "api/og.js": {
+      "includeFiles": "social/fonts/**",
+      "maxDuration": 30
+    }
   },
   "redirects": [
-    { "source": "/share/product/:id", "destination": "/product/:id", "permanent": false }
+    {
+      "source": "/share/product/:id",
+      "destination": "/product/:id",
+      "permanent": false
+    }
   ],
   "headers": [
     {
@@ -23,8 +33,33 @@
       "destination": "/api/product-page?id=:id"
     },
     {
-      "source": "/((?!api/|.*\\.).*)",
+      "source": "/((?!api/|_vercel/|.*\\.).*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "images": {
+    "sizes": [
+      96,
+      320,
+      640,
+      960,
+      1600
+    ],
+    "remotePatterns": [
+      {
+        "protocol": "https",
+        "hostname": "kamlesh-suits-images.s3.ap-south-1.amazonaws.com",
+        "port": "",
+        "pathname": "^/.*$",
+        "search": ""
+      }
+    ],
+    "minimumCacheTTL": 86400,
+    "qualities": [
+      80
+    ],
+    "formats": [
+      "image/webp"
+    ]
+  }
 }

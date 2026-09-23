@@ -1,3 +1,5 @@
+import ProductImage from '../common/ProductImage';
+import { imageSources } from '../../utils/imageDelivery';
 // src/components/Hero.jsx — Mobile: honey-gold gradient banner
 import React, { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
@@ -114,7 +116,9 @@ const Hero = () => {
     const src = nextImage?.src || (window.innerWidth < 768 ? nextImage?.mobile_image || nextImage?.desktop_image : nextImage?.desktop_image);
     if (!src) return;
     const preload = new Image();
-    preload.src = src;
+    const sources = imageSources(src, { enabled: import.meta.env.PROD, sizes: '(max-width: 767px) 82vw, 320px' });
+    if (sources.srcSet) { preload.sizes = sources.sizes; preload.srcset = sources.srcSet; }
+    preload.src = sources.src;
     preload.decode?.().catch(() => {});
   }, [images, liveBanners, currentIdx, bannerIdx]);
 
@@ -228,13 +232,13 @@ const Hero = () => {
       <section className="relative overflow-hidden bg-stone-900">
         <div className="relative md:hidden" {...swipeHandlers}>
           <div ref={swipeRef}>
-          <div role="img" aria-label={banner.alt_text || banner.title} className="aspect-[4/5] max-h-[680px] w-full bg-cover bg-center" style={{ backgroundImage: `url(${banner.mobile_image || banner.desktop_image})` }} />
+          <div role="img" aria-label={banner.alt_text || banner.title} className="aspect-[4/5] max-h-[680px] w-full"><ProductImage src={banner.mobile_image || banner.desktop_image} alt={banner.alt_text || banner.title} sizes="100vw" maxWidth={1600} loading={isMobile ? 'eager' : 'lazy'} fetchPriority={isMobile ? 'high' : 'auto'} allowRetry={false} /></div>
           <BannerOverlay banner={banner} actionLabel={actionLabel} bannerLink={bannerLink} compact />
           </div>
           <div className="bg-white rounded-t-[2.5rem] -mt-5 relative z-20 overflow-hidden"><div className="pt-4 pb-1"><LocationBar className="!border-none" /></div></div>
         </div>
         <div className="relative hidden md:block">
-          <div role="img" aria-label={banner.alt_text || banner.title} className="aspect-[8/3] min-h-[430px] max-h-[680px] w-full bg-cover bg-center" style={{ backgroundImage: `url(${banner.desktop_image})` }} />
+          <div role="img" aria-label={banner.alt_text || banner.title} className="aspect-[8/3] min-h-[430px] max-h-[680px] w-full"><ProductImage src={banner.desktop_image} alt={banner.alt_text || banner.title} sizes="100vw" maxWidth={1600} loading={isMobile ? 'lazy' : 'eager'} fetchPriority={isMobile ? 'auto' : 'high'} allowRetry={false} /></div>
           <BannerOverlay banner={banner} actionLabel={actionLabel} bannerLink={bannerLink} />
           <BannerDots banners={liveBanners} current={bannerIdx} onSelect={setBannerIdx} />
         </div>
@@ -286,18 +290,18 @@ const Hero = () => {
           {/* Product gallery: the active item is the main hero highlight. */}
           <div ref={swipeRef} {...swipeHandlers} className="relative mt-6 h-[380px] min-[380px]:h-[450px]" aria-roledescription="carousel" aria-label="Featured suit collection. Swipe left or right to browse.">
             <HeroProductLink item={images[(currentIdx + images.length - 1) % images.length]} className="absolute left-0 top-10 h-[280px] w-[36%] -rotate-6 overflow-hidden rounded-[1.4rem] border border-white/35 bg-white/10 shadow-2xl">
-              <img src={images[(currentIdx + images.length - 1) % images.length].src} alt={images[(currentIdx + images.length - 1) % images.length].alt} className="h-full w-full object-cover" />
+              <ProductImage allowRetry={false} sizes="(max-width: 767px) 82vw, 320px" wrapperClassName="relative block h-full w-full" src={images[(currentIdx + images.length - 1) % images.length].src} alt={images[(currentIdx + images.length - 1) % images.length].alt} className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#260914]/45 to-transparent" />
             </HeroProductLink>
 
             <HeroProductLink item={images[(currentIdx + 1) % images.length]} className="absolute right-0 top-14 h-[280px] w-[36%] rotate-6 overflow-hidden rounded-[1.4rem] border border-white/35 bg-white/10 shadow-2xl">
-              <img src={images[(currentIdx + 1) % images.length].src} alt={images[(currentIdx + 1) % images.length].alt} className="h-full w-full object-cover" />
+              <ProductImage allowRetry={false} sizes="(max-width: 767px) 82vw, 320px" wrapperClassName="relative block h-full w-full" src={images[(currentIdx + 1) % images.length].src} alt={images[(currentIdx + 1) % images.length].alt} className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#260914]/45 to-transparent" />
             </HeroProductLink>
 
             <HeroProductLink item={images[currentIdx]} className="absolute left-1/2 top-0 z-10 h-[360px] w-[82%] max-w-[380px] -translate-x-1/2 overflow-hidden rounded-[2rem] border-[3px] border-white/70 bg-stone-100 shadow-[0_24px_55px_rgba(12,3,8,0.55)] min-[380px]:h-[430px]">
-              <img src={images[prevIdx].src} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
-              <img src={images[currentIdx].src} alt={images[currentIdx].alt} className="image-overlay absolute inset-0 h-full w-full object-cover opacity-0" />
+              <ProductImage allowRetry={false} sizes="(max-width: 767px) 82vw, 320px" wrapperClassName="absolute inset-0 block h-full w-full" src={images[prevIdx].src} alt="" aria-hidden="true" className="h-full w-full object-cover" />
+              <ProductImage allowRetry={false} sizes="(max-width: 767px) 82vw, 320px" loading={isMobile ? "eager" : "lazy"} fetchPriority={isMobile ? "high" : "auto"} wrapperClassName="absolute inset-0 block h-full w-full image-overlay opacity-0" src={images[currentIdx].src} alt={images[currentIdx].alt} className="h-full w-full object-cover" />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent px-4 pb-4 pt-14 text-white">
                 <p className="text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: images[currentIdx].lineOneColor }}>{images[currentIdx].lineOne}</p>
                 <p className="mt-0.5 font-serif text-base font-bold" style={{ color: images[currentIdx].lineTwoColor }}>{images[currentIdx].lineTwo}</p>
@@ -369,29 +373,29 @@ const Hero = () => {
           <div ref={imageRef} className="relative h-[600px] hidden md:block">
             {/* Slot 1: Desktop Main stack */}
             <HeroProductLink item={images[currentIdx]} className="absolute top-10 right-10 z-20 h-[500px] w-80 overflow-hidden bg-muted shadow-2xl">
-              <img 
+              <ProductImage allowRetry={false} sizes="(max-width: 767px) 82vw, 320px" wrapperClassName="absolute inset-0 block h-full w-full"
                 src={images[prevIdx].src} 
                 alt={images[prevIdx].alt} 
-                className="absolute inset-0 w-full h-full object-cover"
+                className="h-full w-full object-cover"
               />
-              <img 
+              <ProductImage allowRetry={false} sizes="320px" loading={isMobile ? "lazy" : "eager"} fetchPriority={isMobile ? "auto" : "high"} wrapperClassName="absolute inset-0 block h-full w-full image-overlay opacity-0"
                 src={images[currentIdx].src} 
                 alt={images[currentIdx].alt} 
-                className="absolute inset-0 w-full h-full object-cover image-overlay opacity-0"
+                className="h-full w-full object-cover"
               />
               {images[currentIdx].productPath && <span className="absolute bottom-5 right-5 z-10 rounded-full bg-white/95 px-4 py-2 text-xs font-black uppercase tracking-wide text-primary shadow-xl">View product <HiArrowRight className="ml-1 inline" /></span>}
             </HeroProductLink>
             {/* Slot 2: Desktop Sub stack */}
             <HeroProductLink item={images[(currentIdx + 1) % images.length]} className="absolute bottom-10 left-10 z-10 h-[400px] w-72 overflow-hidden border-4 border-white bg-muted shadow-xl">
-              <img 
+              <ProductImage allowRetry={false} sizes="(max-width: 767px) 82vw, 320px" wrapperClassName="absolute inset-0 block h-full w-full"
                 src={images[(prevIdx + 1) % images.length].src} 
                 alt={images[(prevIdx + 1) % images.length].alt} 
-                className="absolute inset-0 w-full h-full object-cover"
+                className="h-full w-full object-cover"
               />
-              <img 
+              <ProductImage allowRetry={false} sizes="(max-width: 767px) 82vw, 320px" wrapperClassName="absolute inset-0 block h-full w-full image-overlay opacity-0"
                 src={images[(currentIdx + 1) % images.length].src} 
                 alt={images[(currentIdx + 1) % images.length].alt} 
-                className="absolute inset-0 w-full h-full object-cover image-overlay opacity-0"
+                className="h-full w-full object-cover"
               />
             </HeroProductLink>
 

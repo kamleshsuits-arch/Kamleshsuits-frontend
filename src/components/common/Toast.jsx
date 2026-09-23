@@ -1,3 +1,4 @@
+import ProductImage from './ProductImage';
 // src/components/Toast.jsx
 import React, { useCallback, useEffect, useRef } from 'react';
 import { HiCheckCircle, HiXCircle, HiX } from 'react-icons/hi';
@@ -51,7 +52,7 @@ const Toast = ({ message, image, show, onClose, type = 'success' }) => {
       {/* Image */}
       {image && (
         <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0 border border-stone-100">
-          <img src={image} alt="Product" className="w-full h-full object-cover" />
+          <ProductImage compact sizes="64px" maxWidth={320} src={image} alt="Product" className="w-full h-full object-cover" />
         </div>
       )}
 

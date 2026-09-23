@@ -1,3 +1,4 @@
+import ProductImage from '../components/common/ProductImage';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -70,7 +71,7 @@ const OrderCard = ({ order }) => <article className="rounded-3xl border border-s
   <PaymentCard order={order} />
   <div className="mt-5 space-y-3 border-t border-stone-100 pt-5">
     {order.items?.map((item, index) => <div key={`${item.suitId}-${index}`} className="flex items-center gap-3">
-      <div className="h-16 w-12 shrink-0 overflow-hidden rounded-lg bg-stone-100">{item.image && <img src={item.image} alt="" className="h-full w-full object-cover" />}</div>
+      <div className="h-16 w-12 shrink-0 overflow-hidden rounded-lg bg-stone-100">{item.image && <ProductImage compact sizes="64px" maxWidth={320} src={item.image} alt="" className="h-full w-full object-cover" />}</div>
       <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-primary">{item.title}</p><p className="text-xs text-stone-500">Quantity: {item.quantity || 1}{item.selectedColor ? ` • ${item.selectedColor}` : ''}</p></div>
       <p className="text-sm font-black text-primary">{formatPrice(Number(item.price || 0) * Number(item.quantity || 1))}</p>
     </div>)}

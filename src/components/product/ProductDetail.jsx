@@ -1,3 +1,4 @@
+import ProductImage from '../common/ProductImage';
 // src/components/ProductDetail.jsx
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -178,8 +179,7 @@ export default function ProductDetail({ product, onBack, allProducts = [], onPro
             onClick={() => openLightbox(galleryItems.findIndex(i => i.src === selectedImage))}
             onDoubleClick={handleWishlistToggle}
           >
-            <img
-              src={selectedImage || product.image || product.images?.[0]}
+            <ProductImage sizes="(max-width: 767px) 100vw, 50vw" maxWidth={1600} src={selectedImage || product.image || product.images?.[0]}
               alt={product.title}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
@@ -212,8 +212,7 @@ export default function ProductDetail({ product, onBack, allProducts = [], onPro
                     (selectedImage === item.src && !isLast) ? 'border-primary ring-1 ring-primary/20' : 'border-transparent hover:border-gray-300'
                   }`}
                 >
-                  <img 
-                    src={item.src} 
+                  <ProductImage compact sizes="80px" maxWidth={320} src={item.src}
                     alt="" 
                     className="w-full h-full object-cover"
                   />
@@ -414,8 +413,7 @@ export default function ProductDetail({ product, onBack, allProducts = [], onPro
               <HiChevronLeft size={48} />
             </button>
 
-            <img 
-              src={galleryItems[currentImageIndex].src} 
+            <ProductImage loading="eager" sizes="100vw" maxWidth={1600} wrapperClassName="relative flex h-full w-full items-center justify-center" src={galleryItems[currentImageIndex].src}
               alt="" 
               className="max-w-full max-h-[85vh] object-contain shadow-2xl"
             />
@@ -438,7 +436,7 @@ export default function ProductDetail({ product, onBack, allProducts = [], onPro
                   currentImageIndex === idx ? 'border-primary ring-4 ring-primary/20 scale-110 shadow-lg' : 'border-white/10 opacity-40 hover:opacity-100'
                 }`}
               >
-                <img src={item.src} alt="" className="w-full h-full object-cover" />
+                <ProductImage compact sizes="80px" maxWidth={320} src={item.src} alt="" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>

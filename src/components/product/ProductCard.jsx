@@ -1,3 +1,4 @@
+import ProductImage from '../common/ProductImage';
 // src/components/ProductCard.jsx
 import React, { useRef } from "react";
 import { HiOutlineHeart, HiHeart, HiStar, HiCheck, HiPlus } from "react-icons/hi";
@@ -18,7 +19,7 @@ export default function ProductCard({ product, onView }) {
     return fallback;
   };
 
-  const mainImage = getSafeImageUrl(product.images || product.image, "https://via.placeholder.com/300x400");
+  const mainImage = getSafeImageUrl(product.images || product.image, "");
   const discount = Math.round(product.discount || (product.mrp && product.mrp > product.price ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0));
   const rawRating = parseFloat(product.rating) || 4.1;
   const rating = (rawRating > 5 ? rawRating / 2 : rawRating).toFixed(1);
@@ -54,7 +55,7 @@ export default function ProductCard({ product, onView }) {
     >
       {/* Image Container */}
       <div className="relative w-full aspect-[3/4] overflow-hidden bg-muted">
-        <img
+        <ProductImage
           src={mainImage}
           alt={product.title}
           loading="lazy"

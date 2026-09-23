@@ -1,0 +1,41 @@
+.product-image { isolation: isolate; }
+.product-image[data-image-state="loading"] { cursor: progress; }
+.product-image__veil {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 42%, #fffaf0 0%, #f4eae8 60%, #ecdee2 100%);
+  color: #681f3b; pointer-events: none;
+}
+.product-image__veil::before {
+  content: ''; position: absolute; inset: -100%;
+  background: linear-gradient(115deg, transparent 42%, #ffffff85 50%, transparent 58%);
+  animation: product-image-scan 2.6s ease-in-out infinite;
+}
+.product-image__orbit {
+  position: relative; width: 44px; height: 44px; flex: 0 0 auto;
+  border: 1px solid #681f3b20; border-top: 2px solid #681f3b;
+  border-bottom: 2px solid #cfb53b; border-radius: 50%;
+  box-shadow: 0 0 22px #cfb53b25; animation: product-image-orbit 1.6s linear infinite;
+}
+.product-image__orbit::before {
+  content: ''; position: absolute; inset: 6px; border: 1px solid #cfb53b70;
+  border-left: 2px solid #cfb53b; border-radius: 50%;
+  animation: product-image-orbit 1s linear infinite reverse;
+}
+.product-image__orbit span {
+  position: absolute; inset: 17px; background: #681f3b; transform: rotate(45deg);
+  box-shadow: 0 0 12px #cfb53b80;
+}
+.product-image__caption { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; text-align: center; padding: 0 8px; }
+.product-image__retry { position: relative; pointer-events: auto; cursor: pointer; border: 1px solid #681f3b40; border-radius: 20px; padding: 6px 12px; background: #ffffffa0; color: #681f3b; font-size: 11px; }
+.product-image[data-compact] .product-image__orbit { width: 24px; height: 24px; }
+.product-image[data-compact] .product-image__orbit::before { inset: 4px; }
+.product-image[data-compact] .product-image__orbit span { inset: 9px; }
+.product-image[data-image-state="error"] .product-image__orbit,
+.product-image[data-image-state="error"] .product-image__orbit::before,
+.product-image[data-image-state="error"] .product-image__veil::before { animation: none; }
+@keyframes product-image-orbit { to { transform: rotate(360deg); } }
+@keyframes product-image-scan { from { transform: translateX(-35%); } to { transform: translateX(35%); } }
+@media (prefers-reduced-motion: reduce) {
+  .product-image__orbit, .product-image__orbit::before, .product-image__veil::before { animation: none; }
+}
