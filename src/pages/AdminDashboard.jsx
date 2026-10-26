@@ -344,9 +344,11 @@ const AdminDashboard = () => {
                 colorName: variant.colorName.trim(),
                 colorHex: variant.colorHex || getColorDisplay(variant.colorName),
                 images: variant.images.filter(Boolean),
-                stock: Math.max(0, parseInt(variant.stock) || 0)
+                stock: formData.inventory_mode === 'shared'
+                    ? (index === 0 ? Math.max(0, parseInt(formData.stock) || 0) : 0)
+                    : Math.max(0, parseInt(variant.stock) || 0)
             }));
-            const flattenedImages = variants.flatMap(variant => variant.images);
+            const flattenedImages = [...new Set(variants.flatMap(variant => variant.images))];
             const variantColours = variants.map(variant => variant.colorName);
             const stock = variants.reduce((total, variant) => total + variant.stock, 0);
             const heroImage = flattenedImages.includes(formData.heroFeature?.image)
@@ -379,6 +381,7 @@ const AdminDashboard = () => {
                 images: flattenedImages,
                 colors: variantColours,
                 variants,
+                inventory_mode: formData.inventory_mode === 'shared' ? 'shared' : 'variant',
                 hero_feature: heroFeature,
                 featured_on_home: Boolean(heroFeature.enabled),
                 hero_image_id: heroFeature.heroImageId || '',
@@ -949,6 +952,7 @@ const AdminDashboard = () => {
                                 <div className="space-y-6">
                                     <FormSectionTitle number="03" label="Suit Colours & Pose Images" description="Add every colour in this design and group all of its pose photos together." />
                                     <ProductVariantManager
+                                        sharedStock={formData.inventory_mode === 'shared'}
                                         variants={formData.variants || []}
                                         onChange={(updater) => setFormData(prev => ({
                                             ...prev,
@@ -1148,10 +1152,12 @@ const AdminDashboard = () => {
 
                                     </div>
 
-                                    <FormSectionTitle number="05" label="Inventory & Description" description="Stock is calculated from all colour variants. Finish with the product summary." />
+                                    <FormSectionTitle number="05" label="Inventory & Description" description={formData.inventory_mode === 'shared' ? 'All colour choices share the total stock below.' : 'Stock is calculated from all colour variants. Finish with the product summary.'} />
                                     <div className="asset-section-card space-y-5">
                                     <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                                        <InputBox label="Total Stock (auto)" type="number" value={(formData.variants || []).reduce((total, variant) => total + (parseInt(variant.stock) || 0), 0)} onChange={() => {}} icon={<HiCube />} disabled />
+                                        {formData.inventory_mode === 'shared'
+                                            ? <InputBox label="Total stock across all colours" type="number" value={formData.stock} onChange={stock => setFormData(previous => ({ ...previous, stock }))} icon={<HiCube />} />
+                                            : <InputBox label="Total Stock (auto)" type="number" value={(formData.variants || []).reduce((total, variant) => total + (parseInt(variant.stock) || 0), 0)} onChange={() => {}} icon={<HiCube />} disabled />}
                                         <div className="grid grid-cols-2 gap-2 sm:gap-3">
                                             <InputBox label="Rating" type="number" value={formData.rating} onChange={(v) => setFormData({...formData, rating: v})} icon={<HiStar className="text-yellow-400" />} />
                                             <InputBox label="Reviews" type="number" value={formData.reviews} onChange={(v) => setFormData({...formData, reviews: v})} icon={<HiUsers />} />

@@ -13,6 +13,7 @@ import SEO from '../components/common/SEO';
 import LocationBar from '../components/common/LocationBar';
 import { getProductCategoryLabel } from '../utils/productTaxonomy';
 import { productMetadata, SITE_URL } from '../utils/socialMetadata';
+import { getColourStock, hasSharedStock, imageColour } from '../utils/productInventory';
 
 const ProductColorSelector = ({ product, colors, selectedColor, colorError, onSelect, compact = false, className = '' }) => (
   <div className={className}>
@@ -47,6 +48,7 @@ const ProductColorSelector = ({ product, colors, selectedColor, colorError, onSe
       })}
     </div>
     {!compact && selectedColor && <p className="mt-4 text-xs font-bold text-emerald-700">Selected colour: {selectedColor}</p>}
+    {hasSharedStock(product) && <p className="mt-2 text-xs text-stone-500">{Number(product.stock) === 1 ? '1 piece available across all colour choices.' : `${product.stock} pieces available across all colour choices.`}</p>}
     {colorError && <p className="mt-3 text-xs font-bold text-red-600" role="alert">{colorError}</p>}
   </div>
 );
@@ -132,10 +134,10 @@ const ProductDetailsContent = ({ id }) => {
       if (!src || items.some(item => item.src === src)) return;
       items.push({ type: 'image', src, color, id: `gallery-${items.length}` });
     };
-    const owner = src => variants.find(variant => variant.images?.includes(src))?.colorName;
+    const owner = src => imageColour(variants, src);
     addImage(product.image, owner(product.image));
     (product.images || []).forEach(src => addImage(src, owner(src)));
-    variants.forEach(variant => (variant.images || []).forEach(src => addImage(src, variant.colorName)));
+    variants.forEach(variant => (variant.images || []).forEach(src => addImage(src, owner(src))));
 
     return items;
   };
@@ -188,7 +190,7 @@ const ProductDetailsContent = ({ id }) => {
       return;
     }
     const variant = product.variants?.find(item => item.colorName === selectedColor);
-    const stock = variant?.stock ?? product.stock;
+    const stock = getColourStock(product, variant);
     if (stock != null && Number(stock) <= 0) {
       setColorError('This colour is sold out. Please choose another colour.');
       return;

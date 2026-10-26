@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { fetchProducts, fetchUserProfile, saveUserProfile } from '../api/products';
 import { useAuth } from '../context/AuthContext';
+import { cartQuantityLimit, hasSharedStock } from '../utils/productInventory';
 
 const CartContext = createContext();
 
@@ -117,8 +118,12 @@ export const CartProvider = ({ children }) => {
         const productIds = new Set(allProducts.map(p => String(p.suitId)));
 
         setCartItems(prev => {
-          const filtered = prev.filter(item => productIds.has(String(item.suitId)));
-          return filtered.length !== prev.length ? filtered : prev;
+          return prev.filter(item => productIds.has(String(item.suitId))).map(item => {
+            const current = allProducts.find(product => String(product.suitId) === String(item.suitId));
+            if (!hasSharedStock(current)) return item;
+            return { ...item, inventory_mode: current.inventory_mode, stock: current.stock,
+              quantity: Math.min(item.quantity || 1, Math.max(1, cartQuantityLimit(current))) };
+          });
         });
 
         setWishlistItems(prev => {
@@ -146,16 +151,21 @@ export const CartProvider = ({ children }) => {
   // --- CART ACTIONS ---
   const addToCart = (product, { checkout = false } = {}) => {
     if (!product || !product.suitId) return;
+    const limit = cartQuantityLimit(product);
+    if (limit === 0) {
+      showToast('This design is sold out.', product.image, 'error');
+      return;
+    }
     setCartItems((prev) => {
       const existing = prev.find((item) => String(item.suitId) === String(product.suitId));
       if (existing) {
         // Checkout keeps the current quantity and applies the colour just selected.
         if (checkout) return prev.map(item => String(item.suitId) === String(product.suitId)
-          ? { ...item, ...product, quantity: item.quantity || 1 } : item);
+          ? { ...item, ...product, quantity: Math.min(item.quantity || 1, limit) } : item);
         showToast(`Quantity updated`, product.image || (product.images && product.images[0]), 'success');
         return prev.map((item) =>
           String(item.suitId) === String(product.suitId)
-            ? { ...item, ...product, quantity: Math.min((item.quantity || 1) + 1, 2) }
+            ? { ...item, ...product, quantity: Math.min((item.quantity || 1) + 1, limit) }
             : item
         );
       }
@@ -171,7 +181,7 @@ export const CartProvider = ({ children }) => {
     }
     if (newQty > 2) return;
     setCartItems((prev) =>
-      prev.map((item) => String(item.suitId) === String(id) ? { ...item, quantity: newQty } : item)
+      prev.map((item) => String(item.suitId) === String(id) && newQty <= cartQuantityLimit(item) ? { ...item, quantity: newQty } : item)
     );
   };
 

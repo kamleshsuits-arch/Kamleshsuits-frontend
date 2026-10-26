@@ -16,7 +16,7 @@ export function productMetadata(product) {
   const title = clean(product.title || 'Explore our collection');
   const price = Number(product.price);
   const hasPrice = product.price != null && Number.isFinite(price) && price >= 0;
-  const stock = Array.isArray(product.variants) && product.variants.length
+  const stock = product.inventory_mode !== 'shared' && Array.isArray(product.variants) && product.variants.length
     ? product.variants.reduce((sum, variant) => sum + Math.max(0, Number(variant.stock) || 0), 0)
     : Number(product.stock);
   const soldOut = Number.isFinite(stock) && stock <= 0;

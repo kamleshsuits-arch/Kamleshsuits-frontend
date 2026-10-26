@@ -7,7 +7,7 @@ import { extractDominantSuitColor } from '../../utils/imageColorExtractor';
 import { isSupportedProductAsset, optimizeProductAsset } from '../../utils/productAssetOptimizer';
 import { createEmptyVariant, MAX_PRODUCT_VARIANTS, MAX_VARIANT_IMAGES } from '../../utils/productVariants';
 
-const ProductVariantManager = ({ variants, onChange, onUploadingChange, showToast }) => {
+const ProductVariantManager = ({ variants, onChange, onUploadingChange, showToast, sharedStock = false }) => {
   const [uploadingCount, setUploadingCount] = useState(0);
   const [progress, setProgress] = useState({});
 
@@ -92,7 +92,9 @@ const ProductVariantManager = ({ variants, onChange, onUploadingChange, showToas
                   <input type="color" value={variant.colorHex} onChange={event => updateVariant(variant.id, { colorHex: event.target.value, colorName: getColorName(event.target.value) })} className="absolute inset-0 cursor-pointer opacity-0" aria-label={`Colour for variant ${variantIndex + 1}`} />
                 </label>
                 <div><label className="mb-2 block text-xs font-black text-stone-700">Colour name</label><input value={variant.colorName} onChange={event => updateVariant(variant.id, { colorName: event.target.value })} placeholder="Detected after first image" maxLength={40} className="asset-control" /></div>
-                <div><label className="mb-2 block text-xs font-black text-stone-700">Stock</label><input type="number" min="0" value={variant.stock} onChange={event => updateVariant(variant.id, { stock: event.target.value })} className="asset-control" /></div>
+                {sharedStock
+                  ? <p className="self-center text-xs text-stone-500">Uses shared design stock</p>
+                  : <div><label className="mb-2 block text-xs font-black text-stone-700">Stock</label><input type="number" min="0" value={variant.stock} onChange={event => updateVariant(variant.id, { stock: event.target.value })} className="asset-control" /></div>}
               </div>
 
               {variant.images.length > 0 && (

@@ -18,6 +18,7 @@ import OrderSuccessAnimation from '../common/OrderSuccessAnimation';
 import DeliveryLocationMap from './DeliveryLocationMap';
 import { SiPhonepe } from 'react-icons/si';
 import { saveGuestOrderReference } from '../../utils/guestOrders';
+import { cartQuantityLimit } from '../../utils/productInventory';
 import { lookupCoordinates, lookupPincode, fetchLocationJson } from '../../utils/locationLookup';
 
 
@@ -845,7 +846,7 @@ const Cart = () => {
                               <span className="w-8 text-center font-bold text-sm text-primary">{item.quantity || 1}</span>
                               <button 
                                 onClick={() => updateQuantity(item.suitId, (item.quantity || 1) + 1)}
-                                disabled={(item.quantity || 1) >= 2}
+                                disabled={(item.quantity || 1) >= cartQuantityLimit(item)}
                                 aria-label={`Increase quantity of ${item.title}`}
                                 className="w-11 h-11 rounded-full hover:bg-white hover:shadow-sm disabled:opacity-20 text-secondary transition flex items-center justify-center"
                               >
