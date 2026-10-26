@@ -5,6 +5,7 @@ import { HiOutlineHeart, HiHeart, HiStar, HiCheck, HiPlus } from "react-icons/hi
 import { useCart } from "../../hooks/useCart.jsx";
 import { gsap } from "gsap";
 import { formatPrice } from "../../utils/currency";
+import { getProductScore } from "../../utils/productScore";
 
 export default function ProductCard({ product, onView }) {
   const { toggleWishlist, isInWishlist, addToCart, isInCart, removeFromCart } = useCart();
@@ -21,8 +22,7 @@ export default function ProductCard({ product, onView }) {
 
   const mainImage = getSafeImageUrl(product.images || product.image, "");
   const discount = Math.round(product.discount || (product.mrp && product.mrp > product.price ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0));
-  const rawRating = parseFloat(product.rating) || 4.1;
-  const rating = (rawRating > 5 ? rawRating / 2 : rawRating).toFixed(1);
+  const score = getProductScore(product);
 
   const handleWishlistToggle = (e) => {
     e.stopPropagation();
@@ -89,14 +89,15 @@ export default function ProductCard({ product, onView }) {
           {inWishlist ? <HiHeart size={18} /> : <HiOutlineHeart size={18} />}
         </button>
 
-        {/* Rating chip */}
-        {rating && (
-          <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm px-2 py-0.5 flex items-center gap-1 text-[10px] text-primary shadow-sm rounded-md z-20">
-            <span className="font-bold">{rating}</span>
+        {/* Keep generated style scores distinct from customer reviews. */}
+          <div data-product-score={score.kind}
+            aria-label={`${score.kind === 'style' ? 'Generated style score' : 'Customer rating'}: ${score.value} out of 5`}
+            title={score.kind === 'style' ? 'Generated style score; not a customer review rating' : `${score.reviews} customer reviews`}
+            className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm px-2 py-0.5 flex items-center gap-1 text-[10px] text-primary shadow-sm rounded-md z-20">
+            <span className="font-bold">{score.value}</span>
             <HiStar className="text-yellow-400" size={11} />
-            <span className="text-secondary font-light border-l border-stone-300 pl-1 ml-0.5">({product.reviews || 26})</span>
+            <span className="text-secondary text-[8px] border-l border-stone-300 pl-1">{score.kind === 'style' ? 'Style score' : `(${score.reviews})`}</span>
           </div>
-        )}
 
         {/* Quick Add Button - Aligned with Rating Along X-Axis */}
         <button
